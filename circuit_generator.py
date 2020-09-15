@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.random as nr
 import matplotlib.pylab as plt
+import matplotlib.colors as colors
 
 import circuit_components as cc
 from copy_phase_space import evolve
@@ -53,7 +54,7 @@ class Circuit(object):
         self.traj = []
         self.est = []
         self.M = []
-        self.Mforw = (5/3)**self.state_string.count('S') #!!!
+        self.Mforw = self.calc_Mforw()
 
     def reset(self):
         if self.w is None:
@@ -64,6 +65,14 @@ class Circuit(object):
         self.M = []
         self.Mforw = None
 
+    def calc_Mforw(self):
+        ''' Calculates M_forward. #!!!
+        '''
+        self.w = cc.calcWstate(self.state_string)
+        self.sample()
+        Mforw = np.abs(self.w).sum()
+        self.reset()
+        return Mforw
 
     def simulate_circuit(self, qudit_num, outcome):
         ''' Calculates outcome Born probability for given qudit and outcome
@@ -127,7 +136,7 @@ class Circuit(object):
         return p_est.sum()/s
 
     def calc_hoeffding_bound(self, eps, delta):
-        return int( 2/(eps*eps) * self.Mforw**2 * np.log(2/delta) )
+        return int( 2/eps**2 * self.Mforw**2 * np.log(2/delta) )
 
 def random_gates_string(n, L):
     ''' Creates a random circuit sequence as input for a Circuit object.
@@ -160,7 +169,9 @@ def data_scaling(n=4, kmax=3, circ_num=10, L=4, eps=0.05, delta=0.1,
                  qudit_num=0, outcome=0):
     ''' Creates data for Fig.1 of Pashayan et al. (2015)
     '''
-    filename = MDIR+'pdiffs_n'+str(n)+'_k'+str(kmax)+'_c'+\
+    mgcs = 'S'
+    state_string = '0'*(n-kmax) + mgcs*kmax
+    filename = MDIR+'pdiffs_'+state_string+'_c'+\
                str(circ_num).zfill(2)+'_L'+str(L).zfill(2)+'_e'+\
                str(int(100*eps)).zfill(3)+'_d'+\
                str(int(100*delta)).zfill(3)+'.npy'
@@ -172,7 +183,7 @@ def data_scaling(n=4, kmax=3, circ_num=10, L=4, eps=0.05, delta=0.1,
 
     p_diffs = np.zeros((1+kmax,1+circ_num))
     for k in range(1+kmax):
-        state_string = '0'*(n-k) + 'S'*k
+        state_string = '0'*(n-k) + mgcs*k
         for i in range(circ_num):
             gates_string = random_gates_string(n, L)
             c = Circuit([state_string]+gates_string)
@@ -209,11 +220,12 @@ def plot_scaling(n=4, kmax=3, circ_num=10, L=4, eps=0.05, delta=0.1,
     ax = fig.add_subplot(111)
     vmine = int(np.log10(n_sampl.min()))
     vmaxe = int(np.log10(n_sampl.max())+1)
-    sc = ax.scatter(kaxis.flatten(), p_diffs.flatten(), marker='o',
-                    c=cr, vmin=10**vmine, vmax=10**vmaxe, cmap=cb)
-    cb = fig.colorbar(sc, ticks=10**np.arange(vmine, vmaxe+1))
+    sc = ax.scatter(kaxis.flatten(), p_diffs.flatten(), marker='o', c=cr,
+                    norm=colors.LogNorm(vmin=10**vmine, vmax=10**vmaxe),
+                    cmap=cb)
+    cb = fig.colorbar(sc, ticks=10**np.arange(vmine-1, vmaxe+1))
     cb.ax.set_yticklabels([r'$10^{%d}$'%(i)
-                           for i in np.arange(vmine, vmaxe+1)])
+                           for i in np.arange(vmine-1, vmaxe+1)])
 
     ax.axhline(y=eps, c='0.', ls='-')
     ax.set_yscale('log')
@@ -223,8 +235,8 @@ def plot_scaling(n=4, kmax=3, circ_num=10, L=4, eps=0.05, delta=0.1,
     ax.set_yticklabels([r'$10^{-%d}$'%(i) for i in np.arange(1, err+1)])
     ax.set_xlabel(r'\# magic states $k$')
     ax.set_ylabel(r'$\hat{p}_{\rm{B}} -\langle \hat{p}\rangle$')
-    ax.set_xlim(-0.5,3.5)
-    ax.set_ylim(5*10**(-(err+1)), 0.1)
+    ax.set_xlim(-0.5,kmax+0.5)
+    ax.set_ylim(5*10**(-(err)), 0.1)
 
 
 
