@@ -10,8 +10,8 @@ class CopyPhaseSpace(object):
     resource for quantum computation" and similar literature.
     '''
     def __init__(self, dim, n):
-        ''' dim: dimension - integer
-            xp: phase space coordinates - list or tuple
+        ''' dim: dimension        - integer
+            n:   number of copies - integer
         '''
         if isinstance(dim, inttypes):
             if (factors(dim).size==1):
@@ -28,10 +28,10 @@ class CopyPhaseSpace(object):
         self.omega = self.tau * self.tau
         self.X = np.roll(np.eye(self.dim), 1, axis=0)
         self.Z = np.diag(self.omega**np.arange(self.dim))
-        self.A0 = np.roll(np.eye(self.dim)[::-1], 1, axis=0
-                          ) if self.dim>2 else A0d2
+        # self.A0 = np.roll(np.eye(self.dim)[::-1], 1, axis=0
+        #                   ) if self.dim>2 else A0d2
 
-    def ele1q(self, k, b):
+    def ele_1q(self, k, b):
         ''' Creates unit matrix element for a 1-copy subsystem.
         '''
         element = np.zeros((self.dim, self.dim))
@@ -53,6 +53,13 @@ class CopyPhaseSpace(object):
         else:
           return
 
+    def D_1q(self, xp):
+        ''' Calculates displacement operator D at point xp for a 1-copy
+            subsystem.
+        '''
+        x, p = xp[0], xp[1]
+        return self.tau**(x*p) * np.dot(power(self.X, x), power(self.Z, p))
+
     def D(self, xp):
         ''' Calculates displacement operator D at point xp.
         '''
@@ -64,32 +71,41 @@ class CopyPhaseSpace(object):
             D = np.kron(D, T)
         return D
 
-    def A(self, xp):
-        ''' Calculates phase-space point operator A at point xp.
+    def h(self, xp, s):
+        ''' Smoothing function.
+        '''
+        return np.exp(-s*((xp[0]*xp[0])%self.dim + (xp[1]*xp[1])%self.dim))
+
+    def A0_1q(self, s=0.):
+        ''' Calculates origin A0(s) - with smoothing function.
+        '''
+        A0 = 0
+        coords = it.product(*([range(self.dim)]*2))
+        for xp in coords:
+            A0 = A0 + self.h(xp,s)/self.dim * self.D_1q(xp)
+        return A0
+
+    def A_1q(self, xp, s=0.):
+        ''' Calculates phase-space point operator at point xp -
+            with smoothing function
+        '''
+        return evolve(self.A0_1q(s), self.D_1q(xp))
+
+    def A(self, xp, s=[0.]):
+        ''' Calculates phase-space point operator A at point xp - with
+            smoothing function.
         '''
         self.errpos(xp, 2)
+        self.errpos(s, 1)
         A = 1
         for i in range(self.n):
             x, p = xp[2*i], xp[2*i+1]
             T = self.tau**(x*p) * np.dot(power(self.X, x), power(self.Z, p))
-            a = evolve(self.A0, T)
+            a = evolve(self.A0_1q(s[i]), T)
             A = np.kron(A, a)
         return A
 
-    def D1q(self, xp):
-        ''' Calculates displacement operator D at point xp for a 1-copy
-            subsystem.
-        '''
-        x, p = xp[0], xp[1]
-        return self.tau**(x*p) * np.dot(power(self.X, x), power(self.Z, p))
-
-    def A1q(self, xp):
-        ''' Calculates phase-space point operator at point xp for a 1-copy
-            subsystem.
-        '''
-        return evolve(self.A0, self.D1q(xp))
-
-    def line1q(self, a, k):
+    def line_1q(self, a, k):
         ''' Returns list of phase space points xp that satisfy the line
             equation a*xp = k for a 1-copy subsystem.
         '''
@@ -115,12 +131,12 @@ class CopyPhaseSpace(object):
         for i in range(self.n):
             a = aa[i]
             k = kk[i]
-            stab_line1q = self.line1q(a,k)
+            stab_line_1q = self.line_1q(a,k)
 
-            stab1q = 0
-            for point in stab_line1q:
-                stab1q += 1/self.dim * self.A1q(point)
-            stab = np.kron(stab, stab1q)
+            stab_1q = 0
+            for point in stab_line_1q:
+                stab_1q += 1/self.dim * self.A_1q(point)
+            stab = np.kron(stab, stab_1q)
         return stab
 
     def clifford(self, FF, zz):
@@ -140,66 +156,16 @@ class CopyPhaseSpace(object):
             if np.isclose(b,0):
                 for k in range(N):
                     exp = a*c*k*k
-                    tot += self.tau**exp * self.ele1q((a*k)%N, k)
+                    tot += self.tau**exp * self.ele_1q((a*k)%N, k)
             else:
                 for j in range(N):
                     for k in range(N):
                         exp = (a*k*k - 2*j*k + d*j*j)*self.inverse(b)
-                        tot += self.tau**exp * self.ele1q(j, k)
+                        tot += self.tau**exp * self.ele_1q(j, k)
                 tot *= 1/np.sqrt(N)
-            cliff1q = np.matmul(self.D1q(z), tot)
-            cliff = np.kron(cliff, cliff1q)
+            cliff_1q = np.matmul(self.D_1q(z), tot)
+            cliff = np.kron(cliff, cliff_1q)
         return cliff
-
-    def csum(self, c, t):
-        ''' Returns a CSUM unitary with the c-th qudit as control and the t-th
-        qudit as target.
-        '''
-        s = 0
-        if c<=t:
-            A0 = np.eye(self.dim**(c))
-            A1 = np.eye(self.dim**(self.n-1-t))
-            for i in range(self.dim):
-                for j in range(self.dim):
-                    temp = np.kron( self.ele1q(i,i),
-                                    np.eye(self.dim**(t-c-1)) )
-                    s += np.kron( temp, self.ele1q(j+i, j) )
-        else:
-            A0 = np.eye(self.dim**(t))
-            A1 = np.eye(self.dim**(self.n-1-c))
-            for i in range(self.dim):
-                for j in range(self.dim):
-                    temp = np.kron( self.ele1q(j+i,j),
-                                    np.eye(self.dim**(c-t-1)) )
-                    s += np.kron( temp, self.ele1q(i, i) )
-
-        return np.kron(A0, np.kron(s, A1) )
-
-    def wstate(self, state):
-        xcoords = it.product(*([range(self.dim)]*(2*self.n)))
-        wig = []
-        for x in xcoords:
-            w = 1/self.dim**self.n * np.real(
-                np.trace(np.dot(state, self.A(x))) )
-            if np.isclose(w,0): w = 0
-            wig.append(w)
-        wig = np.array(wig)
-        return wig
-
-    def wgate(self, gate):
-        xcoords = it.product(*([range(self.dim)]*(2*self.n)))
-        wig = []
-        for x in xcoords:
-            ycoords = it.product(*([range(self.dim)]*(2*self.n)))
-            for y in ycoords:
-                Aev = evolve(self.A(x), gate)
-                w = 1/self.dim**self.n * np.real(
-                    np.trace(np.dot(self.A(y), Aev)) )
-                if np.isclose(w,0): w = 0
-                wig.append(w)
-        wig = np.array(wig).reshape((self.dim**(2*self.n),
-                                     self.dim**(2*self.n))).T
-        return wig
 
 # Auxiliary classes, variables and functions
 inttypes = (int, np.integer)
@@ -239,3 +205,61 @@ plt.rc('ytick', labelsize=15)
 plt.rc('legend', fontsize=14)
 plt.rc('lines', linewidth=1)
 plt.rc('lines', markersize=7)
+
+
+
+# def csum(self, c, t):
+#     ''' Returns a CSUM unitary with the c-th qudit as control and the t-th
+#     qudit as target. #!!!
+#     '''
+#     g = 0
+#     if c<=t:
+#         A0 = np.eye(self.dim**(c))
+#         A1 = np.eye(self.dim**(self.n-1-t))
+#         for i in range(self.dim):
+#             for j in range(self.dim):
+#                 temp = np.kron( self.ele_1q(i,i),
+#                                 np.eye(self.dim**(t-c-1)) )
+#                 g += np.kron( temp, self.ele_1q(j+i, j) )
+#     else:
+#         A0 = np.eye(self.dim**(t))
+#         A1 = np.eye(self.dim**(self.n-1-c))
+#         for i in range(self.dim):
+#             for j in range(self.dim):
+#                 temp = np.kron( self.ele_1q(j+i,j),
+#                                 np.eye(self.dim**(c-t-1)) )
+#                 g += np.kron( temp, self.ele_1q(i, i) )
+
+#     return np.kron(A0, np.kron(g, A1) )
+
+# def wstate(self, state, s):
+#     ''' Calculates the Wigner distribution of state directly in the
+#         composite Hilbert space - with smoothing function.
+#     '''
+#     xcoords = it.product(*([range(self.dim)]*(2*self.n)))
+#     wig = []
+#     for x in xcoords:
+#         w = 1/self.dim**self.n * np.real(
+#             np.trace(np.dot(state, self.A(x, s))) )
+#         if np.isclose(w,0): w = 0
+#         wig.append(w)
+#     wig = np.array(wig)
+#     return wig
+
+# def wgate(self, gate, s_in, s_out):
+#     ''' Calculates the Wigner distribution of gate directly in the
+#         composite Hilbert space - with smoothing function.
+#     '''
+#     xcoords = it.product(*([range(self.dim)]*(2*self.n)))
+#     wig = []
+#     for x in xcoords:
+#         ycoords = it.product(*([range(self.dim)]*(2*self.n)))
+#         for y in ycoords:
+#             Aev = evolve(self.A(x, -s_in), gate)
+#             w = 1/self.dim**self.n * np.real(
+#                 np.trace(np.dot(self.A(y, s_out), Aev)) )
+#             if np.isclose(w,0): w = 0
+#             wig.append(w)
+#     wig = np.array(wig).reshape((self.dim**(2*self.n),
+#                                  self.dim**(2*self.n))).T
+#     return wig

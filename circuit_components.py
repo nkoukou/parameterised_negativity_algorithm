@@ -11,7 +11,8 @@ ps1 = CopyPhaseSpace(DIM, 1)
 ps2 = CopyPhaseSpace(DIM, 2)
 
 def makeState(state_string):
-    ''' Makes a state matrix from the generating state string, e.g. '000SS'.
+    ''' Makes a state matrix from the generating state string,
+        e.g. '+', '000SS', '012+TSN'.
     '''
     state = 1
     for s in state_string:
@@ -20,29 +21,26 @@ def makeState(state_string):
         state = np.kron(state, temp)
     return state
 
-def calcWstate(state_string):
-    ''' Calculates the Wigner distribution from the generating state string.
+def calcWstate(state_string, s):
+    ''' Calculates the Wigner distribution from the generating state string and
+        smoothing parameter s,
+        e.g. '+', '000SS', '012+TSN'.
     '''
-    filename = MDIR+'_ws_'+state_string+'.npy'
-    try:
-        wig = np.load(filename)
-        return wig
-    except: pass
     wig = 1
-    for s in state_string:
-        state = makeState(s)
+    for i in range(len(state_string)):
+        state = makeState(state_string[i])
         coords = it.product(*([range(ps1.dim)]*2))
         temp = []
         for x in coords:
-            w = 1/ps1.dim * np.real( np.trace(np.dot(state, ps1.A1q(x))) )
+            w = 1/ps1.dim * np.real(np.trace(np.dot(state, ps1.A_1q(x, s[i]))))
             if np.isclose(w,0): w = 0
             temp.append(w)
         wig = np.kron(wig, np.array(temp))
-    np.save(filename, wig)
     return wig
 
 def makeGate(gate_string):
-    ''' Makes a gate matrix from the generating gate string, e.g. 'HHSHH'.
+    ''' Makes a gate matrix from the generating gate string,
+        e.g. 'H', '1HS', '1HSM', '1CT11'.
     '''
     if gate_string.find('T')>=0:
         gate = makeCsum(gate_string)
@@ -55,8 +53,35 @@ def makeGate(gate_string):
         gate = np.kron(gate, temp)
     return gate
 
-def calcWgate(gate_string, trj):
-    ''' Calculates the Wigner distribution from the generating state string.
+def calcWgate(gate_string, s, trj):
+    ''' Calculates the Wigner distribution from the generating gate string and
+        smoothing parameter s,
+        e.g. 'H', '1HS', '1HSM', '1CT11'.
+    '''
+    N = len(gate_string)
+    rep = np.base_repr(trj, ps1.dim**2).zfill(N)
+    s_in, s_out = [-i for i in s[0]], s[1]
+    wig = 1
+    for i in range(N):
+        gate = makeGate1q(gate_string[i])
+        wig_sub = []
+        xcoords = it.product(*([range(ps1.dim)]*2))
+        for x in xcoords:
+            ycoords = it.product(*([range(ps1.dim)]*2))
+            for y in ycoords:
+                Aev = evolve(ps1.A_1q(x, s_in[i]), gate)
+                w = 1/ps1.dim * np.real( np.trace(np.dot(
+                                ps1.A_1q(y, s_out[i]), Aev)) )
+                if np.isclose(w,0): w = 0
+                wig_sub.append(w)
+        wig_sub = np.array(wig_sub).reshape((ps1.dim**2, ps1.dim**2))
+        wig = np.kron(wig, wig_sub[int(rep[i])])
+    return wig
+
+def calcWgate_v2(gate_string, trj):
+    ''' DEPRICATED - Calculates the Wigner distribution from the generating
+        state string,
+        e.g. 'H', '1HS', '1HSM', '1CT11'.
     '''
     N = len(gate_string)
 
@@ -98,22 +123,48 @@ def calcWgate(gate_string, trj):
 
     return wig
 
-def makeMeas(meas_string, qudit_num, outcome):
-    ''' Makes a measurement matrix projector,
-    e.g. for meas_string='ZZZZZZ', qudit_num=2, outcome = 0, function returns
-    the tensor product 11|0><0|111.
+def makeMeas(meas_string):
+    ''' Makes a measurement projector matrix,
+        e.g. '2xx' (projects qudit 0 on state |2>, 'xxSx' (projects qudit 2 on
+        state |2>).
     '''
     N = len(meas_string)
+    if meas_string.count('x') != N-1: raise Exception(
+         'Measurement projection on more than 1 qudits is not implemented.')
+    qudit_num = next((i for i, ch  in enumerate(meas_string)
+                      if ch not in ['x']),None)
+    outcome = meas_string[qudit_num]
     idx = np.array([qudit_num, N - qudit_num - 1])
     ids = ps1.dim**idx
 
-    i = int(outcome)
-    measp = ps1.ele1q(i, i)
+    measp = makeState(outcome)
     measp = np.kron( np.kron(np.eye(ids[0]), measp), np.eye(ids[1]) )
     return measp
 
-def calcWmeas(meas_string, qudit_num, outcome, trj):
-    ''' Calculates the measurement Wigner distribution from inputs given.
+def calcWmeas(meas_string, s, trj):
+    ''' Calculates the measurement Wigner distribution from the generating
+        measurement string and smoothing parameter s,
+        e.g. '2xx' (projects qudit 0 on state |2>, 'xxSx' (projects qudit 2 on
+        state |2>).
+    '''
+    N = len(meas_string)
+    if meas_string.count('x') != N-1: raise Exception(
+         'Measurement projection on more than 1 qudits is not implemented.')
+    qudit_num = next((i for i, ch  in enumerate(meas_string)
+                      if ch not in ['x']),None)
+    s = [s[qudit_num]] #!!!
+    outcome = meas_string[qudit_num]
+    idx = np.array([qudit_num, N - qudit_num - 1])
+    ids = ps1.dim**(2*idx)
+
+    measp = ps1.dim*calcWstate(outcome, s)
+    measp = np.kron( np.kron(np.ones(ids[0]), measp),
+                     np.ones(ids[1]) )
+    return measp[trj]
+
+def calcWmeas_v2(meas_string, qudit_num, outcome, trj):
+    ''' DEPRICATED - Calculates the measurement Wigner distribution from
+        inputs given.
     '''
     N = len(meas_string)
     idx = np.array([qudit_num, N - qudit_num - 1])
@@ -123,7 +174,7 @@ def calcWmeas(meas_string, qudit_num, outcome, trj):
     measp = np.array([0]*(3*i)+[1]*3+[0]*(6-3*i))
     measp = np.kron( np.kron(np.ones(ids[0]), measp),
                      np.ones(ids[1]) )
-    return measp[trj]
+    return measp#[trj]
 
 ##### AUXILIARY FUNCTIONS #####
 
@@ -131,17 +182,20 @@ def makeState1q(state_string):
     ''' Makes a 1-qudit state matrix from the generating state string:
         '0' - |0><0|
         '1' - |1><1|
-        '2' - |1><1|
+        '2' - |2><2|
+        '+' - |+><+| (maximally coherent state)
         'S' - |S><S| (Strange state)
         'N' - |N><N| (Norrell state)
-        'T' - |T><T| (Norrell state)
+        'T' - |T><T| (T state)
     '''
     if state_string=='0':
-        state = ps1.ele1q(0,0)
+        state = ps1.ele_1q(0,0)
     elif state_string=='1':
-        state = ps1.ele1q(1,1)
+        state = ps1.ele_1q(1,1)
     elif state_string=='2':
-        state = ps1.ele1q(2,2)
+        state = ps1.ele_1q(2,2)
+    elif state_string=='+':
+        state = sf.psi2rho(1/np.sqrt(3)*np.ones(3))
     elif state_string=='S':
         state = sf.strange
     elif state_string=='N':
@@ -159,9 +213,8 @@ def makeGate1q(gate_string):
         'h' - inverse Hadamard
         'S' - Phase gate
         's' - inverse Phase gate
-        'C' - C-SUM gate (control) between two qudits
-        'c' - inverse C-SUM gate (control) between two qudits
-        'T' - C-SUM & inverse C-SUM gate (target) between two qudits
+        'M' - T gate (magic gate)
+        'm' - T gate (magic gate)
     '''
     if gate_string=='1':
         gate = np.eye(ps1.dim)
@@ -181,6 +234,10 @@ def makeGate1q(gate_string):
         gate = ps1.X
     elif gate_string=='x':
         gate = ps1.X.conj().T
+    elif gate_string=='M':
+        gate = np.diag([sf.ksi, 1, 1/sf.ksi])
+    elif gate_string=='m':
+        gate = np.diag([1/sf.ksi, 1, sf.ksi])
     else:
         raise Exception('Invalid gate string')
     return gate
@@ -188,6 +245,9 @@ def makeGate1q(gate_string):
 def makeCsum(gate_string):
     ''' Makes a 2-qudit C-SUM gate matrix from the generating gate string,
         e.g. '11T1C'.
+        'C' - C-SUM gate (control) between two qudits
+        'c' - inverse C-SUM gate (control) between two qudits
+        'T' - C-SUM & inverse C-SUM gate (target) between two qudits
     '''
     t = gate_string.find('T')
     c1 = gate_string.find('C')
@@ -205,11 +265,11 @@ def makeCsum(gate_string):
     for i in range(ps1.dim):
         for j in range(ps1.dim):
             if c<t:
-                temp1 = ps1.ele1q(i,i)
-                temp3 = ps1.ele1q(j+i, j) if not dagger else ps1.ele1q(j, j+i)
+                temp1 = ps1.ele_1q(i,i)
+                temp3 = ps1.ele_1q(j+i,j) if not dagger else ps1.ele_1q(j,j+i)
             else:
-                temp1 = ps1.ele1q(j+i,j) if not dagger else ps1.ele1q(j, j+i)
-                temp3 = ps1.ele1q(i, i)
+                temp1 = ps1.ele_1q(j+i,j) if not dagger else ps1.ele_1q(j,j+i)
+                temp3 = ps1.ele_1q(i,i)
             temp = np.kron( np.kron(temp1, temp2), temp3 )
             gate += temp
     gate = np.kron( np.kron(np.eye(ids[0]), gate), np.eye(ids[2]) )
@@ -242,6 +302,12 @@ def gate2F(gate_string, invert_ct=False):
     return F, z
 
 
+# filename = MDIR+'_ws_'+state_string+'.npy'
+# try:
+#     wig = np.load(filename)
+#     return wig
+# except: pass
+# np.save(filename, wig)
 
 
 

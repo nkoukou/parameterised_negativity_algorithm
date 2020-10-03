@@ -22,7 +22,7 @@ def psi2rho(psi):
 strange = psi2rho( 1/np.sqrt(2) * np.array([0, 1, -1])      )
 norrell = psi2rho( 1/np.sqrt(6) * np.array([-1, 2, -1])     )
 tmagik  = psi2rho( 1/np.sqrt(2) * np.array([ksi, 1, 0])     )
-tmagic  = psi2rho( 1/np.sqrt(3) * np.array([1, ksi, 1/ksi]) )
+tmagic  = psi2rho( 1/np.sqrt(3) * np.array([ksi, 1, 1/ksi]) )
 ###
 
 def maxmixed(n):
