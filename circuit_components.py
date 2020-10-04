@@ -184,6 +184,7 @@ def makeState1q(state_string):
         '1' - |1><1|
         '2' - |2><2|
         '+' - |+><+| (maximally coherent state)
+        'm' - 1/d 1  (maximally mixed state)
         'S' - |S><S| (Strange state)
         'N' - |N><N| (Norrell state)
         'T' - |T><T| (T state)
@@ -195,7 +196,9 @@ def makeState1q(state_string):
     elif state_string=='2':
         state = ps1.ele_1q(2,2)
     elif state_string=='+':
-        state = sf.psi2rho(1/np.sqrt(3)*np.ones(3))
+        state = sf.maxcoh(DIM)
+    elif state_string=='m':
+        state = sf.maxmixed(DIM)
     elif state_string=='S':
         state = sf.strange
     elif state_string=='N':

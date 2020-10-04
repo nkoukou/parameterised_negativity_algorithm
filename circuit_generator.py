@@ -2,9 +2,11 @@ import numpy as np
 import numpy.random as nr
 import matplotlib.pylab as plt
 import matplotlib.colors as colors
+import collections #!!!
 
 import circuit_components as cc
 from copy_phase_space import evolve
+from neg_circuit import calc_neg_circuit
 
 plt.rcParams.update({
       "text.usetex": True,
@@ -79,7 +81,7 @@ class Circuit(object):
         self.traj = []
         self.est = []
         self.M = []
-        self.Mforw = self.calc_Mforw()
+        self.Mforw = calc_neg_circuit(sequence, list(flatten(s)))
 
     def reset(self):
         if self.w is None:
@@ -276,7 +278,13 @@ s= [
     [0.0,0.0,0.5]
     ]
 
-
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el,
+                                                               (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el
 
 
 
