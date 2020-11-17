@@ -1,136 +1,115 @@
 import numpy as np
-import numpy.random as nr
-import matplotlib.pylab as plt
-import matplotlib.colors as colors
-import circuit_components as cc
-import itertools as it
-from copy_phase_space import CopyPhaseSpace, evolve
-#from copy_phase_space import evolve
+from gate_seq2symplectic import gate_sequence2symplectic_form_merged, symplectic_inverse
+from quasi_dist import W_state_list_1q, W_meas_list_1q
+from make_state import makeState1q, makeMeas1q
 
-d = 3
-ps = CopyPhaseSpace(d,1)
+import scipy.optimize as opt
+import time
 
-def chop_zero(x):
-    if np.isclose(x,0): return 0
-    else: return x
+DIM= 3
 
-def W_neg_state(state,s):
-    A0s = ps.A0_1q(s)
-    coords = it.product(*([range(d)]*2))
-    wig_neg = 0.
-    for xp in coords:
-        wig_neg = wig_neg + abs(1./d * np.real( np.trace(
-                    np.dot(state, evolve(A0s, ps.D(xp)) )) ))
-#    return chop_zero(np.log(wig_neg))
-    return np.log(wig_neg)
+'''Default expression of a phase space point is (x1, p1, x2, p2, ..., xN, pN)'''
+x_range = list(range(DIM))
+p_range = list(range(DIM))
 
-def W_neg_ch1q(gate1q, s_in, s_out):
-    A0sin = ps.A0_1q(-s_in)
-    A0sout = ps.A0_1q(s_out)
-    coords = it.product(*([range(d)]*2))
-    wig_neg_list = []
-    for xp in coords:
-        coords2 = it.product(*([range(d)]*2))
-        wig_neg = 0.
-        Aev = evolve(evolve(A0sin, ps.D(xp)), gate1q)
-        for px in coords2:
-            wig_neg = wig_neg + abs(1./d * np.real( np.trace(
-                        np.dot(evolve(A0sout, ps.D(px)), Aev)) ))
-        wig_neg_list.append(wig_neg)
-#    return chop_zero(np.log(max(wig_neg_list)))
-    return np.log(max(wig_neg_list))
-
-def W_neg_csum(s_C_in,s_T_in,s_C_out,s_T_out):
-    A0sin = np.kron(ps.A0_1q(-1.*s_C_in),ps.A0_1q(-1.*s_T_in))
-    A0sout = np.kron(ps.A0_1q(s_C_out),ps.A0_1q(s_T_out))
-    CSUM = np.array(
-      [[1., 0., 0., 0., 0., 0., 0., 0., 0.],
-       [0., 1., 0., 0., 0., 0., 0., 0., 0.],
-       [0., 0., 1., 0., 0., 0., 0., 0., 0.],
-       [0., 0., 0., 0., 0., 1., 0., 0., 0.],
-       [0., 0., 0., 1., 0., 0., 0., 0., 0.],
-       [0., 0., 0., 0., 1., 0., 0., 0., 0.],
-       [0., 0., 0., 0., 0., 0., 0., 1., 0.],
-       [0., 0., 0., 0., 0., 0., 0., 0., 1.],
-       [0., 0., 0., 0., 0., 0., 1., 0., 0.]])
-
-    wig_neg_list = []
-    coords_C_in = it.product(*([range(d)]*2))
-    for xpC in coords_C_in:
-        coords_T_in = it.product(*([range(d)]*2))
-        for xpT in coords_T_in:
-            wig_neg = 0.
-            Din = np.kron(ps.D(xpC),ps.D(xpT))
-            Aev = evolve(evolve(A0sin,Din), CSUM)
-            coords_C_out = it.product(*([range(d)]*2))
-            for pxC in coords_C_out:
-                coords_T_out = it.product(*([range(d)]*2))
-                for pxT in coords_T_out:
-                    Dout = np.kron(ps.D(pxC),ps.D(pxT))
-                    wig_neg = wig_neg + abs(1./d/d * np.real( np.trace(np.dot(evolve(A0sout, Dout), Aev)) ))
-            wig_neg_list.append(wig_neg)
-#    return chop_zero(np.log(max(wig_neg_list)))
-    return np.log(max(wig_neg_list))
-
-def W_neg_meas(meas,s):
-    A0s = ps.A0_1q(-s)
-    wig = []
-    coords = it.product(*([range(d)]*2))
-    for xp in coords:
-        wig.append(abs(np.real( np.trace(np.dot(meas, evolve(A0s, ps.D(xp)) )) )))
-#    return chop_zero(np.log(max(wig)))
-    return np.log(max(wig))
-
-def calc_neg_state(state_string, s_list):
-    neg_state = 0.
-    for state_index in range(len(state_string)):
-        neg_state = neg_state + W_neg_state(cc.makeState1q(state_string[state_index]),s_list[state_index])
-#    return chop_zero(neg_state)
+'''State Preparation'''
+def neg_state(state_string,gamma):
+    qudit_num = len(state_string)
+    neg_state = 1
+    for qudit_index in range(qudit_num):
+        S_id_1q = np.eye(2)
+        Cov_1q = np.diag(gamma[2*qudit_index:2*qudit_index+2])
+        rho = makeState1q(state_string[qudit_index])
+        W_list = np.reshape(W_state_list_1q(rho,Cov_1q,S_id_1q),(DIM,DIM))
+        neg_state = neg_state*(abs(W_list).sum())
     return neg_state
 
-def calc_neg_channel(channel_string,s_list):
-    neg_channel = 0.
-    number_qutrit = int(len(s_list)/2)
-    for channel_index in range(len(channel_string)):
-        if channel_string[channel_index] == 'C':
-            [Cindex, Tindex] = [channel_index, channel_string.find('T')]
-            neg_channel = neg_channel + W_neg_csum(s_list[Cindex], s_list[Tindex], s_list[Cindex + number_qutrit], s_list[Tindex + number_qutrit])
-        elif channel_string[channel_index] != 'T':
-            gate1q = cc.makeGate1q(channel_string[channel_index])
-            neg_channel = neg_channel + W_neg_ch1q(gate1q, s_list[channel_index],s_list[channel_index + number_qutrit])
-#    return chop_zero(neg_channel)
-    return neg_channel
+'''Circuit components'''
+'''Not need for Clifford circuits'''
+'''phase space point update: w -> Sw + z (deterministic)'''
 
-def calc_neg_meas(meas_string,s_list):
-    neg_meas = 0.
-    for meas_index in range(len(meas_string)):
-        idx = '0' if meas_string[meas_index]=='x' else meas_string[meas_index]
-        neg_meas = neg_meas + W_neg_meas(cc.makeState1q(idx),s_list[meas_index])
-#    return chop_zero(neg_meas)
+'''Measurment on a single output mode'''
+def neg_meas(meas_string, gamma, S):
+    Cov = np.diag(gamma)
+    MeasO, Meas_mode = makeMeas1q(meas_string)
+    W_list = np.reshape(W_meas_list_1q(MeasO,Meas_mode, Cov,S),(DIM,DIM))
+    neg_meas = np.max(abs(W_list))
     return neg_meas
 
-def calc_neg_circuit_list(sequence,s_list):
-    neg_circuit_list = []
-    circuit_depth = len(sequence) - 2
-    number_qutrit = len(sequence[0])
+'''Total negativity of the circuit'''
+def neg_tot(state_string,gate_string,meas_string,gamma):
+    Stot, ztot = gate_sequence2symplectic_form_merged(gate_sequence)
+    S = symplectic_inverse(Stot)
+    return neg_state(state_string,gamma) * neg_meas(meas_string, gamma, S)
 
-    neg_circuit_list.append(calc_neg_state(sequence[0],s_list[0:number_qutrit]))
-    for l_index in range(circuit_depth):
-        neg_circuit_list.append( calc_neg_channel(sequence[l_index+1],s_list[(l_index)*number_qutrit:(l_index+2) * number_qutrit]))
-    neg_circuit_list.append(calc_neg_meas(sequence[-1],s_list[circuit_depth * number_qutrit:(circuit_depth + 1) * number_qutrit]))
+'''Optimize the parameter gamma'''
+def opt_neg_tot(circuit_string, opt_method = 'Powell', show_log = False):
+    state_string = circuit_string[0]
+    gate_sequence = circuit_string[1:-1]
+    meas_string = circuit_string[-1]
 
-    return neg_circuit_list
+    Stot, ztot = gate_sequence2symplectic_form_merged(gate_sequence)
+    S = symplectic_inverse(Stot)
+#    S = Stot
+    qudit_num = len(state_string)
+    def cost_function(x):
+        return neg_state(state_string,x) * neg_meas(meas_string, x, S)
+    x0 = 2.*np.random.rand(2*qudit_num)-1.
+    bnds = []
+    for ll in range(2*qudit_num):
+        bnds.append([-10., 10.])
 
-def calc_neg_circuit(sequence,s_list):
-    circuit_depth = len(sequence) - 2
-    number_qutrit = len(sequence[0])
+    start_time = time.time()
+    optimize_result = opt.minimize(cost_function, x0,
+#    bounds=bnds,
+    method=opt_method,
+    options={'disp':show_log}
+    )
+    optimized_x = optimize_result.x
+    optimized_value = cost_function(optimized_x)
 
-    neg_circuit = calc_neg_state(sequence[0],s_list[0:number_qutrit])
-    for l_index in range(circuit_depth):
-        neg_circuit = neg_circuit + calc_neg_channel(sequence[l_index+1],s_list[(l_index)*number_qutrit:(l_index+2) * number_qutrit])
-    neg_circuit = neg_circuit + calc_neg_meas(sequence[-1],s_list[circuit_depth * number_qutrit:(circuit_depth+1) * number_qutrit])
+    if(show_log):
+        print('------------------------------------------------------------------------')
+        print('Optimization method: ', opt_method)
+        print('Initial_s_list: ', x0)
+        print('Optimized_s_list: ', optimized_x)
+        print('Optmized Log-Negativity (state): ', neg_state(state_string,optimized_x))
+        print('Optmized Log-Negativity (meas): ', neg_meas(meas_string, optimized_x, S))
+        print('Optmized Log-Negativity (total): ', optimized_value, '(Computation time: ',(time.time() - start_time),'s)')
+        print('------------------------------------------------------------------------')
+    return optimized_x, optimized_value
 
-#    if np.isclose(neg_circuit,0): neg_circuit = 0
-#    return chop_zero(neg_circuit)
-    return neg_circuit
+def show_neg_result(circuit_string, gamma=None):
+    print('----------------------------------------------------------------')
+    state_string = circuit_string[0]
+    qudit_num = len(state_string)
+    print('State string:\t\t', state_string)
+    print('Number of qutrit:\t', qudit_num)
 
+    gate_sequence = circuit_string[1:-1]
+    Stot, ztot = gate_sequence2symplectic_form_merged(gate_sequence)
+    S = symplectic_inverse(Stot)
+    print('Gate sequence: \t\t', gate_sequence)
+
+    meas_string = circuit_string[-1]
+    print('Measurement string:\t', meas_string)
+
+    if gamma is None:
+        gamma = np.zeros(2*qudit_num)
+
+    print('Covariance Matrix:\t diag',gamma)
+    neg_state_Wigner = neg_state(state_string,gamma)
+    neg_meas_Wigner = neg_meas(meas_string, gamma, S)
+    neg_tot_Wigner = neg_state_Wigner*neg_meas_Wigner
+
+    print('State Negativity:\t', neg_state_Wigner)
+    print('Measurement Negativity:\t', neg_meas_Wigner)
+    print('Total Negativity:\t',neg_tot_Wigner)
+    print('----------------------------------------------------------------')
+
+
+'''Example code'''
+#circuit_string = ['TTTTSTS','11S11H1','1CT111S','11Z1111']
+#show_neg_result(circuit_string)
+#gamma_opt, neg_opt = opt_neg_tot(circuit_string,show_log = False)
+#show_neg_result(circuit_string, gamma_opt)

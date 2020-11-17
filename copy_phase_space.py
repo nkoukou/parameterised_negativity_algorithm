@@ -167,6 +167,24 @@ class CopyPhaseSpace(object):
             cliff = np.kron(cliff, cliff_1q)
         return cliff
 
+    def wgate(self, gate, s_in, s_out):
+        ''' Calculates the Wigner distribution of gate directly in the
+            composite Hilbert space - with smoothing function.
+        '''
+        xcoords = it.product(*([range(self.dim)]*(2*self.n)))
+        wig = []
+        for x in xcoords:
+            ycoords = it.product(*([range(self.dim)]*(2*self.n)))
+            for y in ycoords:
+                Aev = evolve(self.A(x, -s_in), gate)
+                w = 1/self.dim**self.n * np.real(
+                    np.trace(np.dot(self.A(y, s_out), Aev)) )
+                if np.isclose(w,0): w = 0
+                wig.append(w)
+        wig = np.array(wig).reshape((self.dim**(2*self.n),
+                                      self.dim**(2*self.n))).T
+        return wig
+
 # Auxiliary classes, variables and functions
 inttypes = (int, np.integer)
 A0d2 = np.array([[1, (1+1j)/2],[(1-1j)/2, 0]])
