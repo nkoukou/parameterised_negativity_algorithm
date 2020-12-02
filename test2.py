@@ -326,7 +326,8 @@ gate_sequence = random_gate_sequence(qudit_num,gate_num)
 #print(*gate_sequence,sep='\n')
 meas_string = '0111111'
 optimize_neg(state_string,gate_sequence,meas_string,path='test00')
-#optimize_neg('TTTT',[[[0],TGate],[[0,1],CSUM],[[3],TGate],[[0,3],CSUM],[[0],TGate],[[1,2],CSUM],[[1],TGate],[[2,0],CSUM]],'0010')
+
+optimize_neg('TTTT',[[[0],TGate],[[0,1],CSUM],[[3],TGate],[[0,3],CSUM],[[0],TGate],[[1,2],CSUM],[[1],TGate],[[2,0],CSUM]],'0010')
 
 
 '''Sample codes'''
