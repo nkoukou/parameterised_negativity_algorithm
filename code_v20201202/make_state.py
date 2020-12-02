@@ -1,5 +1,4 @@
-import autograd.numpy as np
-#import numpy as np
+import numpy as np
 
 DIM = 3
 
@@ -46,7 +45,7 @@ def makeState1q(state_string):
     elif state_string=='N':
         state = psi2rho(1/np.sqrt(6) * np.array([-1, 2, -1]))
     elif state_string=='T':
-        state = psi2rho(1/np.sqrt(3) * np.array([1, ksi, 1/ksi]))
+        state = psi2rho(1/np.sqrt(3) * np.array([ksi, 1, 1/ksi]))
     else:
         raise Exception('Invalid state string')
     return state
@@ -87,23 +86,3 @@ def makeMeas(meas_string):
     measp = np.kron( np.kron(np.eye(ids[0]), MeasO), np.eye(ids[1]) )
 
     return measp
-
-
-def makeMeasMq(meas_string):
-    MeasO_list = []
-    Meas_mode_list = []
-    for meas_index in range(len(meas_string)):
-        if meas_string[meas_index] == 'X':
-            MeasO_list.append(makeState1q('+'))
-            Meas_mode_list.append(meas_index)
-        if meas_string[meas_index] == 'Z':
-            MeasO_list.append(makeState1q('0'))
-            Meas_mode_list.append(meas_index)
-        if meas_string[meas_index] == 'T':
-            MeasO_list.append(makeState1q('T'))
-            Meas_mode_list.append(meas_index)
-    return MeasO_list, Meas_mode_list
-
-'''Sample Code'''
-#MeasO_list, Meas_mode_list = makeMeasMq('TT1T1XZ11')
-#print(len(Meas_mode_list))

@@ -37,8 +37,8 @@ def neg_meas(meas_string, gamma, S):
     return neg_meas
 
 '''Total negativity of the circuit'''
-def neg_tot(state_string,gate_string,meas_string,gamma):
-    Stot, ztot = gate_sequence2symplectic_form_merged(gate_sequence)
+def neg_tot(state_string, gate_string, meas_string, gamma):
+    Stot, ztot = gate_sequence2symplectic_form_merged(gate_string)
     S = symplectic_inverse(Stot)
     return neg_state(state_string,gamma) * neg_meas(meas_string, gamma, S)
 
@@ -108,8 +108,19 @@ def show_neg_result(circuit_string, gamma=None):
     print('----------------------------------------------------------------')
 
 
+def calc_hoeffding_bound(eps, delta, circuit_string):
+    neg = neg_tot(circuit_string[0], circuit_string[1:-1], circuit_string[-1],
+              gamma = np.zeros(2*len(circuit_string[0])))
+    gamma_opt, neg_opt = opt_neg_tot(circuit_string)
+    sample_size = int( 2/eps**2 * neg**2 * np.log(2/delta) )
+    sample_size_opt = int( 2/eps**2 * neg_opt**2 * np.log(2/delta) )
+    return sample_size, sample_size_opt, gamma_opt
+
 '''Example code'''
-#circuit_string = ['TTTTSTS','11S11H1','1CT111S','11Z1111']
-#show_neg_result(circuit_string)
-#gamma_opt, neg_opt = opt_neg_tot(circuit_string,show_log = False)
-#show_neg_result(circuit_string, gamma_opt)
+# circuit_string = ['TTTTSTS','11S11H1','1CT111S','11Z1111']
+# show_neg_result(circuit_string)
+# neg = neg_tot(circuit_string[0], circuit_string[1:-1], circuit_string[-1],
+#               gamma = np.zeros(2*len(circuit_string[0])))
+# gamma_opt, neg_opt = opt_neg_tot(circuit_string,show_log = False)
+# show_neg_result(circuit_string, gamma_opt)
+# opt_neg = opt_neg_tot(circuit_string)

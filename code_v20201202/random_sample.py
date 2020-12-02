@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
-from gate_seq2symplectic import gate_sequence2symplectic_form_merged, symplectic_inverse
+from gate_seq2symplectic \
+    import gate_sequence2symplectic_form_merged, symplectic_inverse
 from quasi_dist import W_state_list_1q, W_meas_list_1q
 from make_state import makeState1q, makeMeas1q
 DIM = 3
@@ -19,7 +20,7 @@ def xp2index_1q(xp):
     return xp[0]*DIM + xp[1]
 def index2xp_1q(index):
     return np.array([index/DIM,index%DIM],dtype=int)
-    
+
 ps_array_1q = []
 for xp in itertools.product(x_range,repeat=2):
     xp = np.array(xp).flatten()
@@ -50,14 +51,14 @@ def get_p_dist_1q(rho,Cov,S):
     p_norm = p_dist.sum()
     p_dist = p_dist/p_norm
     return p_dist,sign_dist,p_norm
-    
+
 def get_p_string(state_string,gamma):
     qudit_num = len(state_string)
-    
+
     p_string = []
     sign_string = []
     p_norm_out = 1
-    
+
     S_eye_1q = np.eye(2,dtype=int)
     for qudit_index in range(qudit_num):
         rho = makeState1q(state_string[qudit_index])
@@ -67,7 +68,7 @@ def get_p_string(state_string,gamma):
         sign_string.append(sign_dist)
         p_norm_out = p_norm_out*p_norm
     return p_string, sign_string, p_norm_out
-    
+
 def sample_circuit(circuit_string,gamma,sample_size):
     state_string = circuit_string[0]
     qudit_num = len(state_string)
@@ -79,8 +80,9 @@ def sample_circuit(circuit_string,gamma,sample_size):
     MeasO, Meas_mode = makeMeas1q(meas_string)
     Cov = np.diag(gamma)
     W_meas_list = np.reshape(W_meas_list_1q(MeasO,Meas_mode, Cov,S),(DIM,DIM))
-#    W_meas_list = np.reshape(W_meas_list_1q(MeasO,Meas_mode, Cov,Stot),(DIM,DIM))
-    
+    # W_meas_list = np.reshape(W_meas_list_1q(MeasO,Meas_mode, Cov,Stot),
+    #                          (DIM,DIM))
+
     output_list = []
     for run in range(sample_size):
         xp_string, sign = sample_xp_string(p_string,sign_string)
@@ -90,7 +92,7 @@ def sample_circuit(circuit_string,gamma,sample_size):
         ll = xp_string[2*Meas_mode:2*Meas_mode+2]%DIM
         output = np.real(p_norm_out*sign*W_meas_list[ll[0],ll[1]])
         output_list.append(output)
-    return output_list
+    return np.array(output_list)
 
 def accum_mean(list):
     size = len(list)
@@ -103,7 +105,8 @@ def accum_mean(list):
 '''Sample Code'''
 #print(index2xp_1q(2))
 #print(xp2index_1q([0,2]))
-#circuit_string = ['0STNT1T','11S11H1','1CT111S','1C11TSH','C1TH11S','1T11HCS','1111CTS','TSS111C','11111Z1']
+# circuit_string = ['0STNT1T','11S11H1','1CT111S','1C11TSH','C1TH11S',
+#                   '1T11HCS','1111CTS','TSS111C','11111Z1']
 #state_string = circuit_string[0]
 #rho = makeState1q('T')
 #Cov = np.array([[0,0],[0,0]])

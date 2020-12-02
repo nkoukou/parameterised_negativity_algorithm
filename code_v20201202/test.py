@@ -24,7 +24,7 @@ DIM = 3
 # circuit_string = ['TS0N', 'T1C1', '1TC1', '1T1C', '1SSH', 'H111', '1C1T',
 #                   '111Z']
 circuit_string = random_circuit_string(n=4, L=10, given_state=None,
-                                       given_measurement=None, p_csum=0.23)
+                                       given_measurement=None, p_csum=0.6)
 
 # circuit_string = ['1NSN','1HH1', '1TC1', 'HS1S', 'H111', 'CT11', 'T1C1', \
 #                   '1HSH', 'HHSH', '1C1T', 'HSSS', '1SHS', 'CT11', 'CT11',\
@@ -41,9 +41,9 @@ circuit_string = random_circuit_string(n=4, L=10, given_state=None,
 
 print('Calculating Born probability...')
 if len(circuit_string[0])>7:
-    print('\n' + '!!! If number of qudits is higher than 7, it is too hard to \
-          calculate exact probability... setting p = -0.2 \n')
-    pb = -0.2
+    print('\n' + '!!! The number of qudits is higher than 7 - it is too hard \
+          to calculate exact probability... setting p = -0.5 \n')
+    pb = -0.5
 else:
     pb = simulate_circuit(circuit_string)
 
@@ -61,7 +61,7 @@ show_neg_result(circuit_string)
 gamma_opt, neg_opt = opt_neg_tot(circuit_string, show_log=False)
 show_neg_result(circuit_string, gamma_opt)
 
-sample_size = 10000
+sample_size = 20000
 gamma = np.zeros(2*qudit_num)
 sample_list = sample_circuit(circuit_string,gamma,sample_size)
 print('Wigner sampling average: ', np.mean(sample_list))
