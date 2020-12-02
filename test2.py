@@ -319,8 +319,8 @@ def random_gate_sequence(qudit_num, gate_num):
             gate_sequence.append([[index1,index2],CSUM])
     return gate_sequence
 
-qudit_num = 2
-gate_num = 5
+qudit_num = 7
+gate_num = 15
 state_string = 'TTTTTTT'
 gate_sequence = random_gate_sequence(qudit_num,gate_num)
 #print(*gate_sequence,sep='\n')
