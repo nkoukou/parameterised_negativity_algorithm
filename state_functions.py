@@ -2,9 +2,23 @@ import numpy as np
 from math import isclose
 np.set_printoptions(precision=4, suppress=True)
 
-ksi = np.exp(2*np.pi*1.j/9)
 
-# State functions
+def inverse(a, dim):
+    ''' Calculates multiplicative inverse of number a (mod d).
+    '''
+    if a==0:
+        return 0
+    cand = np.arange(dim)
+    inverses = (cand*a)%dim
+    return cand[inverses==1][0]
+
+def element(k, b, dim):
+    ''' Creates unit matrix element for a 1-copy subsystem.
+    '''
+    element = np.zeros((dim, dim))
+    element[k%dim,b%dim] = 1
+    return element
+
 def psi2rho(psi):
     ''' Converts a pure state psi (1d numpy array) to a density operator (2d
     numpy array).
@@ -17,13 +31,6 @@ def psi2rho(psi):
     else:
         raise Exception('The trace of the state is {0:.2f}'.format(
                          np.trace(rho)))
-
-### Important magic states
-strange = psi2rho( 1/np.sqrt(2) * np.array([0, 1, -1])      )
-norrell = psi2rho( 1/np.sqrt(6) * np.array([-1, 2, -1])     )
-tmagik  = psi2rho( 1/np.sqrt(2) * np.array([ksi, 1, 0])     )
-tmagic  = psi2rho( 1/np.sqrt(3) * np.array([1, ksi, 1/ksi]) )
-###
 
 def maxmixed(n):
     return 1/n * np.eye(n)

@@ -21,23 +21,6 @@ def makeState(state_string):
         state = np.kron(state, temp)
     return state
 
-def calcWstate(state_string, s):
-    ''' Calculates the Wigner distribution from the generating state string and
-        smoothing parameter s,
-        e.g. '+', '000SS', '012+TSN'.
-    '''
-    wig = 1
-    for i in range(len(state_string)):
-        state = makeState(state_string[i])
-        coords = it.product(*([range(ps1.dim)]*2))
-        temp = []
-        for x in coords:
-            w = 1/ps1.dim * np.real(np.trace(np.dot(state, ps1.A_1q(x, s[i]))))
-            if np.isclose(w,0): w = 0
-            temp.append(w)
-        wig = np.kron(wig, np.array(temp))
-    return wig
-
 def makeGate(gate_string):
     ''' Makes a gate matrix from the generating gate string,
         e.g. 'H', '1HS', '1HSM', '1CT11'.

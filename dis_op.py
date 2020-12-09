@@ -14,12 +14,7 @@ X = np.roll(np.eye(DIM), 1, axis=0)
 Z = np.diag(omega**np.arange(DIM))
 
 '''Get 2^{-1}'''
-def get_Inv(p):
-    out_list = []
-    for index in range(DIM):
-        out_list.append(index*p%DIM)
-    return out_list.index(1)
-Inv2 = get_Inv(2)
+Inv2 = 2
 
 '''Power of matrix'''
 def power(a, p):
@@ -34,7 +29,7 @@ def power(a, p):
 def chi(q):
     return np.exp(1.j*2.*np.pi*q/DIM)
 
-''' Calculates displacement operator D at point w = (p,q).'''
+''' Calculates 1-qudit displacement operator D at point w = (p,q).'''
 def D1q(w):
     p = w[0]%DIM
     q = w[1]%DIM
