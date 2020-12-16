@@ -1,5 +1,6 @@
 import autograd.numpy as np
 from circuit_components import(makeGate)
+from random_circuit_generator import(random_circuit)
 from opt_neg import(optimize_neg)
 
 # from mpl_toolkits.mplot3d import Axes3D
@@ -28,15 +29,13 @@ def random_gate_sequence(qudit_num, gate_num):
             gate_sequence.append([[index1,index2],CSUM])
     return gate_sequence
 
-qudit_num = 3
-gate_num = 15
-state_string = '0TT' #'TTTTTTT'
-gate_sequence = random_gate_sequence(qudit_num, gate_num)
-#print(*gate_sequence,sep='\n')
-meas_string = '0111111'
-optimize_neg(state_string, gate_sequence, meas_string, path='test00')
+circuit = random_circuit(qudit_num=3,
+                         C1qGate_num=7, TGate_num=4, CSUMGate_num=5,
+                         given_state='0TT',
+                         given_measurement='011')
+optimize_neg(circuit, path='test00')
 
-optimize_neg('TTTT', [[[0],TGate ],
+circuit = ['TTTT', [[[0],TGate ],
                       [[0,1],CSUM],
                       [[3],TGate ],
                       [[0,3],CSUM],
@@ -44,7 +43,8 @@ optimize_neg('TTTT', [[[0],TGate ],
                       [[1,2],CSUM],
                       [[1],TGate ],
                       [[2,0],CSUM]
-                     ],'0010')
+                     ],'0010']
+optimize_neg(circuit)
 
 
 '''Sample codes'''

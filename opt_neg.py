@@ -10,15 +10,15 @@ from circuit_components import(makeState1q)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q,
                    neg_gate_Cliff_2q, neg_meas_1q)
 
-def optimize_neg(state_string, gate_sequence, meas_string, opt_method='B',
-                 path='test_directory'):
-    ''' state_string: 'T0TT0T'
-        gate_sequence: [[[state_index],U1q],
-                        [[state_index_c,state_index_t],U2q], ... ]
-        meas_string:  '000000'
+def optimize_neg(circuit, opt_method='B', path='test_directory'):
+    ''' List circuit contains 3 elements:
+        - state_string: 'T0TT0T'
+        - gate_sequence: [[[state_index], U1q],
+                          [[state_index_c, state_index_t], U2q],
+                          ... ]
+        - meas_string:  '000000'
     '''
-    # qudit_num = len(state_string)
-    # x_length = qudit_num
+    state_string, gate_sequence, meas_string = circuit
 
     current_state_index = []
     init_state_index = []
@@ -55,12 +55,12 @@ def optimize_neg(state_string, gate_sequence, meas_string, opt_method='B',
 
     x_len = x_index
 
-    print('x_len:', x_len)
-    print('init_state_index:', init_state_index)
-    print('gate_1q_index:', gate_1q_index)
-    print('gate_2q_index:', gate_2q_index)
-    print('meas_index:', meas_index)
-    print('---------------------------------------------------------------')
+    # print('x_len:', x_len)
+    # print('init_state_index:', init_state_index)
+    # print('gate_1q_index:', gate_1q_index)
+    # print('gate_2q_index:', gate_2q_index)
+    # print('meas_index:', meas_index)
+    # print('---------------------------------------------------------------')
 
     def cost_function(x):
         Gamma_list = []

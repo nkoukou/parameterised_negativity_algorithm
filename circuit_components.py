@@ -183,6 +183,7 @@ def makeGate(gate_string):
 def makeMeasMq(meas_string):
     ''' Returns the measurement output and mode from the generating all-qudit
     measurement string:
+        '1' - Trace out
         'Z' - Projection on |0>
         'X' - Projection on |+>
         'T' - Projection on |T>
