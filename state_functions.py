@@ -1,7 +1,12 @@
 import numpy as np
-from math import isclose
 np.set_printoptions(precision=4, suppress=True)
 
+############################ Phase space dimension ############################
+DIM   = 3
+tau   = -np.exp(1.j*np.pi/DIM)
+omega = tau*tau
+ksi   = np.exp(2*np.pi*1.j/9)
+###############################################################################
 
 def inverse(a, dim):
     ''' Calculates multiplicative inverse of number a (mod d).
@@ -11,6 +16,20 @@ def inverse(a, dim):
     cand = np.arange(dim)
     inverses = (cand*a)%dim
     return cand[inverses==1][0]
+
+def power(a, p):
+    ''' Calculates the matrix power a**p for given 2d-array a and non-negative
+        integer p.
+    '''
+    if p==0:
+        return np.eye(a.shape[0])
+    elif p==1:
+        return a
+    else:
+        return np.dot(a, power(a, (p-1)))
+
+def chi(q, dim):
+    return np.exp(1.j*2.*np.pi*q/dim)
 
 def element(k, b, dim):
     ''' Creates unit matrix element for a 1-copy subsystem.
@@ -25,8 +44,8 @@ def psi2rho(psi):
     '''
     psi = np.array(psi)
     rho = np.outer(psi, np.conjugate(psi))
-    if (isclose(np.real(np.trace(rho)), 1) and
-        isclose(np.imag(np.trace(rho)), 0)):
+    if (np.isclose(np.real(np.trace(rho)), 1) and
+        np.isclose(np.imag(np.trace(rho)), 0)):
         return rho
     else:
         raise Exception('The trace of the state is {0:.2f}'.format(
