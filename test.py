@@ -31,12 +31,10 @@ def random_gate_sequence(qudit_num, gate_num):
 qudit_num = 3
 gate_num = 15
 state_string = '0TT' #'TTTTTTT'
-gate_sequence = random_gate_sequence(qudit_num,gate_num)
+gate_sequence = random_gate_sequence(qudit_num, gate_num)
 #print(*gate_sequence,sep='\n')
 meas_string = '0111111'
 optimize_neg(state_string, gate_sequence, meas_string, path='test00')
-
-print('ALL DONE UP TO TTTT')
 
 optimize_neg('TTTT', [[[0],TGate ],
                       [[0,1],CSUM],
