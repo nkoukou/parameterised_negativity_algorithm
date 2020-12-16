@@ -1,4 +1,3 @@
-old/*
-saves/*
-
 __pycache__/*
+old/*
+.DS_Store
