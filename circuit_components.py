@@ -193,17 +193,9 @@ def makeMeasMq(meas_string):
     for meas_index in range(len(meas_string)):
         if meas_string[meas_index] == '1':
             continue
-        elif meas_string[meas_index] == 'X':
-            MeasO_list.append(makeState1q('+'))
-            Meas_mode_list.append(meas_index)
-        elif meas_string[meas_index] == 'Z':
-            MeasO_list.append(makeState1q('0'))
-            Meas_mode_list.append(meas_index)
-        elif meas_string[meas_index] == 'T':
-            MeasO_list.append(makeState1q('T'))
-            Meas_mode_list.append(meas_index)
         else:
-            raise Exception('Invalid measurement string')
+            MeasO_list.append(makeState1q(meas_string[meas_index]))
+            Meas_mode_list.append(meas_index)
     return MeasO_list, Meas_mode_list
 
 

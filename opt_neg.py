@@ -6,7 +6,7 @@ from autograd import(grad)
 from scipy.optimize import(Bounds, minimize)
 from scipy.optimize import(basinhopping)
 
-from circuit_components import(makeState1q)
+from circuit_components import(makeState1q, makeGate)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q,
                    neg_gate_Cliff_2q, neg_meas_1q)
 
@@ -33,8 +33,8 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     for gate_str in gate_sequence:
         if len(gate_str[0])==1:
             t_index = (gate_str[0])[0]
-            gate_1q_index.append([[current_state_index[t_index],x_index],
-                                   gate_str[1]])
+            gate_1q_index.append([[current_state_index[t_index], x_index],
+                                   makeGate(gate_str[1])])
             current_state_index[t_index] = x_index
             x_index += 1
         elif len(gate_str[0])==2:
@@ -42,7 +42,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             t_index = (gate_str[0])[1]
             gate_2q_index.append( [[current_state_index[c_index],
                                     current_state_index[t_index],
-                                    x_index,x_index+1],gate_str[1]])
+                                    x_index,x_index+1], makeGate(gate_str[1])])
             current_state_index[c_index] = x_index
             current_state_index[t_index] = x_index+1
             x_index += 2
@@ -50,7 +50,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     meas_index = []
     for meas_str in meas_string:
         if meas_str != '1':
-            meas_index.append([x_index,makeState1q(meas_str)])
+            meas_index.append([x_index, makeState1q(meas_str)])
             x_index += 1
 
     x_len = x_index
@@ -97,9 +97,9 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     start_time = time.time()
     out = cost_function(x0)
     dt = time.time() - start_time
-    print('Wigner Log Neg:', out)
-    print('Computation time:', dt)
     print('---------------------------------------------------------------')
+    print('Wigner Log Neg:  ', out)
+    print('Computation time:', dt)
 
 #    x0 = 2*np.random.rand(8*x_len)-1
     optimize_result, dt = optimizer(cost_function, x0, opt_method)
@@ -107,9 +107,10 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     # save_results(optimize_result)
     optimized_x = optimize_result.x
     optimized_value = cost_function(optimized_x)
-    print(optimized_x)
-    print('Optimized Log negativity:\t', optimized_value)
-    print('Computation time:', dt)
+    print('---------------------------------------------------------------')
+    print('Optimized Log Neg:', optimized_value)
+    print('Computation time: ', dt)
+    # print(optimized_x)
 
     directory = os.path.join('data', path)
     if not os.path.isdir(directory): os.mkdir(directory)

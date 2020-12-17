@@ -1,50 +1,30 @@
 import autograd.numpy as np
 from circuit_components import(makeGate)
-from random_circuit_generator import(random_circuit)
+from random_circuit_generator import(random_circuit, show_circuit)
 from opt_neg import(optimize_neg)
 
 # from mpl_toolkits.mplot3d import Axes3D
 # import matplotlib.pyplot as plt
 
-def show_circuit(circuit_string):
-    state_string = circuit_string[0]
-    gate_sequence = circuit_string[1:-1]
-    meas_string = circuit_string[-1]
-    print(*state_string,sep='   ')
-    for gate_string in gate_sequence:
-        print(*gate_string,sep='   ')
-    print(*meas_string,sep='   ')
-    return 0
-
-TGate = makeGate('T')
-CSUM = makeGate('C+')
-def random_gate_sequence(qudit_num, gate_num):
-    gate_sequence = []
-    for index in range(gate_num):
-        if np.random.randint(2) == 0:
-            gate_sequence.append([[np.random.randint(qudit_num)],TGate])
-        elif np.random.randint(2) == 1:
-            [index1, index2] = np.random.choice(range(qudit_num), size=2,
-                                                replace=False)
-            gate_sequence.append([[index1,index2],CSUM])
-    return gate_sequence
-
-circuit = random_circuit(qudit_num=3,
-                         C1qGate_num=7, TGate_num=4, CSUMGate_num=5,
-                         given_state='0TT',
-                         given_measurement='011')
+circuit = random_circuit(qudit_num=4,
+                         C1qGate_num=5, TGate_num=3, CSUMGate_num=3,
+                         given_state='0TTT',
+                         given_measurement='0+11')
+show_circuit(circuit)
 optimize_neg(circuit, path='test00')
 
-circuit = ['TTTT', [[[0],TGate ],
-                      [[0,1],CSUM],
-                      [[3],TGate ],
-                      [[0,3],CSUM],
-                      [[0],TGate ],
-                      [[1,2],CSUM],
-                      [[1],TGate ],
-                      [[2,0],CSUM]
-                     ],'0010']
-optimize_neg(circuit)
+# TGate = makeGate('T')
+# CSUM = makeGate('C+')
+# circuit = ['TTTT', [[[0],TGate ],
+#                       [[0,1],CSUM],
+#                       [[3],TGate ],
+#                       [[0,3],CSUM],
+#                       [[0],TGate ],
+#                       [[1,2],CSUM],
+#                       [[1],TGate ],
+#                       [[2,0],CSUM]
+#                       ],'0010']
+# optimize_neg(circuit)
 
 
 '''Sample codes'''
