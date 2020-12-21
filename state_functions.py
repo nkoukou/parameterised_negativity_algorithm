@@ -105,6 +105,12 @@ def addNoise(rho, eps):
     '''
     return (1-eps)*rho + eps*maxmixed(rho.shape[0])
 
+def evolve(X, U, is_state=True):
+    ''' Returns UXU^\dagger if is_state is True else U^\daggerXU.
+    '''
+    (U, V) = (U, U.conj().T) if is_state else (U.conj().T, U)
+    return np.dot(U, np.dot(X, V))
+
 def isRho(rho, off=1.0e-9):
     ''' Checks if rho is a valid quantum state.
     '''

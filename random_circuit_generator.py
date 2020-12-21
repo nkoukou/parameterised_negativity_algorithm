@@ -24,7 +24,7 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
 
     else:
         if len(given_state)!=qudit_num:
-            raise Exception('Number of qubits must be %d'%(qudit_num))
+            raise Exception('Number of qudits must be %d'%(qudit_num))
         state_string = given_state
 
     # gate_sequence
@@ -63,7 +63,7 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
             measurement_string += m
     else:
         if len(given_measurement)!=qudit_num:
-            raise Exception('Number of qubits is %d'%(qudit_num))
+            raise Exception('Number of qudits is %d'%(qudit_num))
         measurement_string = given_measurement
 
     circuit_string = [state_string] + [gates_sequence] + [measurement_string]

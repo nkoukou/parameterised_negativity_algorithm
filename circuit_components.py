@@ -46,9 +46,9 @@ def makeGate1q(gate_string, dim=DIM):
     if gate_string=='1':
         gate = np.eye(dim)
     elif gate_string=='H':
-        gate = np.array([[1., 1.,          1.         ],
-                         [1., omega,       omega*omega],
-                         [1., omega*omega, omega      ]])
+        gate = 1/np.sqrt(dim) * np.array([[1., 1.,          1.         ],
+                                          [1., omega,       omega*omega],
+                                          [1., omega*omega, omega      ]])
     elif gate_string=='S':
         gate = np.diag([1., omega, 1.])
     elif gate_string=='Z':
@@ -205,5 +205,5 @@ def makeMeasMq(meas_string):
 # gate2q = makeGate('1C+')
 # symp1q = gate2F('H')
 # symp2q = gate2F('C+')
-MeasO_list, Meas_mode_list = makeMeasMq('TT1T1XZ11111')
+# MeasO_list, Meas_mode_list = makeMeasMq('TT1T1+011111')
 # print(len(Meas_mode_list))

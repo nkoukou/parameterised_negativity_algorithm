@@ -1,7 +1,7 @@
 import autograd.numpy as np
 import itertools as it
 
-from state_functions import(DIM, tau, power)
+from state_functions import(DIM, tau, power, evolve)
 from circuit_components import(makeGate)
 
 x_range = list(range(DIM))
@@ -34,6 +34,7 @@ def x2Gamma(x):
     ''' Returns Hermitian matrix Gamma given array of independent parameters x
         with len(x) = 8.
     '''
+    print('GAMMA')
     return np.array([[ x[0],             x[1] + 1.j*x[2],  x[3] + 1.j*x[4] ],
                      [ x[1] - 1.j*x[2],  x[5],             x[6]+1.j*x[7]   ],
                      [ x[3] - 1.j*x[4],  x[6] - 1.j*x[7],  1-x[0]-x[5]     ]
@@ -49,6 +50,7 @@ def get_trace_D(Gamma):
     return np.reshape(np.array(out_list,dtype = "complex_"),(DIM,DIM))
 
 def get_F1q0(Gamma):
+    print('get_F1q0')
     D_Gamma_list = get_trace_D(Gamma)
     F1q0 = np.zeros((DIM,DIM), dtype="complex_")
     for w in it.product(range(DIM),repeat=2):
@@ -57,6 +59,7 @@ def get_F1q0(Gamma):
     return np.array(F1q0/DIM, dtype="complex_")
 
 def get_F1q_list(Gamma):
+    print('get_F1q_list')
     F1q0 = get_F1q0(Gamma)
     F_list = []
     for ll in it.product(range(DIM), repeat=2):
@@ -65,6 +68,7 @@ def get_F1q_list(Gamma):
     return np.reshape(np.array(F_list, dtype="complex_"), (DIM,DIM,DIM,DIM))
 
 def get_G1q_list(Gamma):
+    print('get_G1q_list')
     G_list = []
     for ll in it.product(range(DIM), repeat=2):
         p,q = ll[0],ll[1]
@@ -75,6 +79,7 @@ def W_state_1q(rho, Gamma):
     ''' Returns Gamma-distribution of rho.
         Output - (DIM, DIM) complex ndarray
     '''
+    print('W_state_1q')
     w_list = []
     F1q = get_F1q_list(Gamma)
     for ll in it.product(range(DIM), repeat=2):
@@ -85,11 +90,13 @@ def W_state_1q(rho, Gamma):
 def neg_state_1q(rho, Gamma):
     ''' Calculates sum-negativity of the Gamma-distribution of state rho.
     '''
+    print('neg_state_1q')
     return np.abs(W_state_1q(rho, Gamma)).sum()
 
 def W_meas_1q(E, Gamma):
     ''' Returns Gamma-distribution of measurement effect E.
     '''
+    print('W_meas_1q')
     w_list = []
     G1q = get_G1q_list(Gamma)
     for ll in it.product(range(DIM), repeat=2):
@@ -100,17 +107,21 @@ def W_meas_1q(E, Gamma):
 def neg_meas_1q(E, Gamma):
     ''' Calculates sum-negativity of the Gamma-distribution of state rho.
     '''
+    print('neg_meas_1q')
     return np.max(np.abs(W_meas_1q(E, Gamma)))
 
 def W_gate_1q(U1q, Gamma_in, Gamma_out):
     ''' Returns Gamma-distribution of 1-qudit gate U.
     '''
+    print('W_gate_1q')
     w_list = []
     G1q_in = get_G1q_list(Gamma_in)
     F1q_out = get_F1q_list(Gamma_out)
     for ll_in in it.product(range(DIM), repeat=2):
         p_in,q_in = ll_in[0],ll_in[1]
-        rho_ev = np.dot(np.dot(U1q,G1q_in[p_in,q_in]),U1q.T.conj())
+        rho_ev = evolve(G1q_in[p_in,q_in], U1q)
+        print(np.all(np.isclose(
+            rho_ev, np.dot(np.dot(U1q, G1q_in[p_in,q_in]), U1q.T.conj()))))
         for ll_out in it.product(range(DIM), repeat=2):
             p_out, q_out = ll_out[0], ll_out[1]
             w_list.append(np.trace(np.dot(rho_ev,F1q_out[p_out,q_out])))
@@ -120,12 +131,15 @@ def neg_gate_1q(U1q, Gamma_in, Gamma_out):
     ''' Calculates sum-negativity of the Gamma-distribution of 1-qudit gate
         U1q.
     '''
+    print('neg_gate_1q')
     neg_list = []
     G1q_in = get_G1q_list(Gamma_in)
     F1q_out = get_F1q_list(Gamma_out)
     for ll_in in it.product(range(DIM), repeat=2):
         p_in,q_in = ll_in[0],ll_in[1]
-        rho_ev = np.dot(np.dot(U1q,G1q_in[p_in,q_in]),U1q.T.conj())
+        rho_ev = evolve(G1q_in[p_in,q_in], U1q)
+        print(np.all(np.isclose(
+            rho_ev, np.dot(np.dot(U1q,G1q_in[p_in,q_in]),U1q.T.conj()))))
         neg = 0
         for ll_out in it.product(range(DIM), repeat=2):
             p_out, q_out = ll_out[0], ll_out[1]
@@ -136,6 +150,7 @@ def neg_gate_1q(U1q, Gamma_in, Gamma_out):
 def W_gate_2q(U2q, Gamma1_in, Gamma2_in, Gamma1_out, Gamma2_out):
     ''' Returns Gamma-distribution of 2-qudit gate U2q.
     '''
+    print('W_gate_2q')
     w_list = []
     G1_in = get_G1q_list(Gamma1_in)
     G2_in = get_G1q_list(Gamma2_in)
@@ -154,6 +169,7 @@ def W_gate_2q(U2q, Gamma1_in, Gamma2_in, Gamma1_out, Gamma2_out):
                                                DIM,DIM,DIM,DIM))
 
 def neg_gate_CSUM(GammaC_in, GammaT_in, GammaC_out, GammaT_out):
+    print('neg_gate_CSUM')
     G0_in = np.kron(GammaC_in, GammaT_in)
     FC_out = get_F1q_list(GammaC_out)
     FT_out = get_F1q_list(GammaT_out)
@@ -166,6 +182,7 @@ def neg_gate_CSUM(GammaC_in, GammaT_in, GammaC_out, GammaT_out):
     return neg/DIM/DIM
 
 def neg_gate_Cliff_2q(U2q, GammaC_in, GammaT_in, GammaC_out, GammaT_out):
+    print('neg_gate_Cliff_2q')
     G0_in = np.kron(GammaC_in, GammaT_in)
     FC_out = get_F1q_list(GammaC_out)
     FT_out = get_F1q_list(GammaT_out)
@@ -178,6 +195,7 @@ def neg_gate_Cliff_2q(U2q, GammaC_in, GammaT_in, GammaC_out, GammaT_out):
     return neg/DIM/DIM
 
 def neg_gate_2q(U2q, Gamma1_in, Gamma2_in, Gamma1_out, Gamma2_out):
+    print('neg_gate_2q')
     neg_list = []
     G1_in = get_G1q_list(Gamma1_in)
     G2_in = get_G1q_list(Gamma2_in)
