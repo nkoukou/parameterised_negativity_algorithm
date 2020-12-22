@@ -54,7 +54,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             x_index += 1
 
     x_len = x_index
-    print('x_len: ', x_len)
+
     # print('x_len:', x_len)
     # print('init_state_index:', init_state_index)
     # print('gate_1q_index:', gate_1q_index)
@@ -94,22 +94,15 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     x0w = [1,0,0,0,0,0,1,0]
     for x_index in range(x_len):
         x0 = np.append(x0, x0w)
-    # print('x0: ', x0)
     start_time = time.time()
-    # print('start_time: ', start_time)
     out = cost_function(x0)
-    # print('DONE')
     dt = time.time() - start_time
     print('---------------------------------------------------------------')
     print('Wigner Log Neg:  ', out)
     print('Computation time:', dt)
 
-    print('\n\nx0: ', len(x0))
-    x0 = 2*np.random.rand(8*x_len)-1
-    print('x0: ', len(x0))
+#    x0 = 2*np.random.rand(8*x_len)-1
     optimize_result, dt = optimizer(cost_function, x0, opt_method)
-
-    print('DONE')
 
     # save_results(optimize_result)
     optimized_x = optimize_result.x
@@ -132,20 +125,14 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
 
 def optimizer(cost_function, x0, opt_method='B'):
     if opt_method=='B': # autograd
-        print('autograd')
         grad_cost_function = grad(cost_function)
-        print('autograd 2')
         def func(x):
             return cost_function(x), grad_cost_function(x)
-        print('autograd 3')
         start_time = time.time()
-        print('autograd 4')
         optimize_result = basinhopping(func, x0,
                             minimizer_kwargs={"method":"L-BFGS-B","jac":True},
                             disp=False, niter=1)
-        print('autograd 5')
     elif opt_method=='NG': # Powell
-        print('powell')
         start_time = time.time()
         optimize_result = minimize(cost_function, x0, method='Powell')
     # elif opt_method=='G': # Without autograd
@@ -155,5 +142,4 @@ def optimizer(cost_function, x0, opt_method='B'):
     #                         options={'disp': show_log})
     else: raise Exception('Invalid optimisation method')
     dt = time.time()-start_time
-    print(optimize_result, dt)
     return optimize_result, dt
