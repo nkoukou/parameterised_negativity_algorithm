@@ -37,7 +37,7 @@ def x2Gamma(x):
     return np.array([[ x[0],             x[1] + 1.j*x[2],  x[3] + 1.j*x[4] ],
                      [ x[1] - 1.j*x[2],  x[5],             x[6]+1.j*x[7]   ],
                      [ x[3] - 1.j*x[4],  x[6] - 1.j*x[7],  1-x[0]-x[5]     ]
-                    ],dtype = "complex_")
+                    ], dtype = "complex_")
 
 def get_trace_D(Gamma):
     ''' Returns traces of all displacement operators.
@@ -217,16 +217,16 @@ def neg_gate_2q(U2q, Gamma1_in, Gamma2_in, Gamma1_out, Gamma2_out):
     return np.max(neg_list)/DIM/DIM
 
 '''Sample Code'''
-x0_w = [1,0,0,0,0,0,1,0]
-x0 = 2*np.random.rand(8)-1
-Gamma_w = x2Gamma(x0_w)
-Gamma = x2Gamma(x0)
+# x0_w = [1,0,0,0,0,0,1,0]
+# x0 = 2*np.random.rand(8)-1
+# Gamma_w = x2Gamma(x0_w)
+# Gamma = x2Gamma(x0)
 
-traces = get_trace_D(Gamma)
+# traces = get_trace_D(Gamma)
 
-f1s = get_F1q_list(Gamma)
+# f1s = get_F1q_list(Gamma)
 
-
+# f1list = get_F1q_list(Gamma)
 
 
 
