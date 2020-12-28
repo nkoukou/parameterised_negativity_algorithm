@@ -8,7 +8,7 @@ from scipy.optimize import(basinhopping)
 
 from circuit_components import(makeState1q, makeGate)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q,
-                   neg_gate_Cliff_2q, neg_meas_1q)
+                   neg_gate_2q, neg_meas_1q)
 
 def optimize_neg(circuit, opt_method='B', path='test_directory'):
     ''' List circuit contains 3 elements:
@@ -82,8 +82,8 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             GammaT_in = Gamma_list[(gate_index[0])[1]]
             GammaC_out = Gamma_list[(gate_index[0])[2]]
             GammaT_out = Gamma_list[(gate_index[0])[3]]
-            neg = neg*neg_gate_Cliff_2q(U2q,GammaC_in,GammaT_in,
-                                        GammaC_out,GammaT_out)
+            neg = neg*neg_gate_2q(U2q, GammaC_in, GammaT_in,
+                                        GammaC_out, GammaT_out)
         for m_index in meas_index:
             E = m_index[1]
             Gamma = Gamma_list[m_index[0]]
