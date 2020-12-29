@@ -1,12 +1,8 @@
 import autograd.numpy as np
 import itertools as it
 
-from state_functions import(DIM, tau, power, evolve)
+from state_functions import(DIM, tau, power)
 from circuit_components import(makeGate, makeState)
-
-X = makeGate('X')
-Z = makeGate('Z')
-CSUM = makeGate('C+')
 
 def x2Gamma(x):
     ''' Returns covariance matrix Gamma given array x of independent parameters
@@ -72,20 +68,6 @@ def neg_state_1q(rho, Gamma):
     '''
     return np.abs(W_state_1q(rho, Gamma)).sum()
 
-def W_meas_1q(E, Gamma):
-    ''' Returns Gamma-distribution of measurement effect E,
-        W_E(p,q) = 1/DIM tr[G_{p,q} E].
-        Output - (DIM, DIM) complex ndarray
-    '''
-    G1q = get_G1q_list(Gamma)
-    return np.einsum('ijkl,lk->ij', G1q, E).real
-
-def neg_meas_1q(E, Gamma):
-    ''' Calculates \max_{p,q} |W_E(p,q)|.
-        Output - float
-    '''
-    return np.max(np.abs(W_meas_1q(E, Gamma)))
-
 def W_gate_1q(U1q, Gamma_in, Gamma_out):
     ''' Returns Gamma-distribution of 1-qudit gate U,
         W_U(p_out,q_out|p_in,q_in) = 1/DIM tr[U G_{p_in,q_in} U^\dagger
@@ -98,6 +80,15 @@ def W_gate_1q(U1q, Gamma_in, Gamma_out):
     return 1/DIM * np.einsum('ijkl,mnlk->ijmn', rho_ev, F1q_out).real
 
 def neg_gate_1q(U1q, Gamma_in, Gamma_out):
+    ''' Calculates \sum_{p_in,q_in} \abs{
+                   \sum{p_out,q_out}|W_U(p_out,q_out|p_in,q_in)|}.
+        Output - float
+    '''
+    F1q_out = get_F1q_list(Gamma_out)
+    rho_ev = np.einsum('lk,kn,mn->lm', U1q, Gamma_in, U1q.conj())
+    return 1/DIM * np.abs(np.einsum('kl,mnlk->mn', rho_ev, F1q_out)).sum()
+
+def neg_gate_1q_max(U1q, Gamma_in, Gamma_out):
     ''' Calculates \max_{p_in,q_in}
                    \sum{p_out,q_out}|W_U(p_out,q_out|p_in,q_in)|.
         Output - float
@@ -114,11 +105,25 @@ def W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
     G_in = np.einsum('ijkl,mnrs->ijmnkrls',
             get_G1q_list(Gamma_in1), get_G1q_list(Gamma_in2)
            ).reshape((DIM,DIM,DIM,DIM,DIM*DIM,DIM*DIM))
-    F_out = 1/DIM/DIM*np.einsum('ijkl,mnrs->ijmnkrls',
+    F_out = np.einsum('ijkl,mnrs->ijmnkrls',
                        get_F1q_list(Gamma_out1), get_F1q_list(Gamma_out2)
                       ).reshape((DIM,DIM,DIM,DIM,DIM*DIM,DIM*DIM))
     U_ev = np.einsum('lk,ijsrkn,mn->ijsrlm', U2q, G_in, U2q.conj())
-    return np.einsum('ijsrkl,mnablk->ijsrmnab', U_ev, F_out).real
+    return 1/DIM/DIM * np.einsum('ijsrkl,mnablk->ijsrmnab', U_ev, F_out).real
+
+def neg_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
+    ''' Calculates \sum_{p1_in,q1_in,p2_in,q2_in} \abs{
+                   \sum{p1_out,q1_out, p2_out,q2_out}
+                   |W_U(p1_out,q1_out,p2_out,q2_out|p1_in,q1_in,p2_in,q2_in)|}.
+        Output - float
+    '''
+    G_in = np.einsum('ij,kl->ikjl', Gamma_in1, Gamma_in2
+                     ).reshape((DIM*DIM,DIM*DIM))
+    F_out = np.einsum('ijkl,mnrs->ijmnkrls',
+                       get_F1q_list(Gamma_out1), get_F1q_list(Gamma_out2)
+                      ).reshape((DIM,DIM,DIM,DIM,DIM*DIM,DIM*DIM))
+    U_ev = np.einsum('lk,kn,mn->lm', U2q, G_in, U2q.conj())
+    return 1/DIM/DIM * np.abs(np.einsum('kl,ijmnlk->ijmn', U_ev, F_out)).sum()
 
 def neg_gate_2q_max(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
     ''' Calculates \max_{p1_in,q1_in,p2_in,q2_in}
@@ -129,19 +134,23 @@ def neg_gate_2q_max(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
     wigner_dist = W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
     return np.abs(wigner_dist).sum(axis=(4,5,6,7)).max()
 
-def neg_gate_2q(U2q, GammaC_in, GammaT_in, GammaC_out, GammaT_out):
-    G0_in = np.kron(GammaC_in, GammaT_in)
-    FC_out = get_F1q_list(GammaC_out)
-    FT_out = get_F1q_list(GammaT_out)
-    neg = 0
-    for ll in it.product(range(DIM), repeat=4):
-        p1,q1,p2,q2 = ll[0],ll[1],ll[2],ll[3]
-        rho_ev = evolve(G0_in, U2q)
-        F_out = np.kron(FC_out[p1,q1], FT_out[p2,q2])
-        neg += np.abs(np.trace(np.dot(rho_ev,F_out)))
-    return neg/DIM/DIM
+def W_meas_1q(E, Gamma):
+    ''' Returns Gamma-distribution of measurement effect E,
+        W_E(p,q) = 1/DIM tr[G_{p,q} E].
+        Output - (DIM, DIM) complex ndarray
+    '''
+    G1q = get_G1q_list(Gamma)
+    return np.einsum('ijkl,lk->ij', G1q, E).real
+
+def neg_meas_1q(E, Gamma):
+    ''' Calculates \max_{p,q} |W_E(p,q)|.
+        Output - float
+    '''
+    return np.max(np.abs(W_meas_1q(E, Gamma)))
 
 ########################### DISPLACEMENT OPERATORS ############################
+X = makeGate('X')
+Z = makeGate('Z')
 def D1q(w):
     ''' Returns 1-qudit displacement operator at phase space location w.
         w - tuple
@@ -173,71 +182,51 @@ Gamma_in2  = x2Gamma(2*np.random.rand(8)-1)
 Gamma_out1 = x2Gamma(2*np.random.rand(8)-1)
 Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 
-# current = w
-# def test(U2q, GammaC_in, GammaT_in, GammaC_out, GammaT_out):
-#     # G0_in = np.kron(GammaC_in, GammaT_in)
-#     # FC_out = get_F1q_list(GammaC_out)
-#     # FT_out = get_F1q_list(GammaT_out)
-#     # neg = 0
-#     # for ll in it.product(range(DIM), repeat=4):
-#     #     p1,q1,p2,q2 = ll[0],ll[1],ll[2],ll[3]
-#     #     rho_ev = evolve(G0_in, U2q)
-#     #     F_out = np.kron(FC_out[p1,q1], FT_out[p2,q2])
-#     #     neg += np.abs(np.trace(np.dot(rho_ev,F_out)))
-#     # return neg/DIM/DIM
-#     wigner_dist = W_gate_2q(U2q, GammaC_in, GammaT_in, GammaC_out, GammaT_out)
-#     return 1
+# Test 1q stochastic transformations
+s0  = makeState('0')
+s1  = makeState('+')
+U1q = makeGate('H')
+w0= W_state_1q(s0, Gamma_in1)
+w1= W_state_1q(s1, Gamma_out1)
+wh= W_gate_1q(U1q, Gamma_in1, Gamma_out1)
 
+sf = np.dot(np.dot(U1q, s0), U1q.conj().T)
+is_evolved = np.all(np.isclose(sf, s1))
+wf = np.einsum('ijkl,ij->kl', wh, w0)
+is_stoch = np.all(np.isclose(wf, w1))
+print('Stoch-1q')
+# print('U s0 U* = ', sf)
+# print('s1 = ', s1)
+# print('<wh,w0> = ', wf)
+# print('w1 = ', w1)
+print('is_evolved: ', is_evolved)
+print('is_stoch: ', is_stoch)
 
-# print(w)
-# print('----------------------------------------------------------------')
-# print(test(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2))
-# print(np.all(np.isclose(current,
-#               test(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2))))
-
-# # Test 1q stochastic transformations
-# s0  = makeState('+')
-# s1  = makeState('0')
-# U1q = makeGate('H')
-# w0= W_state_1q(s0, Gamma_in1)
-# w1= W_state_1q(s1, Gamma_out1)
-# wh= W_gate_1q(U1q, Gamma_in1, Gamma_out1)
-
-# sf = np.dot(np.dot(U1q, s0), U1q.conj().T)
-# is_evolved = np.all(np.isclose(sf, s1))
-# wf = np.einsum('ijkl,ij->kl', wh, w0)
-# is_stoch = np.all(np.isclose(wf, w1))
-# # print('U s0 U* = ', sf)
-# # print('s1 = ', s1)
-# # print('<wh,w0> = ', wf)
-# # print('w1 = ', w1)
-# print('is_evolved: ', is_evolved)
-# print('is_stoch: ', is_stoch)
-
-# # Test 2q stochastic transformations
-# s0a, s0b = makeState('1'), makeState('+')
-# s1a, s1b = makeState('2'), makeState('1')
-# s1a = np.dot(np.dot(makeGate('S'), s0a), makeGate('S').conj().T)
+# Test 2q stochastic transformations
+s0a, s0b = makeState('2'), makeState('2')
+s1a, s1b = makeState('1'), makeState('2')
+# s1a = np.dot(np.dot(makeGate('T'), s0a), makeGate('T').conj().T)
 # s1b = np.dot(np.dot(makeGate('H'), s0b), makeGate('H').conj().T)
-# U2q      = makeGate('SH')
-# # U2q      = makeGate('+C')
-# s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
-# w0= np.einsum('ij,kl->ikjl', W_state_1q(s0a, Gamma_in1),
-#                               W_state_1q(s0b, Gamma_in2))
-# w1= np.einsum('ij,kl->ikjl', W_state_1q(s1a, Gamma_out1),
-#                               W_state_1q(s1b, Gamma_out2))
-# wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
+# U2q      = makeGate('TH')
+U2q      = makeGate('+C')
+s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
+w0= np.einsum('ij,kl->ikjl', W_state_1q(s0a, Gamma_in1),
+                              W_state_1q(s0b, Gamma_in2))
+w1= np.einsum('ij,kl->ikjl', W_state_1q(s1a, Gamma_out1),
+                              W_state_1q(s1b, Gamma_out2))
+wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
 
-# sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
-# is_evolved = np.all(np.isclose(sf, s1))
-# wf = np.einsum('ijklmnsr,ikjl->msnr', wc, w0)
-# is_stoch = np.all(np.isclose(wf, w1))
-# # print('U s0 U* = ', sf)
-# # print('s1 = ', s1)
-# # print('<wc,w0> = ', wf)
-# # print('w1 = ', w1)
-# print('is_evolved: ', is_evolved)
-# print('is_stoch: ', is_stoch)
+sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
+is_evolved = np.all(np.isclose(sf, s1))
+wf = np.einsum('ijklmnsr,ikjl->msnr', wc, w0)
+is_stoch = np.all(np.isclose(wf, w1))
+print('Stoch-2q')
+# print('U s0 U* = ', sf)
+# print('s1 = ', s1)
+# print('<wc,w0> = ', wf)
+# print('w1 = ', w1)
+print('is_evolved: ', is_evolved)
+print('is_stoch: ', is_stoch)
 
 
 
