@@ -60,7 +60,7 @@ def W_state_1q(rho, Gamma):
         Output - (DIM, DIM) complex ndarray
     '''
     F1q = get_F1q_list(Gamma)
-    return 1/DIM * np.einsum('ijkl,lk->ij', F1q, rho).real
+    return 1/DIM * np.real(np.einsum('ijkl,lk->ij', F1q, rho))
 
 def neg_state_1q(rho, Gamma):
     ''' Calculates \sum_{p,q} |W_rho(p,q)|.
@@ -77,7 +77,7 @@ def W_gate_1q(U1q, Gamma_in, Gamma_out):
     G1q_in = get_G1q_list(Gamma_in)
     F1q_out = get_F1q_list(Gamma_out)
     rho_ev = np.einsum('lk,ijkn,mn->ijlm', U1q, G1q_in, U1q.conj())
-    return 1/DIM * np.einsum('ijkl,mnlk->ijmn', rho_ev, F1q_out).real
+    return 1/DIM * np.real(np.einsum('ijkl,mnlk->ijmn', rho_ev, F1q_out))
 
 def neg_gate_1q(U1q, Gamma_in, Gamma_out):
     ''' Calculates \sum_{p_in,q_in} \abs{
@@ -109,7 +109,8 @@ def W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
                        get_F1q_list(Gamma_out1), get_F1q_list(Gamma_out2)
                       ).reshape((DIM,DIM,DIM,DIM,DIM*DIM,DIM*DIM))
     U_ev = np.einsum('lk,ijsrkn,mn->ijsrlm', U2q, G_in, U2q.conj())
-    return 1/DIM/DIM * np.einsum('ijsrkl,mnablk->ijsrmnab', U_ev, F_out).real
+    return 1/DIM/DIM * np.real(np.einsum('ijsrkl,mnablk->ijsrmnab',
+                                         U_ev, F_out))
 
 def neg_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
     ''' Calculates \sum_{p1_in,q1_in,p2_in,q2_in} \abs{
@@ -140,7 +141,7 @@ def W_meas_1q(E, Gamma):
         Output - (DIM, DIM) complex ndarray
     '''
     G1q = get_G1q_list(Gamma)
-    return np.einsum('ijkl,lk->ij', G1q, E).real
+    return np.real(np.einsum('ijkl,lk->ij', G1q, E))
 
 def neg_meas_1q(E, Gamma):
     ''' Calculates \max_{p,q} |W_E(p,q)|.
@@ -174,59 +175,59 @@ def allD1qs():
 D1q_list = allD1qs()
 
 '''Test Code'''
-Gamma_w    = x2Gamma([1,0,0,0,0,0,1,0])
-Gamma_t    = x2Gamma([0.9,0.1,0,0,0,0,1,0])
-Gamma      = x2Gamma(2*np.random.rand(8)-1)
-Gamma_in1  = x2Gamma(2*np.random.rand(8)-1)
-Gamma_in2  = x2Gamma(2*np.random.rand(8)-1)
-Gamma_out1 = x2Gamma(2*np.random.rand(8)-1)
-Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
+# Gamma_w    = x2Gamma([1,0,0,0,0,0,1,0])
+# Gamma_t    = x2Gamma([0.9,0.1,0,0,0,0,1,0])
+# Gamma      = x2Gamma(2*np.random.rand(8)-1)
+# Gamma_in1  = x2Gamma(2*np.random.rand(8)-1)
+# Gamma_in2  = x2Gamma(2*np.random.rand(8)-1)
+# Gamma_out1 = x2Gamma(2*np.random.rand(8)-1)
+# Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 
-# Test 1q stochastic transformations
-s0  = makeState('0')
-s1  = makeState('+')
-U1q = makeGate('H')
-w0= W_state_1q(s0, Gamma_in1)
-w1= W_state_1q(s1, Gamma_out1)
-wh= W_gate_1q(U1q, Gamma_in1, Gamma_out1)
+# # Test 1q stochastic transformations
+# s0  = makeState('0')
+# s1  = makeState('+')
+# U1q = makeGate('H')
+# w0= W_state_1q(s0, Gamma_in1)
+# w1= W_state_1q(s1, Gamma_out1)
+# wh= W_gate_1q(U1q, Gamma_in1, Gamma_out1)
 
-sf = np.dot(np.dot(U1q, s0), U1q.conj().T)
-is_evolved = np.all(np.isclose(sf, s1))
-wf = np.einsum('ijkl,ij->kl', wh, w0)
-is_stoch = np.all(np.isclose(wf, w1))
-print('Stoch-1q')
-# print('U s0 U* = ', sf)
-# print('s1 = ', s1)
-# print('<wh,w0> = ', wf)
-# print('w1 = ', w1)
-print('is_evolved: ', is_evolved)
-print('is_stoch: ', is_stoch)
+# sf = np.dot(np.dot(U1q, s0), U1q.conj().T)
+# is_evolved = np.all(np.isclose(sf, s1))
+# wf = np.einsum('ijkl,ij->kl', wh, w0)
+# is_stoch = np.all(np.isclose(wf, w1))
+# print('Stoch-1q')
+# # print('U s0 U* = ', sf)
+# # print('s1 = ', s1)
+# # print('<wh,w0> = ', wf)
+# # print('w1 = ', w1)
+# print('is_evolved: ', is_evolved)
+# print('is_stoch: ', is_stoch)
 
-# Test 2q stochastic transformations
-s0a, s0b = makeState('2'), makeState('2')
-s1a, s1b = makeState('1'), makeState('2')
-# s1a = np.dot(np.dot(makeGate('T'), s0a), makeGate('T').conj().T)
-# s1b = np.dot(np.dot(makeGate('H'), s0b), makeGate('H').conj().T)
-# U2q      = makeGate('TH')
-U2q      = makeGate('+C')
-s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
-w0= np.einsum('ij,kl->ikjl', W_state_1q(s0a, Gamma_in1),
-                              W_state_1q(s0b, Gamma_in2))
-w1= np.einsum('ij,kl->ikjl', W_state_1q(s1a, Gamma_out1),
-                              W_state_1q(s1b, Gamma_out2))
-wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
+# # Test 2q stochastic transformations
+# s0a, s0b = makeState('2'), makeState('2')
+# s1a, s1b = makeState('1'), makeState('2')
+# # s1a = np.dot(np.dot(makeGate('T'), s0a), makeGate('T').conj().T)
+# # s1b = np.dot(np.dot(makeGate('H'), s0b), makeGate('H').conj().T)
+# # U2q      = makeGate('TH')
+# U2q      = makeGate('+C')
+# s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
+# w0= np.einsum('ij,kl->ikjl', W_state_1q(s0a, Gamma_in1),
+#                               W_state_1q(s0b, Gamma_in2))
+# w1= np.einsum('ij,kl->ikjl', W_state_1q(s1a, Gamma_out1),
+#                               W_state_1q(s1b, Gamma_out2))
+# wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
 
-sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
-is_evolved = np.all(np.isclose(sf, s1))
-wf = np.einsum('ijklmnsr,ikjl->msnr', wc, w0)
-is_stoch = np.all(np.isclose(wf, w1))
-print('Stoch-2q')
-# print('U s0 U* = ', sf)
-# print('s1 = ', s1)
-# print('<wc,w0> = ', wf)
-# print('w1 = ', w1)
-print('is_evolved: ', is_evolved)
-print('is_stoch: ', is_stoch)
+# sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
+# is_evolved = np.all(np.isclose(sf, s1))
+# wf = np.einsum('ijklmnsr,ikjl->msnr', wc, w0)
+# is_stoch = np.all(np.isclose(wf, w1))
+# print('Stoch-2q')
+# # print('U s0 U* = ', sf)
+# # print('s1 = ', s1)
+# # print('<wc,w0> = ', wf)
+# # print('w1 = ', w1)
+# print('is_evolved: ', is_evolved)
+# print('is_stoch: ', is_stoch)
 
 
 

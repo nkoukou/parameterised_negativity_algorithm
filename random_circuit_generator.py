@@ -9,9 +9,9 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
         given_state - None or string (state_string)
         given_measurement - string (measurement_string)
                             or int (number of measurement modes)
-        Currently gates are completely random.
+        !!! Gates are completely random.
     '''
-    # state_string
+    ### state_string
     if given_state is None:
         # Full state list: ['0', '1', '2', '+', 'm', 'S', 'N', 'T']
         char1q = ['0', '1', '2', 'T']
@@ -27,7 +27,7 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
             raise Exception('Number of qudits must be %d'%(qudit_num))
         state_string = given_state
 
-    # gate_sequence
+    ### gate_sequence
     # Full 1q gate list: ['H', 'S', '1']
     char1q = ['H', 'S']
     # Equal probability
@@ -70,6 +70,8 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
     return circuit_string
 
 def show_circuit(circuit, return_repr=False):
+    '''
+    '''
     init_state = circuit[0]
     qudit_num = len(init_state)
 

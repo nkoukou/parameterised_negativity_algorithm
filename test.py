@@ -6,26 +6,26 @@ from opt_neg import(optimize_neg)
 # from mpl_toolkits.mplot3d import Axes3D
 # import matplotlib.pyplot as plt
 
-# circuit = random_circuit(qudit_num=2,
-#                           C1qGate_num=3, TGate_num=1, CSUMGate_num=1,
-#                           given_state=None,
-#                           given_measurement=2)
-# show_circuit(circuit)
-# optimize_neg(circuit, path='test00')
 
-print('--------------------------------------------------------------------')
+# circuit = ['0', [[[0], 'H']], '0']
 
-circuit = ['TT', [[[0], 'T' ],
-                    [[0,1], 'C+'],
-                    [[1], 'T' ],
-                    # [[0,1], 'C+'],
-                    # [[0], 'T' ],
-                    # [[1,2], 'C+'],
-                    # [[1], 'T' ],
-                    # [[2,0], 'C+']
-                    ],'00']
+# circuit = ['0TT', [[[0], 'T'   ],
+#                   [[0,1], 'C+'],
+#                   [[1], 'T'   ],
+#                   [[0,1], 'C+'],
+#                   [[0], 'T'   ],
+#                   [[1,2], 'C+'],
+#                   [[1],   'T' ],
+#                   [[2,0], 'C+']
+#                   ],'010']
+
+circuit = random_circuit(qudit_num=10,
+                          C1qGate_num=15, TGate_num=5, CSUMGate_num=10,
+                          given_state=None,
+                          given_measurement=5)
 show_circuit(circuit)
 optimize_neg(circuit)
+
 
 
 '''Sample codes'''
