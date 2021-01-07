@@ -9,20 +9,20 @@ from opt_neg import(optimize_neg)
 
 # circuit = ['0', [[[0], 'H']], '0']
 
-# circuit = ['0TT', [[[0], 'T'   ],
-#                   [[0,1], 'C+'],
-#                   [[1], 'T'   ],
-#                   [[0,1], 'C+'],
-#                   [[0], 'T'   ],
-#                   [[1,2], 'C+'],
-#                   [[1],   'T' ],
-#                   [[2,0], 'C+']
-#                   ],'010']
+circuit = ['0TT', [[[0], 'T'   ],
+                   [[0,1], 'C+'],
+                   [[1], 'T'   ],
+                   [[0,1], 'C+'],
+                   [[0], 'T'   ],
+                   [[1,2], 'C+'],
+                   [[1],   'T' ],
+                   [[2,0], 'C+']
+                   ],'010']
 
-circuit = random_circuit(qudit_num=10,
-                          C1qGate_num=15, TGate_num=5, CSUMGate_num=10,
-                          given_state=None,
-                          given_measurement=5)
+#circuit = random_circuit(qudit_num=7,
+#                          C1qGate_num=15, TGate_num=5, CSUMGate_num=5,
+#                          given_state=None,
+#                          given_measurement=5)
 show_circuit(circuit)
 optimize_neg(circuit)
 
