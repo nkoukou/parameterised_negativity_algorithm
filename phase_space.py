@@ -80,13 +80,10 @@ def W_gate_1q(U1q, Gamma_in, Gamma_out):
     return 1/DIM * np.real(np.einsum('ijkl,mnlk->ijmn', rho_ev, F1q_out))
 
 def neg_gate_1q(U1q, Gamma_in, Gamma_out):
-    ''' Calculates \sum_{p_in,q_in} \abs{
-                   \sum{p_out,q_out}|W_U(p_out,q_out|p_in,q_in)|}.
+    ''' Calculates \abs{\sum{p_out,q_out}|W_U(p_out,q_out|p_in,q_in)|}.
         Output - float
     '''
-    F1q_out = get_F1q_list(Gamma_out)
-    rho_ev = np.einsum('lk,kn,mn->lm', U1q, Gamma_in, U1q.conj())
-    return 1/DIM * np.abs(np.einsum('kl,mnlk->mn', rho_ev, F1q_out)).sum()
+    return np.abs(W_gate_1q(U1q, Gamma_in, Gamma_out)).sum(axis=(2,3))
 
 def neg_gate_1q_max(U1q, Gamma_in, Gamma_out):
     ''' Calculates \max_{p_in,q_in}
@@ -113,9 +110,8 @@ def W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
                                          U_ev, F_out))
 
 def neg_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
-    ''' Calculates \sum_{p1_in,q1_in,p2_in,q2_in} \abs{
-                   \sum{p1_out,q1_out, p2_out,q2_out}
-                   |W_U(p1_out,q1_out,p2_out,q2_out|p1_in,q1_in,p2_in,q2_in)|}.
+    ''' Calculates \sum{p1_out,q1_out, p2_out,q2_out}
+                   |W_U(p1_out,q1_out,p2_out,q2_out|p1_in,q1_in,p2_in,q2_in)|.
         Output - float
     '''
     G_in = np.einsum('ij,kl->ikjl', Gamma_in1, Gamma_in2
@@ -124,7 +120,7 @@ def neg_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
                        get_F1q_list(Gamma_out1), get_F1q_list(Gamma_out2)
                       ).reshape((DIM,DIM,DIM,DIM,DIM*DIM,DIM*DIM))
     U_ev = np.einsum('lk,kn,mn->lm', U2q, G_in, U2q.conj())
-    return 1/DIM/DIM * np.abs(np.einsum('kl,ijmnlk->ijmn', U_ev, F_out)).sum()
+    return 1/DIM/DIM * np.abs(np.einsum('kl,ijmnlk->ijmn', U_ev, F_out))
 
 def neg_gate_2q_max(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
     ''' Calculates \max_{p1_in,q1_in,p2_in,q2_in}

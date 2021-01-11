@@ -19,10 +19,10 @@ from opt_neg import(optimize_neg)
 #                   [[2,0], 'C+']
 #                   ],'010']
 
-circuit = random_circuit(qudit_num=10,
-                          C1qGate_num=15, TGate_num=5, CSUMGate_num=10,
+circuit = random_circuit(qudit_num=2,
+                          C1qGate_num=0, TGate_num=1, CSUMGate_num=1,
                           given_state=None,
-                          given_measurement=5)
+                          given_measurement=2)
 show_circuit(circuit)
 optimize_neg(circuit)
 

@@ -70,7 +70,7 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
     return circuit_string
 
 def show_circuit(circuit, return_repr=False):
-    '''
+    ''' Prints a visual circuit representation.
     '''
     init_state = circuit[0]
     qudit_num = len(init_state)

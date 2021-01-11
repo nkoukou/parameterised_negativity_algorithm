@@ -6,7 +6,7 @@ from autograd import(grad)
 from scipy.optimize import(Bounds, minimize)
 from scipy.optimize import(basinhopping)
 
-from circuit_components import(makeState1q, makeState, makeGate)
+from circuit_components import(makeState, makeGate)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max,
                    neg_gate_2q_max, neg_meas_1q)
 
@@ -16,7 +16,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
         - gate_sequence: [[[state_index], U1q],
                           [[state_index_c, state_index_t], U2q],
                           ... ]
-        - meas_string:  '000000'
+        - meas_string:  '01T111'
     '''
     state_string, gate_sequence, meas_string = circuit
 
@@ -24,7 +24,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     init_state_index = []
     x_index = 0
     for state_str in state_string:
-        init_state_index.append([x_index, makeState1q(state_str)])
+        init_state_index.append([x_index, makeState(state_str)])
         current_state_index.append(x_index)
         x_index += 1
 
@@ -50,7 +50,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     meas_index = []
     for meas_str in meas_string:
         if meas_str != '1':
-            meas_index.append([x_index, makeState1q(meas_str)])
+            meas_index.append([x_index, makeState(meas_str)])
             x_index += 1
 
     x_len = x_index
@@ -90,6 +90,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             neg = neg*neg_meas_1q(E,Gamma)
         return np.log(neg)
 
+    # Wigner distribution
     x0 = []
     x0w = [1,0,0,0,0,0,1,0]
     for x_index in range(x_len):
@@ -101,17 +102,16 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     print('Wigner Log Neg:  ', out)
     print('Computation time:', dt)
 
-#    x0 = 2*np.random.rand(8*x_len)-1
+    # Optimised distribution
+    x0 = 2*np.random.rand(8*x_len)-1
     optimize_result, dt = optimizer(cost_function, x0, opt_method)
-
-    # save_results(optimize_result)
     optimized_x = optimize_result.x
     optimized_value = cost_function(optimized_x)
     print('---------------------------------------------------------------')
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
-    # print(optimized_x)
 
+    # Saving data
     directory = os.path.join('data', path)
     if not os.path.isdir(directory): os.mkdir(directory)
     np.save(os.path.join('data', path, 'state_string.npy'), state_string)
@@ -143,3 +143,15 @@ def optimizer(cost_function, x0, opt_method='B'):
     else: raise Exception('Invalid optimisation method')
     dt = time.time()-start_time
     return optimize_result, dt
+
+
+
+
+
+
+
+
+
+
+
+
