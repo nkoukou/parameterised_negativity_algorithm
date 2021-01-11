@@ -4,6 +4,45 @@ from state_functions import(DIM, omega, ksi, psi2rho, maxcoh, maxmixed,
 # import time
 np.set_printoptions(precision=4, suppress=True)
 
+def makeState(state_string):
+    ''' Makes a state matrix from the generating state string,
+        e.g. '+', '000SS', '012+TSN'. !!! Faster p_Born
+    '''
+    state = 1
+    for s in state_string:
+        # print(s)
+        temp = makeState1q(s)
+        state = np.kron(state, temp)
+    return state
+
+def makeGate(gate_string):
+    ''' Makes a gate matrix from the generating gate string,
+        e.g. 'H', '1HS', '1HST', '1C+11'.
+    '''
+    if gate_string.find('+')>=0:
+        gate = makeCsum(gate_string)
+        return gate
+
+    gate = 1
+    for g in gate_string:
+        # print(g)
+        temp = makeGate1q(g)
+        gate = np.kron(gate, temp)
+    return gate
+
+def makeMeas(meas_string):
+    ''' Returns the measurement output and mode from the generating all-qudit
+    measurement string ('/' - Trace out).
+    '''
+    MeasO_list = []
+    Meas_mode_list = []
+    for meas_index in range(len(meas_string)):
+        if meas_string[meas_index]=='/':
+            continue
+        MeasO_list.append(makeState1q(meas_string[meas_index]))
+        Meas_mode_list.append(meas_index)
+    return MeasO_list, Meas_mode_list
+
 def makeState1q(state_string, dim=DIM):
     ''' Returns a 1-qudit state matrix from the generating state string:
         '0' - |0><0| (Pauli Z basis |0> state)
@@ -143,60 +182,9 @@ def makeMeas1q(meas_string, dim=DIM):
         'X' - Projection on |+>
         'T' - Projection on |T>
     '''
-    if meas_string.find('Z') != -1:
-        MeasO = makeState1q('0')
-        Meas_mode = meas_string.find('Z')
-    if meas_string.find('X') != -1:
-        MeasO = makeState1q('+')
-        Meas_mode = meas_string.find('X')
-    if meas_string.find('T') != -1:
-        MeasO = makeState1q('T')
-        Meas_mode = meas_string.find('T')
+    MeasO = makeState1q(meas_string)
+    Meas_mode = meas_string.find(meas_string)
     return MeasO, Meas_mode
-
-def makeState(state_string):
-    ''' Makes a state matrix from the generating state string,
-        e.g. '+', '000SS', '012+TSN'. !!! Faster p_Born
-    '''
-    state = 1
-    for s in state_string:
-        # print(s)
-        temp = makeState1q(s)
-        state = np.kron(state, temp)
-    return state
-
-def makeGate(gate_string):
-    ''' Makes a gate matrix from the generating gate string,
-        e.g. 'H', '1HS', '1HST', '1C+11'. !!! Faster p_Born
-    '''
-    if gate_string.find('+')>=0:
-        gate = makeCsum(gate_string)
-        return gate
-
-    gate = 1
-    for g in gate_string:
-        # print(g)
-        temp = makeGate1q(g)
-        gate = np.kron(gate, temp)
-    return gate
-
-def makeMeasMq(meas_string):
-    ''' Returns the measurement output and mode from the generating all-qudit
-    measurement string:
-        '1' - Trace out
-        'Z' - Projection on |0>
-        'X' - Projection on |+>
-        'T' - Projection on |T>
-    '''
-    MeasO_list = []
-    Meas_mode_list = []
-    for meas_index in range(len(meas_string)):
-        if meas_string[meas_index] == '1':
-            continue
-        else:
-            MeasO_list.append(makeState1q(meas_string[meas_index]))
-            Meas_mode_list.append(meas_index)
-    return MeasO_list, Meas_mode_list
 
 
 '''Sample Code'''
@@ -205,5 +193,5 @@ def makeMeasMq(meas_string):
 # gate2q = makeGate('1C+')
 # symp1q = gate2F('H')
 # symp2q = gate2F('C+')
-# MeasO_list, Meas_mode_list = makeMeasMq('TT1T1+011111')
+# MeasO_list, Meas_mode_list = makeMeas('TT1T1+01//')
 # print(len(Meas_mode_list))

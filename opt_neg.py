@@ -47,12 +47,18 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             current_state_index[t_index] = x_index+1
             x_index += 2
 
-    meas_index = []
-    for meas_str in meas_string:
-        if meas_str != '1':
-            meas_index.append([x_index, makeState(meas_str)])
-            x_index += 1
+#    meas_index = []
+#    for meas_str in meas_string:
+#        if meas_str != '1':
+#            meas_index.append([x_index, makeState1q(meas_str)])
+#            x_index += 1
 
+    meas_index = []
+    k = 0
+    for meas_str in meas_string:
+        if meas_str != '/':
+            meas_index.append([current_state_index[k], makeState(meas_str)])
+        k+=1
     x_len = x_index
 
     # print('x_len:', x_len)

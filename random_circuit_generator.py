@@ -54,7 +54,7 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
         # Equal probability
         prob1q = [1/len(char1q)]*len(char1q)
 
-        measurement = ['1']*qudit_num
+        measurement = ['/']*qudit_num
         for i in range(given_measurement):
             measurement[i] = nr.choice(char1q, p=prob1q)
 
