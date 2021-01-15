@@ -20,8 +20,8 @@ from prob_estimation import(sample)
 #                    [[2,0], 'C+']
 #                    ],'010']
 
-# circuit = random_circuit(qudit_num=2,
-#                           C1qGate_num=0, TGate_num=1, CSUMGate_num=1,
+# circuit = random_circuit(qudit_num=3,
+#                           C1qGate_num=6, TGate_num=3, CSUMGate_num=4,
 #                           given_state=None,
 #                           given_measurement=2)
 # show_circuit(circuit)

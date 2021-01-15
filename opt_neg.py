@@ -117,6 +117,15 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
 
+    print('---------------------------------------------------------------')
+    print('Testing that optimization results in local min:')
+    print('Min Log Neg:      ', cost_function(optimized_x))
+    x_test = 2*np.random.rand(8*x_len)-1
+    x_test = optimized_x + 0.01*x_test
+    print('Perturbed Log Neg:', cost_function(x_test))
+    print('Initial Log Neg:  ', cost_function(x0))
+    print('---------------------------------------------------------------')
+
     # Saving data
     directory = os.path.join('data', path)
     if not os.path.isdir(directory): os.mkdir(directory)

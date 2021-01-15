@@ -10,50 +10,49 @@ def sample(circuit, x=None, niters=1000):
     ''' Samples given circuit with given parameter list x. Number of sampling
         iterations is niters.
     '''
-    outcomes = np.zeros(len(circuit[0]))
+    prob = 0
     for i in range(niters):
         if i%int(niters/10)==0: print(i)
-        outcome = sample_iter(circuit, x)
-        outcomes += outcome
-    outcomes /= niters
-    return outcomes
+        prob += sample_iter(circuit, x)
+    prob /= niters
+    return prob
 
-def sample_iter(circuit, x=None):
+def sample_iter(circuit, x=0):
     ''' Performs Monte Carlo sampling (Pashayan et al.)
     '''
     state_string, gate_sequence, meas_string = circuit
-    if x is None:
+    if isinstance(x, int):
         gates = []
         for g in gate_sequence:
             gates.append(g[1])
         sampled_components = state_string + ''.join(gates)
-        x = [1,0,0,0,0,0,1,0]*len(sampled_components)
+        x = [1,0,0,0,0,0,1,0]*len(sampled_components) # Wigner distribution
+
+        if x==1: # Randomly perturbed Wigner distribution
+            x += 0.01* 2*np.random.rand(8*len(sampled_components))-1
 
     # Sampling
     outcomes = np.zeros(len(state_string))
     gammas = np.zeros((len(state_string),3,3), dtype='complex_')
+    prob = 1
 
     for s in range(len(state_string)):
         Gamma = x2Gamma(x[8*s:8*(s+1)])
         state = makeState(state_string[s])
-        prob_dist = np.abs(W_state_1q(state, Gamma).flatten()
-                           )/neg_state_1q(state, Gamma)
-        outcomes[s] = nr.choice(np.arange(len(prob_dist)), p=prob_dist)
+
+        w = W_state_1q(state, Gamma).flatten()
+        neg = neg_state_1q(state, Gamma)
+
+        prob_dist = np.abs(w)/neg
+        outcome = nr.choice(np.arange(len(prob_dist)), p=prob_dist)
+
+        outcomes[s] = outcome
         gammas[s] = Gamma
-        # print('---------------------------')
-        # print('STATE')
-        # print(prob_dist)
-        # print(outcomes)
+        prob *= neg*np.sign(w[outcome])
 
     running_idx = len(state_string)
     for g in range(len(gate_sequence)):
         idx, gate = gate_sequence[g][0], makeGate(gate_sequence[g][1])
-        # print('Gate: ', gate)
-        # print('------------------------------------------------------------')
-        # print('Gammas: ', gammas)
-        # print('------------------------------------------------------------')
-        # print('Out: ', outcomes)
-        # print()
         if len(idx)==1:
             Gamma_in = gammas[idx[0]]
             Gamma_out = x2Gamma(x[8*running_idx:8*(running_idx+1)])
@@ -65,9 +64,11 @@ def sample_iter(circuit, x=None):
             neg = neg_gate_1q(gate, Gamma_in, Gamma_out)[row_p, row_q]
 
             prob_dist = np.abs(w)/neg
-            outcomes[idx[0]] = nr.choice(np.arange(len(prob_dist)),
-                                         p=prob_dist)
+            outcome = nr.choice(np.arange(len(prob_dist)), p=prob_dist)
+
+            outcomes[idx[0]] = outcome
             gammas[idx[0]] = Gamma_out
+            prob *= neg*np.sign(w[outcome])
             running_idx +=1
         elif len(idx)==2:
             Gamma_in1 = gammas[idx[0]]
@@ -92,13 +93,10 @@ def sample_iter(circuit, x=None):
             outcomes[idx[1]] = outcome%9
 
             gammas[idx[0]], gammas[idx[1]] = Gamma_out1, Gamma_out2
+            prob *= neg*np.sign(w[outcome])
             running_idx +=2
         else:
             raise Exception('Too many gate indices')
-        # print('---------------------------')
-        # print('GATE')
-        # print(prob_dist)
-        # print(outcomes)
 
     #measurement
     for m in range(len(meas_string)):
@@ -110,13 +108,9 @@ def sample_iter(circuit, x=None):
 
         row_p = int(outcomes[m]//3)
         row_q = int(outcomes[m]%3)
-        outcomes[m] = W_meas_1q(E, Gamma)[row_p, row_q]
-        # print('---------------------------')
-        # print('MEAS')
-        # print(W_meas_1q(E, Gamma).flatten())
-        # print(outcomes)
-
-    return outcomes
+        w = W_meas_1q(E, Gamma)[row_p, row_q]
+        prob *= w
+    return prob
 
 def calc_prob(circuit):
     ''' Calculates exact Born probability of given circuit.

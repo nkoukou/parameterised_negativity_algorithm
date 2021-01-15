@@ -24,7 +24,7 @@ def get_trace_D(Gamma):
 
 def get_F1q0(Gamma):
     ''' Returns new displacement operator at the origin,
-        F_0 = 1/DIM \sum_{p,q} tr[D_{p,q} Gamma] D_{p,q}. !!! D_{-p,-q}
+        F_0 = 1/DIM \sum_{p,q} 1/tr[D_{p,q} Gamma] D_{p,q}. !!! D_{-p,-q}
         Output - (DIM,DIM) complex ndarray
     '''
     traces = 1/get_trace_D(Gamma)
@@ -80,7 +80,7 @@ def W_gate_1q(U1q, Gamma_in, Gamma_out):
     return 1/DIM * np.real(np.einsum('ijkl,mnlk->ijmn', rho_ev, F1q_out))
 
 def neg_gate_1q(U1q, Gamma_in, Gamma_out):
-    ''' Calculates \abs{\sum{p_out,q_out}|W_U(p_out,q_out|p_in,q_in)|}.
+    ''' Calculates \sum{p_out,q_out}|W_U(p_out,q_out|p_in,q_in)|.
         Output - float
     '''
     return np.abs(W_gate_1q(U1q, Gamma_in, Gamma_out)).sum(axis=(2,3))

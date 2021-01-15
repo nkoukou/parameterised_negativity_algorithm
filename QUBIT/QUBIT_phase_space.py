@@ -22,7 +22,7 @@ def get_trace_D(Gamma):
 
 def get_F1q0(Gamma):
     ''' Returns new displacement operator at the origin,
-        F_0 = 1/DIM \sum_{p,q} tr[D_{p,q} Gamma] D_{p,q}. !!! D_{-p,-q}
+        F_0 = 1/DIM \sum_{p,q} 1/tr[D_{p,q} Gamma] D_{p,q}. !!! D_{-p,-q}
         Output - (DIM,DIM) complex ndarray
     '''
     traces = 1/get_trace_D(Gamma)
