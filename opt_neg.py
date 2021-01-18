@@ -109,7 +109,7 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
     print('Computation time:', dt)
 
     # Optimised distribution
-    x0 = 2*np.random.rand(8*x_len)-1
+    # x0 = 2*np.random.rand(8*x_len)-1
     optimize_result, dt = optimizer(cost_function, x0, opt_method)
     optimized_x = optimize_result.x
     optimized_value = cost_function(optimized_x)

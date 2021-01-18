@@ -7,8 +7,10 @@ from phase_space import(x2Gamma, W_state_1q, neg_state_1q, W_gate_1q,
                         neg_meas_1q)
 
 def sample(circuit, x=None, niters=1000):
-    ''' Samples given circuit with given parameter list x. Number of sampling
-        iterations is niters.
+    ''' Samples given circuit with given parameter list x.
+        x      - parameter list (x=0: Wigner, x=1: randomly perturbed
+                                 distribution near Wigner)
+        niters - number of sampling iterations.
     '''
     prob = 0
     for i in range(niters):
@@ -18,7 +20,9 @@ def sample(circuit, x=None, niters=1000):
     return prob
 
 def sample_iter(circuit, x=0):
-    ''' Performs Monte Carlo sampling (Pashayan et al.)
+    ''' Performs Monte Carlo sampling as outlined in Pashayan et al. (2015)
+        for given circuit and parameter list x.
+        (x=0 uses Wigner, x=1 uses randomly perturbed distribution near Wigner)
     '''
     state_string, gate_sequence, meas_string = circuit
     if isinstance(x, int):
