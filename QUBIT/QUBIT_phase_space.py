@@ -2,17 +2,17 @@ import autograd.numpy as np
 import itertools as it
 
 from QUBIT_state_functions import(DIM, tau, power)
-from QUBIT_circuit_components import(makeGate, makeState)
+from QUBIT_circuit_components import(makeGate, makeState, psi2rho)
 
 def x2Gamma(x):
     ''' Returns covariance matrix Gamma given array x of independent parameters
         with len(x) = 3 (Gamma is Hermitian with unit trace).
         x takes values in [-1,1].
-        Wigner distribution corresponds to x = [1,1/2,-1/2]?
+        Wigner distribution corresponds to x = [1,1/2,1/2]
         Output - (2x2) complex ndarray
     '''
-    return np.array([[ x[0],             x[1] + 1.j*x[2]],
-                     [ x[1] - 1.j*x[2],  1-x[0],         ]], dtype="complex_")
+    return np.array([[ x[0],             x[1] - 1.j*x[2]],
+                     [ x[1] + 1.j*x[2],  1-x[0],         ]], dtype="complex_")
 
 def get_trace_D(Gamma):
     ''' Returns traces tr[D_{p,q} Gamma] at all phase points x.
@@ -162,3 +162,7 @@ def allD1qs():
     print('Done calculating D1qs.')
     return D1q_list
 D1q_list = allD1qs()
+
+# print(get_F1q0(x2Gamma([1,1/2,1/2])))
+# print(get_F1q_list(x2Gamma([1,1/2,1/2])))
+# print(W_state_1q(psi2rho(np.array([1,0])), x2Gamma([1,1/2,1/2])).flatten())

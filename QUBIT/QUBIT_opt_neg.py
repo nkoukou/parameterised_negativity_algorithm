@@ -77,11 +77,13 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             rho = state_index[1]
             Gamma = Gamma_list[state_index[0]]
             neg = neg*neg_state_1q(rho,Gamma)
+        #print('State: ', neg)
         for gate_index in gate_1q_index:
             U1q = gate_index[1]
             Gamma_in = Gamma_list[(gate_index[0])[0]]
             Gamma_out = Gamma_list[(gate_index[0])[1]]
             neg = neg*neg_gate_1q_max(U1q,Gamma_in,Gamma_out)
+        #print('1q Gates: ', neg)
         for gate_index in gate_2q_index:
             U2q = gate_index[1]
             GammaC_in = Gamma_list[(gate_index[0])[0]]
@@ -90,15 +92,17 @@ def optimize_neg(circuit, opt_method='B', path='test_directory'):
             GammaT_out = Gamma_list[(gate_index[0])[3]]
             neg = neg*neg_gate_2q_max(U2q, GammaC_in, GammaT_in,
                                         GammaC_out, GammaT_out)
+        #print('2q Gates: ', neg)
         for m_index in meas_index:
             E = m_index[1]
             Gamma = Gamma_list[m_index[0]]
             neg = neg*neg_meas_1q(E,Gamma)
+        #print('After measurement: ', neg)
         return np.log(neg)
 
     # Wigner distribution
     x0 = []
-    x0w = [1,1/2,-1/2]
+    x0w = [1,1/2,1/2]
     for x_index in range(x_len):
         x0 = np.append(x0, x0w)
     start_time = time.time()
