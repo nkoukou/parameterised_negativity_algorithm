@@ -13,11 +13,13 @@ def sample(circuit, x=None, niters=1000):
         niters - number of sampling iterations.
     '''
     prob = 0
+    prob_list = []
     for i in range(niters):
-        if i%int(niters/10)==0: print(i)
+#        if i%int(niters/10)==0: print(i)
         prob += sample_iter(circuit, x)
+        prob_list.append(prob)
     prob /= niters
-    return prob
+    return prob, np.array(prob_list)/np.linspace(1,niters,niters)
 
 def sample_iter(circuit, x=0):
     ''' Performs Monte Carlo sampling as outlined in Pashayan et al. (2015)
