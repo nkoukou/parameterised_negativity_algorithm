@@ -1,7 +1,9 @@
 import numpy as np
 import numpy.random as nr
+import matplotlib.pyplot as plt
 
 from QUBIT_circuit_components import(makeState, makeGate)
+from QUBIT_opt_neg import(optimize_neg)
 from QUBIT_phase_space import(x2Gamma, W_state_1q, neg_state_1q, W_gate_1q,
                         neg_gate_1q, W_gate_2q, neg_gate_2q, W_meas_1q,
                         neg_meas_1q)
@@ -17,6 +19,40 @@ def sample(circuit, x=0, niters=10000):
         p_sample += sample_iter(circuit, x)
     return p_sample/niters
 
+
+def compare_Wigner_para(circuit, niters=50000):
+    '''Show the difference between sampling with Wigner distribution
+       and sampling with the optimised parameter list 'opt_Gammas'.
+       It prints the final p_estimate in each case
+       and produces a plot showing the convergence of p_estimate 
+       in each case as a function of niters.
+    '''
+    opt_Gammas, Gamma_dist = optimize_neg(circuit)
+
+    p_sample_Wigner = 0
+    p_sample_opt = 0
+
+    plot_Wigner = []
+    plot_opt = []
+
+    for n in range(niters):
+        p_sample_Wigner += sample_iter(circuit, 0)
+        p_sample_opt += sample_iter(circuit, opt_Gammas)
+
+        plot_Wigner.append(p_sample_Wigner)
+        plot_opt.append(p_sample_opt)
+
+    # Print the final results
+    print('Using Wigner: ', p_sample_Wigner)
+    print('Using optimised QP: ', p_sample_opt)
+
+    # Plot the results, both the Wigner and the optimised ones.
+    x_axis = np.arange(niters)
+    plt.plot(x_axis, plot_Wigner, linestyle='solid', color='tab:blue')
+    plt.plot(x_axis, plot_opt, linestyle='solid', color='tab:orange')
+    plt.xlabel("number of iterations")
+    plt.ylabel("p_estimate")
+    plt.show()
 
 
 def sample_iter(circuit, x):
