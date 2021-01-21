@@ -39,12 +39,12 @@ def compare_Wigner_para(circuit, niters=50000):
         p_sample_Wigner += sample_iter(circuit, 0)
         p_sample_opt += sample_iter(circuit, opt_Gammas)
 
-        plot_Wigner.append(p_sample_Wigner)
-        plot_opt.append(p_sample_opt)
+        plot_Wigner.append(p_sample_Wigner/(n+1))
+        plot_opt.append(p_sample_opt/(n+1))
 
     # Print the final results
-    print('Using Wigner: ', p_sample_Wigner)
-    print('Using optimised QP: ', p_sample_opt)
+    print('Using Wigner: ', p_sample_Wigner/niters)
+    print('Using optimised QP: ', p_sample_opt/niters)
 
     # Plot the results, both the Wigner and the optimised ones.
     x_axis = np.arange(niters)

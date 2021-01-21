@@ -141,7 +141,7 @@ def optimizer(cost_function, x0, opt_method='B'):
         start_time = time.time()
         optimize_result = basinhopping(func, x0,
                             minimizer_kwargs={"method":"L-BFGS-B","jac":True},
-                            disp=False, niter=5)
+                            disp=False, niter=10)
     elif opt_method=='NG': # Powell
         start_time = time.time()
         optimize_result = minimize(cost_function, x0, method='Powell')
