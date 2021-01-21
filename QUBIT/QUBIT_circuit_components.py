@@ -77,7 +77,7 @@ def makeGate1q(gate_string, dim=DIM):
         'K' - Pi/4-Phase shift gate ([[1,0],[0,i]]) 
         'T' - qubit T-gate (magic gate)
         't' - Conjugate transpose of the T-gate
-        Followed the notations in the Bravyi&Kitaev paper:quant-ph/0403025.
+        Followed the definition of T-gates in Wikipedia
     '''
     if gate_string=='1':
         gate = np.eye(dim)
@@ -91,11 +91,9 @@ def makeGate1q(gate_string, dim=DIM):
     elif gate_string=='X':
         gate = np.roll(np.eye(dim), 1, axis=0)
     elif gate_string=='T':
-        gate = ksi/np.sqrt(dim) * np.array([[1., 1.],
-                                            [1.j, -1.j]])
+        gate = np.diag([1., ksi])
     elif gate_string=='t':
-        gate = np.conjugate(ksi)/np.sqrt(dim) * np.array([[1., -1.j],
-                                            [1, 1.j]])
+        gate = np.diag([1., np.conjugate(ksi)])
     else:
         raise Exception('Invalid 1-q gate string')
     return gate
