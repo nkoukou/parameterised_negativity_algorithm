@@ -25,7 +25,7 @@ def makeGate(gate_string):
 
     gate = 1
     for g in gate_string:
-        # print(g)
+        #print(g)
         temp = makeGate1q(g)
         gate = np.kron(gate, temp)
     return gate
@@ -76,6 +76,7 @@ def makeGate1q(gate_string, dim=DIM):
         'H' - Hadamard
         'K' - Pi/4-Phase shift gate ([[1,0],[0,i]]) 
         'T' - qubit T-gate (magic gate)
+        't' - Conjugate transpose of the T-gate
         Followed the notations in the Bravyi&Kitaev paper:quant-ph/0403025.
     '''
     if gate_string=='1':
@@ -92,6 +93,9 @@ def makeGate1q(gate_string, dim=DIM):
     elif gate_string=='T':
         gate = ksi/np.sqrt(dim) * np.array([[1., 1.],
                                             [1.j, -1.j]])
+    elif gate_string=='t':
+        gate = np.conjugate(ksi)/np.sqrt(dim) * np.array([[1., -1.j],
+                                            [1, 1.j]])
     else:
         raise Exception('Invalid 1-q gate string')
     return gate
