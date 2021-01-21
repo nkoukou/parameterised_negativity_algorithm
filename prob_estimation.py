@@ -36,6 +36,7 @@ def sample_iter(circuit, x=0):
             x += 0.01* 2*np.random.rand(8*len(sampled_components))-1
 
     # Sampling
+    # Initial state
     outcomes = np.zeros(len(state_string))
     gammas = np.zeros((len(state_string),3,3), dtype='complex_')
     prob = 1
@@ -54,6 +55,7 @@ def sample_iter(circuit, x=0):
         gammas[s] = Gamma
         prob *= neg*np.sign(w[outcome])
 
+    # Gates
     running_idx = len(state_string)
     for g in range(len(gate_sequence)):
         idx, gate = gate_sequence[g][0], makeGate(gate_sequence[g][1])
@@ -61,7 +63,7 @@ def sample_iter(circuit, x=0):
             Gamma_in = gammas[idx[0]]
             Gamma_out = x2Gamma(x[8*running_idx:8*(running_idx+1)])
 
-            row_p =int(outcomes[idx[0]]//3)
+            row_p = int(outcomes[idx[0]]//3)
             row_q = int(outcomes[idx[0]]%3)
 
             w = (W_gate_1q(gate, Gamma_in, Gamma_out)[row_p, row_q]).flatten()
@@ -81,18 +83,17 @@ def sample_iter(circuit, x=0):
             Gamma_out2 = x2Gamma(x[8*(running_idx+1):8*(running_idx+2)])
 
             row1_p = int(outcomes[idx[0]]//3)
-            row2_p = int(outcomes[idx[0]]%3)
-            row1_q = int(outcomes[idx[1]]//3)
+            row1_q = int(outcomes[idx[0]]%3)
+            row2_p = int(outcomes[idx[1]]//3)
             row2_q = int(outcomes[idx[1]]%3)
 
             w = (W_gate_2q(gate, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2
-                           )[row1_p,row2_p,row1_q,row2_q]).flatten()
+                           )[row1_p,row1_q,row2_p,row2_q]).flatten()
             neg = neg_gate_2q(gate, Gamma_in1, Gamma_in2, Gamma_out1,
-                              Gamma_out2)[row1_p,row2_p,row1_q,row2_q]
+                              Gamma_out2)[row1_p,row1_q,row2_p,row2_q]
 
             prob_dist = np.abs(w)/neg
-            outcome = nr.choice(np.arange(len(prob_dist)),
-                                         p=prob_dist)
+            outcome = nr.choice(np.arange(len(prob_dist)), p=prob_dist)
             outcomes[idx[0]] = outcome//9
             outcomes[idx[1]] = outcome%9
 
@@ -102,7 +103,7 @@ def sample_iter(circuit, x=0):
         else:
             raise Exception('Too many gate indices')
 
-    #measurement
+    # Measurement
     for m in range(len(meas_string)):
         if meas_string[m]=='/':
             outcomes[m] = -1

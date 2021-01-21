@@ -12,8 +12,8 @@ def x2Gamma(x):
         Output - (3x3) complex ndarray
     '''
     return np.array([[ x[0],             x[1] + 1.j*x[2],  x[3] + 1.j*x[4] ],
-                     [ x[1] - 1.j*x[2],  x[5],             x[6]+1.j*x[7]   ],
-                     [ x[3] - 1.j*x[4],  x[6] - 1.j*x[7],  1-x[0]-x[5]     ]
+                     [ x[1] - 1.j*x[2],  x[5],             x[6] + 1.j*x[7] ],
+                     [ x[3] - 1.j*x[4],  x[6] - 1.j*x[7],  1 - x[0] - x[5] ]
                     ], dtype="complex_")
 
 def get_trace_D(Gamma):
@@ -29,15 +29,6 @@ def get_F1q0(Gamma):
     '''
     traces = 1/get_trace_D(Gamma)
     return 1/DIM * np.einsum('ij,ijkl->kl', traces, D1q_list)
-
-def test_F1q0(Gamma):
-    D_Gamma_list = get_trace_D(Gamma)
-    F1q0 = np.zeros((DIM,DIM), dtype="complex_")
-    for w in it.product(range(DIM),repeat=2):
-        p,q = w[0],w[1]
-        F1q0 += D1q_list[p,q]/D_Gamma_list[p,q]
-#         F1q0 += D1q_list[-p,-q]/D_Gamma_list[p,q]
-    return np.array(F1q0/DIM, dtype="complex_")
 
 def get_F1q_list(Gamma):
     ''' Returns new displacement operators at all phase space points x,
@@ -210,31 +201,31 @@ Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 # print('w1 = ', w1)
 # print('is_stoch: ', is_stoch)
 
-# # Test 2q stochastic transformations
-# s0a, s0b = makeState('2'), makeState('2')
-# s1a, s1b = makeState('1'), makeState('2')
-# # s1a = np.dot(np.dot(makeGate('T'), s0a), makeGate('T').conj().T)
-# # s1b = np.dot(np.dot(makeGate('H'), s0b), makeGate('H').conj().T)
-# # U2q      = makeGate('TH')
-# U2q      = makeGate('+C')
-# s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
-# w0= np.einsum('ij,kl->ikjl', W_state_1q(s0a, Gamma_in1),
-#                               W_state_1q(s0b, Gamma_in2))
-# w1= np.einsum('ij,kl->ikjl', W_state_1q(s1a, Gamma_out1),
-#                               W_state_1q(s1b, Gamma_out2))
-# wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
+# Test 2q stochastic transformations
+s0a, s0b = makeState('2'), makeState('1')
+s1a, s1b = makeState('2'), makeState('0')
+# s1a = np.dot(np.dot(makeGate('T'), s0a), makeGate('T').conj().T)
+# s1b = np.dot(np.dot(makeGate('H'), s0b), makeGate('H').conj().T)
+# U2q      = makeGate('TH')
+U2q      = makeGate('C+')
+s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
+w0= np.einsum('ij,kl->ijkl', W_state_1q(s0a, Gamma_in1),
+                              W_state_1q(s0b, Gamma_in2))
+w1= np.einsum('ij,kl->ijkl', W_state_1q(s1a, Gamma_out1),
+                              W_state_1q(s1b, Gamma_out2))
+wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
 
-# sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
-# is_evolved = np.allclose(sf, s1)
-# wf = np.einsum('ijklmnsr,ikjl->msnr', wc, w0)
-# is_stoch = np.allclose(wf, w1)
-# print('Stoch-2q')
-# # print('U s0 U* = ', sf)
-# # print('s1 = ', s1)
-# # print('<wc,w0> = ', wf)
-# # print('w1 = ', w1)
-# print('is_evolved: ', is_evolved)
-# print('is_stoch: ', is_stoch)
+sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
+is_evolved = np.allclose(sf, s1)
+wf = np.einsum('ijklmnsr,ijkl->mnsr', wc, w0)
+is_stoch = np.allclose(wf, w1)
+print('Stoch-2q')
+# print('U s0 U* = ', sf)
+# print('s1 = ', s1)
+# print('<wc,w0> = ', wf)
+# print('w1 = ', w1)
+print('is_evolved: ', is_evolved)
+print('is_stoch: ', is_stoch)
 
 
 
