@@ -25,8 +25,8 @@ def get_F1q0(Gamma):
         F_0 = 1/DIM \sum_{p,q} 1/tr[D_{p,q} Gamma] D_{p,q}. !!! D_{-p,-q}
         Output - (DIM,DIM) complex ndarray
     '''
-    traces = 1/get_trace_D(Gamma)
-    return 1/DIM * np.einsum('ij,ijkl->kl', traces, D1q_list)
+    traces = 1./get_trace_D(Gamma)
+    return 1./DIM * np.einsum('ij,ijkl->kl', traces, D1q_list)
 
 def test_F1q0(Gamma):
     D_Gamma_list = get_trace_D(Gamma)
@@ -163,6 +163,18 @@ def allD1qs():
     return D1q_list
 D1q_list = allD1qs()
 
+
 # print(get_F1q0(x2Gamma([1,1/2,1/2])))
 # print(get_F1q_list(x2Gamma([1,1/2,1/2])))
-# print(W_state_1q(psi2rho(np.array([1,0])), x2Gamma([1,1/2,1/2])).flatten())
+#print(W_state_1q(psi2rho(np.array([1,-1.j])/np.sqrt(2)), x2Gamma([1,1/2,1/2])).flatten())
+x0w = [1,1/2,1/2]
+x = [1,2,4]
+Gamma_in = x2Gamma(x0w)
+H_Gate = makeGate('H')
+Gamma_out = np.dot(np.dot(H_Gate, Gamma_in),np.conjugate(H_Gate.T))
+print(W_gate_1q(makeGate('H'), Gamma_in , Gamma_out))
+#
+#print(makeGate('H'))
+#print(makeGate('Z'))
+#print(np.dot(makeGate('Z'),makeGate('X')))
+#print(D1q_list[1,1])

@@ -14,11 +14,11 @@ from QUBIT_prob_estimation import(sample,sample_iter,compare_Wigner_para)
 Bernstein_Vazirani_circuit = ['001', [[[0],'H'], [[2],'H'], [[2],'H'], [[1,2],'C+'], 
 							[[2],'t'], [[0,2],'C+'], [[2],'T'], [[1,2],'C+'], [[2],'t'],
 							[[0,2],'C+'], [[1],'T'], [[2],'T'], [[0,1],'C+'], [[2],'H'],
-							[[0],'T'], [[1],'t'], [[0,1],'C+'], [[0],'H']], '0//']
+							[[0],'T'], [[1],'t'], [[0,1],'C+'], [[0],'H']], '1//']
 
 
 show_circuit(Bernstein_Vazirani_circuit)
-compare_Wigner_para(Bernstein_Vazirani_circuit, 50000)
+compare_Wigner_para(Bernstein_Vazirani_circuit, 1000000)
 # result_Wigner = sample(Bernstein_Vazirani_circuit)
 # print('Using Wigner: ', result_Wigner)
 # opt_Gammas, Gamma_dist = optimize_neg(Bernstein_Vazirani_circuit)
