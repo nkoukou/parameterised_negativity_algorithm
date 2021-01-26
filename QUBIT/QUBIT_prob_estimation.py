@@ -20,7 +20,7 @@ def sample(circuit, x=0, niters=10000):
     return p_sample/niters
 
 
-def compare_Wigner_para(circuit, niters=50000):
+def compare_Wigner_para(circuit, niters=10000, save=0):
     '''Show the difference between sampling with Wigner distribution
        and sampling with the optimised parameter list 'opt_Gammas'.
        It prints the final p_estimate in each case
@@ -48,11 +48,20 @@ def compare_Wigner_para(circuit, niters=50000):
 
     # Plot the results, both the Wigner and the optimised ones.
     x_axis = np.arange(niters)
-    plt.plot(x_axis, plot_Wigner, linestyle='solid', color='tab:blue')
-    plt.plot(x_axis, plot_opt, linestyle='solid', color='tab:orange')
+    plt.plot(x_axis, plot_Wigner, linestyle='solid', color='tab:blue', label='Wigner')
+    plt.plot(x_axis, plot_opt, linestyle='solid', color='tab:orange', label='para')
     plt.xlabel("number of iterations")
     plt.ylabel("p_estimate")
+    plt.legend()
     plt.show()
+
+    if save==1:
+        path = 'P_estimate.txt'
+        with open(path, 'a') as f:
+            for n in range(niters):
+                f.write(str(n)+" "+str(plot_opt[n]))
+                f.write("\n")
+        f.close()
 
 
 def sample_iter(circuit, x):
