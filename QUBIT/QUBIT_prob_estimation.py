@@ -24,7 +24,7 @@ def compare_Wigner_para(circuit, niters=50000):
     '''Show the difference between sampling with Wigner distribution
        and sampling with the optimised parameter list 'opt_Gammas'.
        It prints the final p_estimate in each case
-       and produces a plot showing the convergence of p_estimate 
+       and produces a plot showing the convergence of p_estimate
        in each case as a function of niters.
     '''
     opt_Gammas, Gamma_dist = optimize_neg(circuit)
@@ -43,15 +43,21 @@ def compare_Wigner_para(circuit, niters=50000):
         plot_opt.append(p_sample_opt/(n+1))
 
     # Print the final results
+    print('----------------------------------------------------------------')
     print('Using Wigner: ', p_sample_Wigner/niters)
     print('Using optimised QP: ', p_sample_opt/niters)
 
     # Plot the results, both the Wigner and the optimised ones.
     x_axis = np.arange(niters)
-    plt.plot(x_axis, plot_Wigner, linestyle='solid', color='tab:blue')
-    plt.plot(x_axis, plot_opt, linestyle='solid', color='tab:orange')
-    plt.xlabel("number of iterations")
-    plt.ylabel("p_estimate")
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.plot(x_axis, plot_Wigner, linestyle='solid', color='tab:blue',
+             label='Wigner')
+    ax.plot(x_axis, plot_opt, linestyle='solid', color='tab:orange',
+             label='Optimised')
+    ax.set_xlabel("number of iterations")
+    ax.set_ylabel("p_estimate")
+    ax.legend(loc='upper right')
     plt.show()
 
 
@@ -118,8 +124,10 @@ def sample_iter(circuit, x):
             q_in1 = current_PS_point[idx[0]]%2
             p_in2 = current_PS_point[idx[1]]//2
             q_in2 = current_PS_point[idx[1]]%2
-            WF = W_gate_2q(gate,Gamma_in1,Gamma_in2,Gamma_out1,Gamma_out2)[p_in1,q_in1,p_in2,q_in2].flatten()
-            neg = neg_gate_2q(gate,Gamma_in1,Gamma_in2,Gamma_out1,Gamma_out2)[p_in1,q_in1,p_in2,q_in2]
+            WF = W_gate_2q(gate,Gamma_in1,Gamma_in2,Gamma_out1,Gamma_out2
+                           )[p_in1,q_in1,p_in2,q_in2].flatten()
+            neg = neg_gate_2q(gate,Gamma_in1,Gamma_in2,Gamma_out1,Gamma_out2
+                              )[p_in1,q_in1,p_in2,q_in2]
 
             prob = np.abs(WF)/neg
 
