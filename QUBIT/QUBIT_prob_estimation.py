@@ -6,7 +6,7 @@ from QUBIT_circuit_components import(makeState, makeGate)
 from QUBIT_opt_neg import(optimize_neg)
 from QUBIT_phase_space import(x2Gamma, W_state_1q, neg_state_1q, W_gate_1q,
                         neg_gate_1q, W_gate_2q, neg_gate_2q, W_meas_1q,
-                        neg_meas_1q)
+                        neg_meas_1q, n_Gammas)
 
 def sample(circuit, x=0, niters=10000):
     ''' Samples given circuit with given parameter list x.
@@ -71,17 +71,13 @@ def sample_iter(circuit, x):
     state_string, gate_sequence, meas_string = circuit
 
     if isinstance(x, int): # If x==0, set every Gamma [1,1/2,1/2] (Wigner).
-        n_Gammas = len(state_string)
-        gate_string = ''
-        for g in gate_sequence:
-            gate_string += g[1]
-        n_Gammas += len(gate_string)
-        x = [1,1/2,1/2]*n_Gammas
+        x = [1,1/2,1/2]*n_Gammas(circuit)
 
     current_PS_point = []
     Gamma_index = 0
     Gammas = []
-    p_estimate = 1
+    p_estimate = 1.
+    agg_Gates=[np.eye(2)]*len(state_string)
 
     # Input states
     for s in state_string:
@@ -103,19 +99,24 @@ def sample_iter(circuit, x):
     for g in gate_sequence:
         idx, gate = g[0], makeGate(g[1])
         if len(idx)==1:
-            Gamma_in = Gammas[idx[0]]
-            Gamma_out = x2Gamma(x[3*Gamma_index:3*(Gamma_index+1)])
+            if g[1]=='H':
+                Gamma_in = Gammas[idx[0]]
+                Gamma_out = np.dot(np.dot(gate, Gamma_in),np.conjugate(gate.T))
+            else:    
+                Gamma_in = Gammas[idx[0]]
+                Gamma_out = x2Gamma(x[3*Gamma_index:3*(Gamma_index+1)])
+                Gamma_index += 1
+
             p_in = current_PS_point[idx[0]]//2
             q_in = current_PS_point[idx[0]]%2
             WF = W_gate_1q(gate, Gamma_in, Gamma_out)[p_in,q_in].flatten()
-            neg = neg_gate_1q(gate,Gamma_in, Gamma_out)[p_in,q_in]
+            neg = neg_gate_1q(gate, Gamma_in, Gamma_out)[p_in,q_in]
 
             prob = np.abs(WF)/neg
 
+            Gammas[idx[0]] = Gamma_out    
             PS_point = nr.choice(np.arange(len(prob)), p=prob)
-            current_PS_point[idx[0]] = PS_point
-            Gammas[idx[0]] = Gamma_out
-            Gamma_index += 1
+            current_PS_point[idx[0]] = PS_point            
             p_estimate *= neg*np.sign(WF[PS_point])
 
         elif len(idx)==2:

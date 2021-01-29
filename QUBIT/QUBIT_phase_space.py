@@ -138,6 +138,21 @@ def neg_meas_1q(E, Gamma):
     '''
     return np.max(np.abs(W_meas_1q(E, Gamma)))
 
+def n_Gammas(circuit):
+    state_string, gate_sequence, meas_string = circuit
+    Gamma_index = 0
+    for s in state_string:
+        Gamma_index += 1
+    for g in gate_sequence:
+        idx = g[0]
+        if len(idx)==1:
+            if g[1]=='H':
+                continue
+            Gamma_index += 1
+        elif len(idx)==2:
+            Gamma_index += 2
+    return Gamma_index
+
 ########################### DISPLACEMENT OPERATORS ############################
 X = makeGate('X')
 Z = makeGate('Z')
@@ -167,12 +182,13 @@ D1q_list = allD1qs()
 # print(get_F1q0(x2Gamma([1,1/2,1/2])))
 # print(get_F1q_list(x2Gamma([1,1/2,1/2])))
 #print(W_state_1q(psi2rho(np.array([1,-1.j])/np.sqrt(2)), x2Gamma([1,1/2,1/2])).flatten())
-x0w = [1,1/2,1/2]
-x = [1,2,4]
-Gamma_in = x2Gamma(x0w)
-H_Gate = makeGate('H')
-Gamma_out = np.dot(np.dot(H_Gate, Gamma_in),np.conjugate(H_Gate.T))
-print(W_gate_1q(makeGate('H'), Gamma_in , Gamma_out))
+# x0w = [1,1/2,1/2]
+# #x = [1,2,4]
+# Gamma_in = x2Gamma(x0w)
+# H_Gate = makeGate('H')
+# Gamma_out = np.dot(np.dot(H_Gate, Gamma_in),np.conjugate(H_Gate.T))
+# print(W_gate_1q(makeGate('H'), Gamma_in , Gamma_in))
+# print(neg_gate_1q(makeGate('H'), Gamma_in , Gamma_in))
 #
 #print(makeGate('H'))
 #print(makeGate('Z'))
