@@ -9,7 +9,7 @@ from QUBIT_prob_estimation import(sample,sample_iter,compare_Wigner_para)
 # import matplotlib.pyplot as plt
 
 
-circuit = ['000', [[[0], 'X'],[[0], 'H'],[[0,1], 'C+'],[[2],'H']], '00/']
+#circuit = ['000', [[[0], 'X'],[[0], 'H'],[[0,1], 'C+'],[[2],'H']], '00/']
 
 ### s = 0, 1-qubit case
 Bernstein_Vazirani_circuit = ['001', [[[0],'H'], [[2],'H'], [[2],'H'],
@@ -20,12 +20,12 @@ Bernstein_Vazirani_circuit = ['001', [[[0],'H'], [[2],'H'], [[2],'H'],
                                       [[1],'t'], [[0,1],'C+'], [[0],'H']],
                               '1//']
 
-plt.close('all')
-show_circuit(Bernstein_Vazirani_circuit)
+#plt.close('all')
+#show_circuit(Bernstein_Vazirani_circuit)
 compare_Wigner_para(Bernstein_Vazirani_circuit, int(1e5))
 # result_Wigner = sample(Bernstein_Vazirani_circuit)
 # print('Using Wigner: ', result_Wigner)
-optimize_neg(circuit)
+#optimize_neg(circuit)
 # result_Gamma = sample(Bernstein_Vazirani_circuit, opt_Gammas)
 # print('Using optimised QP: ', result_Gamma)
 
