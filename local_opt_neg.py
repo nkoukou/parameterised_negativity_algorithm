@@ -58,7 +58,12 @@ def local_opt_Gate2q(U2q,x_in1,x_in2,**kwargs):
     return [x_opt1,x_opt2]
 
 def get_opt_x(circuit,**kwargs):
+    options = {'show_detailed_log':False}
+    options.update(kwargs)
+    
     [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list] = circuit
+    
+    print('----------Opt_Dist--------------',kwargs)
     x_rho_opt_list = []
     neg_rho_opt_list = []
     neg_tot = 1.
@@ -68,7 +73,8 @@ def get_opt_x(circuit,**kwargs):
         neg = neg_state_1q(rho, x2Gamma(x_opt))
         neg_rho_opt_list.append(neg)
         neg_tot *= neg
-        print('neg_state:',neg,'\t weight:\t',weight(x2Gamma(x_opt)))
+        if options['show_detailed_log']:
+            print('neg_state:',neg,'\t weight:\t',weight(x2Gamma(x_opt)))
     
     x_running = x_rho_opt_list.copy()
     x_gate_out_opt_list = []
@@ -83,7 +89,8 @@ def get_opt_x(circuit,**kwargs):
         neg = neg_gate_2q_max(U2q, x2Gamma(x_in1),x2Gamma(x_in2),x2Gamma(x_out_opt1),x2Gamma(x_out_opt2))
         neg_gate_opt_list.append(neg)
         neg_tot *= neg
-        print('neg_gate(',gate_index+1,'):',neg,'\t weight:\t',[weight(x2Gamma(x_out_opt1)),weight(x2Gamma(x_out_opt2))])
+        if options['show_detailed_log']:
+            print('neg_gate(',gate_index+1,'):',neg,'\t weight:\t',[weight(x2Gamma(x_out_opt1)),weight(x2Gamma(x_out_opt2))])
         x_running[qudit_index1] = x_out_opt1
         x_running[qudit_index2] = x_out_opt2
     
@@ -95,35 +102,42 @@ def get_opt_x(circuit,**kwargs):
         neg = neg_meas_1q(E, x2Gamma(x_out))
         neg_meas_opt_list.append(neg)
         neg_tot *= neg
-        print('neg_meas:',neg)
+        if options['show_detailed_log']:
+            print('neg_meas:',neg)
         
     print('neg_tot:', neg_tot)
     
     return x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot
 
-def show_Wigner_neg_x(circuit):
+def show_Wigner_neg_x(circuit,**kwargs):
+    options = {'show_detailed_log':False}
+    options.update(kwargs)
     [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list] = circuit
+    
+    print('----------Wigner----------------')
     neg_tot = 1.
     for rho in rho_list:
         neg = neg_state_1q(rho, x2Gamma(x0w))
         neg_tot *= neg
-        print('neg_state:',neg)
+        if options['show_detailed_log']:
+            print('neg_state:',neg)
     
     for gate_index in range(len(gate_U2q_list)):
         U2q = gate_U2q_list[gate_index]
         [qudit_index1,qudit_index2] = gate_qudit_index_list[gate_index]
         neg = neg_gate_2q_max(U2q, x2Gamma(x0w),x2Gamma(x0w),x2Gamma(x0w),x2Gamma(x0w))
         neg_tot *= neg
-        print('neg_gate(',gate_index+1,'):',neg)
+        if options['show_detailed_log']:
+            print('neg_gate(',gate_index+1,'):',neg)
     
     for qudit_index in range(len(meas_list)):
         E = meas_list[qudit_index]
         neg = neg_meas_1q(E, x2Gamma(x0w))
         neg_tot *= neg
-        print('neg_meas:',neg)
+        if options['show_detailed_log']:
+            print('neg_meas:',neg)
         
     print('neg_tot:', neg_tot)
-    print('---------------------------------------')
     return neg_tot
 
 rho_string_list = ['0','1','2','+']
@@ -194,3 +208,29 @@ def get_rand_circuit(qudit_num,circuit_length,**kwargs):
     meas_list = get_rand_meas_list(qudit_num)
     circuit = [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
     return circuit
+
+'''Convert compressed circuit to run local optimisation'''
+def get_circuit_loc(circuit_compressed):
+    state_string_list = circuit_compressed[0]
+    gate_compressed_list = circuit_compressed[1]
+    meas_string_list = circuit_compressed[2]
+
+    rho_list = []
+    for state_string in state_string_list:
+        rho_list.append(makeState(state_string))
+        
+    gate_U2q_list = []
+    gate_qudit_index_list = []
+    for gate_compressed in gate_compressed_list:
+        gate_qudit_index_list.append(gate_compressed[0])
+        gate_U2q_list.append(gate_compressed[1])
+        
+    meas_list = []
+    for meas_string in meas_string_list:
+        if meas_string=='/':
+            E = np.eye(DIM)
+        else:
+            E = makeState(meas_string)
+        meas_list.append(E)
+        
+    return [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
