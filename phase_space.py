@@ -152,7 +152,7 @@ def allD1qs():
         D1q_list.append(D1q(w))
     D1q_list = np.array(np.reshape(D1q_list,(DIM,DIM,DIM,DIM)),
                         dtype="complex_")
-    print('Done calculating D1qs.')
+    # print('Done calculating D1qs.')
     return D1q_list
 D1q_list = allD1qs()
 
@@ -201,31 +201,31 @@ Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 # print('w1 = ', w1)
 # print('is_stoch: ', is_stoch)
 
-# Test 2q stochastic transformations
-s0a, s0b = makeState('2'), makeState('1')
-s1a, s1b = makeState('2'), makeState('0')
+# # Test 2q stochastic transformations
+# s0a, s0b = makeState('2'), makeState('1')
+# s1a, s1b = makeState('2'), makeState('0')
 # s1a = np.dot(np.dot(makeGate('T'), s0a), makeGate('T').conj().T)
 # s1b = np.dot(np.dot(makeGate('H'), s0b), makeGate('H').conj().T)
 # U2q      = makeGate('TH')
-U2q      = makeGate('C+')
-s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
-w0= np.einsum('ij,kl->ijkl', W_state_1q(s0a, Gamma_in1),
-                              W_state_1q(s0b, Gamma_in2))
-w1= np.einsum('ij,kl->ijkl', W_state_1q(s1a, Gamma_out1),
-                              W_state_1q(s1b, Gamma_out2))
-wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
+# U2q      = makeGate('C+')
+# s0, s1   = np.kron(s0a, s0b), np.kron(s1a, s1b)
+# w0= np.einsum('ij,kl->ijkl', W_state_1q(s0a, Gamma_in1),
+#                               W_state_1q(s0b, Gamma_in2))
+# w1= np.einsum('ij,kl->ijkl', W_state_1q(s1a, Gamma_out1),
+#                               W_state_1q(s1b, Gamma_out2))
+# wc= W_gate_2q(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2)
 
-sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
-is_evolved = np.allclose(sf, s1)
-wf = np.einsum('ijklmnsr,ijkl->mnsr', wc, w0)
-is_stoch = np.allclose(wf, w1)
-print('Stoch-2q')
-# print('U s0 U* = ', sf)
-# print('s1 = ', s1)
-# print('<wc,w0> = ', wf)
-# print('w1 = ', w1)
-print('is_evolved: ', is_evolved)
-print('is_stoch: ', is_stoch)
+# sf = np.dot(np.dot(U2q, s0), U2q.conj().T)
+# is_evolved = np.allclose(sf, s1)
+# wf = np.einsum('ijklmnsr,ijkl->mnsr', wc, w0)
+# is_stoch = np.allclose(wf, w1)
+# print('Stoch-2q')
+# # print('U s0 U* = ', sf)
+# # print('s1 = ', s1)
+# # print('<wc,w0> = ', wf)
+# # print('w1 = ', w1)
+# print('is_evolved: ', is_evolved)
+# print('is_stoch: ', is_stoch)
 
 
 

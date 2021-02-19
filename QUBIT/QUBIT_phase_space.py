@@ -174,14 +174,15 @@ def allD1qs():
         D1q_list.append(D1q(w))
     D1q_list = np.array(np.reshape(D1q_list,(DIM,DIM,DIM,DIM)),
                         dtype="complex_")
-    print('Done calculating D1qs.')
+    # print('Done calculating D1qs.')
     return D1q_list
 D1q_list = allD1qs()
 
 
 # print(get_F1q0(x2Gamma([1,1/2,1/2])))
 # print(get_F1q_list(x2Gamma([1,1/2,1/2])))
-#print(W_state_1q(psi2rho(np.array([1,-1.j])/np.sqrt(2)), x2Gamma([1,1/2,1/2])).flatten())
+# print(W_state_1q(psi2rho(np.array([1,-1.j])/np.sqrt(2)),
+#                    x2Gamma([1,1/2,1/2])).flatten())
 # x0w = [1,1/2,1/2]
 # #x = [1,2,4]
 # Gamma_in = x2Gamma(x0w)

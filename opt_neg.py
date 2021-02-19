@@ -10,7 +10,19 @@ from circuit_components import(makeState, makeGate)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max,
                    neg_gate_2q_max, neg_meas_1q)
 
-def optimize_neg(circuit, opt_method='B', path='test_directory'):
+def optimize_neg(circuit_compressed, opt_method='B', path='test_directory'):
+    ''' Given circuit_compressed must be output of
+        random_circuit_generator.compress_circuit function.
+    '''
+
+    x0w = [1,0,0,0,0,0,1,0]
+    x_opt = x0w
+
+    neg_opt = 1.
+
+    return x_opt, neg_opt
+
+def optimize_neg2(circuit, opt_method='B', path='test_directory'):
     ''' List circuit contains 3 elements:
         - state_string: 'T0TT0T'
         - gate_sequence: [[[state_index], U1q],

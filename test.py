@@ -1,7 +1,8 @@
 import numpy as np
 from state_functions import(evolve)
 from circuit_components import(makeGate, makeState)
-from random_circuit_generator import(random_circuit, show_circuit)
+from random_circuit_generator import(random_circuit, compress_circuit,
+                                     show_circuit, solve_circuit_symbolic)
 from opt_neg import(optimize_neg)
 from prob_estimation import(sample)
 
@@ -9,27 +10,41 @@ from prob_estimation import(sample)
 import matplotlib.pyplot as plt
 
 
-# circuit = ['0', [[[0], 'H']], '0']
-
-# circuit = ['0TT', [[[0], 'T'   ],
-#                    [[0,1], 'C+'],
-#                    [[1], 'T'   ],
-#                    [[0,1], 'C+'],
-#                    [[0], 'T'   ],
-#                    [[1,2], 'C+'],
-#                    [[1],   'T' ],
-#                    [[2,0], 'C+']
-#                    ],'010']
-
-# circuit = random_circuit(qudit_num=3,
-#                           C1qGate_num=6, TGate_num=2, CSUMGate_num=3,
+# circuit = random_circuit(qudit_num=10,
+#                           C1qGate_num=17, TGate_num=5, CSUMGate_num=14,
 #                           given_state=None,
 #                           given_measurement=2)
-# show_circuit(circuit)
+circuit = ['011', [
+            [[2], 'H'],
+            [[0], 'S'],
+            [[1], 'T'],
+            [[0], 'T'],
+            [[2, 0], 'C+'],
+            [[1], 'H'],
+            [[1], 'S'],
+            [[0], 'T'],
+            [[2, 0], 'C+'],
+            [[0], 'S'],
+            [[1], 'T'],
+            [[0], 'H'],
+            [[1], 'S'],
+            [[1, 2], 'C+'],
+            [[1], 'H']
+            ], '1T/']
+show_circuit(circuit)
+circuit_compressed = compress_circuit(circuit)
 # optimize_neg(circuit)
 
 # p= sample(circuit, 0)
 # q= sample(circuit, np.load('data/test_directory/optimized_x.npy'))
+
+
+def test_solver():
+    check1 = solve_circuit_symbolic(circuit)
+
+    state, gates, meas = circuit_compressed
+
+    return check1, state, gates, meas
 
 
 def test_sampling(N=1e1):
@@ -141,7 +156,7 @@ def test_sampling2(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,N=1e2):
 
     return 0
 
-test_sampling(1e5)
+# test_sampling(1e5)
 #qudit_num = 5
 #C1qGate_num = 25
 #TGate_num = 5

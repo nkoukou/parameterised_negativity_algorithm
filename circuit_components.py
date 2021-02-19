@@ -31,17 +31,15 @@ def makeGate(gate_string):
     return gate
 
 def makeMeas(meas_string):
-    ''' Returns the measurement output and mode from the generating all-qudit
+    ''' Returns the measurement projector from the generating all-qudit
     measurement string ('/' - Trace out).
     '''
-    MeasO_list = []
-    Meas_mode_list = []
-    for meas_index in range(len(meas_string)):
-        if meas_string[meas_index]=='/':
-            continue
-        MeasO_list.append(makeState1q(meas_string[meas_index]))
-        Meas_mode_list.append(meas_index)
-    return MeasO_list, Meas_mode_list
+    meas = 1
+    for m in meas_string:
+        # print(m)
+        temp = makeMeas1q(m)
+        meas = np.kron(meas, temp)
+    return meas
 
 def makeState1q(state_string, dim=DIM):
     ''' Returns a 1-qudit state matrix from the generating state string:
@@ -176,15 +174,14 @@ def gate2F_aux(gate_string, invert_ct=False, dim=DIM):
     return F, z
 
 def makeMeas1q(meas_string, dim=DIM):
-    ''' Returns the measurement output and mode from the generating 1-qudit
-    measurement string:
-        'Z' - Projection on |0>
-        'X' - Projection on |+>
-        'T' - Projection on |T>
+    ''' Returns the measurement projector from the generating 1-qudit
+    measurement string ('/' - Trace out)
     '''
-    MeasO = makeState1q(meas_string)
-    Meas_mode = meas_string.find(meas_string)
-    return MeasO, Meas_mode
+    if meas_string=='/':
+        meas = np.eye(dim)
+    else:
+        meas = makeState1q(meas_string)
+    return meas
 
 
 '''Sample Code'''
