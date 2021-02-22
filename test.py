@@ -3,37 +3,39 @@ from state_functions import(evolve)
 from circuit_components import(makeGate, makeState)
 from random_circuit_generator import(random_circuit, compress_circuit,
                                      show_circuit, solve_circuit_symbolic)
-from opt_neg import(optimize_neg)
+from opt_neg import(optimize_neg, optimize_neg_compressed)
 from prob_estimation import(sample)
 
 # from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 
-# circuit = random_circuit(qudit_num=10,
-#                           C1qGate_num=17, TGate_num=5, CSUMGate_num=14,
-#                           given_state=None,
-#                           given_measurement=2)
-circuit = ['011', [
-            [[2], 'H'],
-            [[0], 'S'],
-            [[1], 'T'],
-            [[0], 'T'],
-            [[2, 0], 'C+'],
-            [[1], 'H'],
-            [[1], 'S'],
-            [[0], 'T'],
-            [[2, 0], 'C+'],
-            [[0], 'S'],
-            [[1], 'T'],
-            [[0], 'H'],
-            [[1], 'S'],
-            [[1, 2], 'C+'],
-            [[1], 'H']
-            ], '1T/']
+circuit = random_circuit(qudit_num=4,
+                         C1qGate_num=17, TGate_num=7, CSUMGate_num=4,
+                         given_state=None, given_measurement=2,
+                         symbolic=True)
+# circuit = ['011', [
+#             [[2], 'H'],
+#             [[0], 'S'],
+#             [[1], 'T'],
+#             [[0], 'T'],
+#             [[2, 0], 'C+'],
+#             [[1], 'H'],
+#             [[1], 'S'],
+#             [[0], 'T'],
+#             [[2, 0], 'C+'],
+#             [[0], 'S'],
+#             [[1], 'T'],
+#             [[0], 'H'],
+#             [[1], 'S'],
+#             [[1, 2], 'C+'],
+#             [[1], 'H']
+#             ], '1T/']
 show_circuit(circuit)
 circuit_compressed = compress_circuit(circuit)
 # optimize_neg(circuit)
+print('¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬')
+optimize_neg_compressed(circuit_compressed)
 
 # p= sample(circuit, 0)
 # q= sample(circuit, np.load('data/test_directory/optimized_x.npy'))
@@ -74,7 +76,8 @@ def test_sampling(N=1e1):
 
     # wig_plot, = plt.plot(out_wig_list,'r',label = 'Wigner-sampling')
     # opt_plot, = plt.plot(out_opt_list,'b',label = 'Opt-sampling')
-    # born_plot, = plt.plot(np.ones(len(out_wig_list))*p_born,'k-.',label = 'Born rule probability')
+    # born_plot, = plt.plot(np.ones(len(out_wig_list))*p_born,'k-.',
+    #                        label = 'Born rule probability')
     # plt.xlabel("Iterations")
     # plt.ylabel("Probability")
     # plt.legend(handles=[wig_plot,opt_plot,born_plot])

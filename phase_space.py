@@ -2,7 +2,7 @@ import autograd.numpy as np
 import itertools as it
 
 from state_functions import(DIM, tau, power)
-from circuit_components import(makeGate, makeState)
+from circuit_components import(makeGate, makeState, makeMeas)
 
 def x2Gamma(x):
     ''' Returns covariance matrix Gamma given array x of independent parameters
@@ -165,6 +165,57 @@ Gamma_in2  = x2Gamma(2*np.random.rand(8)-1)
 Gamma_out1 = x2Gamma(2*np.random.rand(8)-1)
 Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 
+####################### DISTRIBUTION CALC FOR CIRCUIT #########################
+
+def get_prob_list(circuit_compressed, x):
+    '''	For a given circuit and a list of Gammas, calculate the Gamma
+    probability distributions of each circuit element.
+ 	'''
+    state_string, gate_sequence, meas_string = circuit_compressed
+
+    Gamma_index = 0
+    Gammas = []
+
+    PD_list_states = []
+    PD_list_gates = []
+    PD_list_meas = []
+
+ 	# Input states
+    for s in state_string:
+        state = makeState(s)
+        Gamma = x2Gamma(x[8*Gamma_index:8*(Gamma_index+1)])
+        WF = W_state_1q(state, Gamma)
+
+        PD_list_states.append(WF)
+        Gammas.append(Gamma)
+        Gamma_index += 1
+
+    # Gates
+    for g in gate_sequence:
+        idx, gate = g[0], g[1]
+
+        Gamma_in1 = Gammas[idx[0]]
+        Gamma_in2 = Gammas[idx[1]]
+        Gamma_out1 = x2Gamma(x[8*Gamma_index:8*(Gamma_index+1)])
+        Gamma_out2 = x2Gamma(x[8*(Gamma_index+1):8*(Gamma_index+2)])
+        WF = W_gate_2q(gate,Gamma_in1,Gamma_in2,Gamma_out1,Gamma_out2)
+
+        PD_list_gates.append(WF)
+        Gammas[idx[0]] = Gamma_out1
+        Gammas[idx[1]] = Gamma_out2
+        Gamma_index += 2
+
+    # Measurement
+    for m in range(len(meas_string)):
+        if meas_string[m]=='/': PD_list_meas.append([])
+        E = makeMeas(meas_string[m])
+        Gamma = Gammas[m]
+        WF = W_meas_1q(E, Gamma)
+
+        PD_list_meas.append(WF)
+
+    return PD_list_states, PD_list_gates, PD_list_meas
+
 # # Test 1q stochastic transformations
 # s0  = makeState('0')
 # s1  = makeState('+')
@@ -226,8 +277,6 @@ Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 # # print('w1 = ', w1)
 # print('is_evolved: ', is_evolved)
 # print('is_stoch: ', is_stoch)
-
-
 
 
 

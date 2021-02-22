@@ -14,7 +14,6 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
         symbolic          - True to return gate strings, e.g. 'H', '1', etc. or
                             False to return gate matrices , e.g. makeGate('H'),
                             makeGate('1') etc.
-        !!! Gates are completely random.
     '''
     ### state_string
     if given_state is None:
@@ -45,11 +44,11 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
         gate = [[nr.randint(qudit_num)], g]
         gates_sequence.append(gate)
     for i in range(TGate_num):
-        g = char if symbolic else makeGate('T')
+        g = 'T' if symbolic else makeGate('T')
         gate = [[nr.randint(qudit_num)], g]
         gates_sequence.append(gate)
     for i in range(CSUMGate_num):
-        g = char if symbolic else makeGate('C+')
+        g = 'C+' if symbolic else makeGate('C+')
         gate = [list(nr.choice(qudit_num, size=2, replace=False)), g]
         gates_sequence.append(gate)
     nr.shuffle(gates_sequence)

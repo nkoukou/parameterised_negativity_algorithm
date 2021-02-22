@@ -6,23 +6,111 @@ from autograd import(grad)
 from scipy.optimize import(Bounds, minimize)
 from scipy.optimize import(basinhopping)
 
-from circuit_components import(makeState, makeGate)
+from circuit_components import(makeState, makeGate, makeMeas)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max,
                    neg_gate_2q_max, neg_meas_1q)
 
-def optimize_neg(circuit_compressed, opt_method='B', path='test_directory'):
-    ''' Given circuit_compressed must be output of
-        random_circuit_generator.compress_circuit function.
+def optimize_neg_compressed(circuit_compressed, opt_method='B',
+                            path='test_directory'):
+    ''' circuit_compressed - output of random_circuit_generator.
+                                       compress_circuit function.
     '''
+    state_string, gate_sequence, meas_string = circuit_compressed
 
+    current_state_index = []
+    init_state_index = []
+    gate_2q_index = []
+    meas_index = []
+    x_index = 0
+    for state_str in state_string:
+        init_state_index.append([x_index, makeState(state_str)])
+        current_state_index.append(x_index)
+        x_index +=1
+    for gate in gate_sequence:
+        if len(gate[0])==1: raise Exception('There are disentangled wires.')
+        c_index = (gate[0])[0]
+        t_index = (gate[0])[1]
+        gate_2q_index.append( [[current_state_index[c_index],
+                                current_state_index[t_index],
+                                x_index,x_index+1], gate[1]])
+        current_state_index[c_index] = x_index
+        current_state_index[t_index] = x_index+1
+        x_index +=2
+    k = 0
+    for meas_str in meas_string:
+        if meas_str=='/': continue
+        meas_index.append([current_state_index[k], makeMeas(meas_str)])
+        k+=1
+    x_len = x_index
+
+    def cost_function(x):
+        Gamma_list = []
+        for x_index in range(x_len):
+            Gamma_list.append(x2Gamma(x[8*x_index:8*(x_index+1)]))
+        neg = 1.
+        for state_index in init_state_index:
+            rho = state_index[1]
+            Gamma = Gamma_list[state_index[0]]
+            neg = neg * neg_state_1q(rho, Gamma)
+        for gate_index in gate_2q_index:
+            U2q = gate_index[1]
+            GammaC_in = Gamma_list[(gate_index[0])[0]]
+            GammaT_in = Gamma_list[(gate_index[0])[1]]
+            GammaC_out = Gamma_list[(gate_index[0])[2]]
+            GammaT_out = Gamma_list[(gate_index[0])[3]]
+            neg = neg * neg_gate_2q_max(U2q, GammaC_in, GammaT_in,
+                                             GammaC_out, GammaT_out)
+        for m_index in meas_index:
+            E = m_index[1]
+            Gamma = Gamma_list[m_index[0]]
+            neg = neg * neg_meas_1q(E, Gamma)
+        return np.log(neg)
+
+    # Wigner distribution
+    x0 = []
     x0w = [1,0,0,0,0,0,1,0]
-    x_opt = x0w
+    for x_index in range(x_len):
+        x0 = np.append(x0, x0w)
+    start_time = time.time()
+    out = cost_function(x0)
+    dt = time.time() - start_time
+    print('---------------------------------------------------------------')
+    print('Wigner Log Neg:  ', out)
+    print('Computation time:', dt)
 
-    neg_opt = 1.
+    # Optimised distribution
+    # x0 = 2*np.random.rand(8*x_len)-1
+    optimize_result, dt = optimizer(cost_function, x0, opt_method)
+    optimized_x = optimize_result.x
+    optimized_value = cost_function(optimized_x)
+    print('---------------------------------------------------------------')
+    print('Optimized Log Neg:', optimized_value)
+    print('Computation time: ', dt)
 
-    return x_opt, neg_opt
+    print('DONE')
 
-def optimize_neg2(circuit, opt_method='B', path='test_directory'):
+    # Saving data
+    directory = os.path.join('data', path)
+    if not os.path.isdir(directory): os.mkdir(directory)
+    np.save(os.path.join('data', path, 'state_string_compressed.npy'),
+            state_string)
+    print('STATE')
+    np.save(os.path.join('data', path, 'gate_sequence_compressed.npy'),
+            gate_sequence)
+    print('GATE')
+    np.save(os.path.join('data', path, 'meas_string_compressed.npy'),
+            meas_string)
+    print('MEAS')
+    np.save(os.path.join('data', path, 'optimized_x_compressed.npy'),
+            optimized_x)
+    print('XOPT')
+    np.save(os.path.join('data', path, 'optimized_neg_compressed.npy'),
+            optimized_value)
+    print('NEG')
+
+    return optimized_x, optimized_value
+
+def optimize_neg(circuit, opt_method='B', path='test_directory'):
     ''' List circuit contains 3 elements:
         - state_string: 'T0TT0T'
         - gate_sequence: [[[state_index], U1q],
@@ -170,8 +258,6 @@ def optimizer(cost_function, x0, opt_method='B'):
     else: raise Exception('Invalid optimisation method')
     dt = time.time()-start_time
     return optimize_result, dt
-
-
 
 
 
