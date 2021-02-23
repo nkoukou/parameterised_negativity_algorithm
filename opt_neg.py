@@ -87,26 +87,19 @@ def optimize_neg_compressed(circuit_compressed, opt_method='B',
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
 
-    print('DONE')
-
     # Saving data
     directory = os.path.join('data', path)
     if not os.path.isdir(directory): os.mkdir(directory)
     np.save(os.path.join('data', path, 'state_string_compressed.npy'),
             state_string)
-    print('STATE')
     np.save(os.path.join('data', path, 'gate_sequence_compressed.npy'),
             gate_sequence)
-    print('GATE')
     np.save(os.path.join('data', path, 'meas_string_compressed.npy'),
             meas_string)
-    print('MEAS')
     np.save(os.path.join('data', path, 'optimized_x_compressed.npy'),
             optimized_x)
-    print('XOPT')
     np.save(os.path.join('data', path, 'optimized_neg_compressed.npy'),
             optimized_value)
-    print('NEG')
 
     return optimized_x, optimized_value
 
