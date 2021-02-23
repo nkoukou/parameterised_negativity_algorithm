@@ -9,6 +9,9 @@ from QUBIT_phase_space import(x2Gamma, W_state_1q, neg_state_1q, W_gate_1q,
                         neg_gate_1q, W_gate_2q, neg_gate_2q, W_meas_1q,
                         neg_meas_1q, n_Gammas)
 
+PD_list_Wigner = []
+PD_list_Gammas = []
+
 def sample(circuit, x=0, niters=10000):
     ''' Samples given circuit with given parameter list x.
         x      - Gamma parameter list
@@ -21,7 +24,7 @@ def sample(circuit, x=0, niters=10000):
     return p_sample/niters
 
 
-def compare_Wigner_para(circuit, niters=10000, save=1):
+def compare_Wigner_para(circuit, niters=10000, Gamma_list=0, save=1):
     '''Show the difference between sampling with Wigner distribution
        and sampling with the optimised parameter list 'opt_Gammas'.
        It prints the final p_estimate in each case
@@ -29,10 +32,18 @@ def compare_Wigner_para(circuit, niters=10000, save=1):
        in each case as a function of niters.
     '''
     Wigner_Gammas = [1,1/2,1/2]*n_Gammas(circuit)
-    opt_Gammas, Gamma_dist = optimize_neg(circuit)
+
+    # If the Gammma list is given, set the opt_Gammas the one given. Otherwise, run optimisation
+    # to get the optimised Gamma list.
+    if isinstance(Gamma_list, int):
+        opt_Gammas, Gamma_dist = optimize_neg(circuit)
+    else:
+        opt_Gammas = Gamma_list
 
     # Calculate the quasi-probability distributions of all circuit elements and save them
+    global PD_list_Wigner 
     PD_list_Wigner = get_prob_list(circuit, Wigner_Gammas)
+    global PD_list_Gammas 
     PD_list_Gammas = get_prob_list(circuit, opt_Gammas)
 
     p_sample_Wigner = 0
@@ -46,8 +57,8 @@ def compare_Wigner_para(circuit, niters=10000, save=1):
 
     start_time = time.time()
     for n in range(niters):
-        p_sample_Wigner += sample_iter(circuit, PD_list_Wigner)
-        p_sample_opt += sample_iter(circuit, PD_list_Gammas)
+        p_sample_Wigner += sample_iter(circuit, 0)
+        p_sample_opt += sample_iter(circuit, 1)
 
         plot_Wigner.append(p_sample_Wigner/(n+1))
         plot_opt.append(p_sample_opt/(n+1))
@@ -104,12 +115,19 @@ def compare_Wigner_para(circuit, niters=10000, save=1):
     f2.close()
 
 
-def sample_iter(circuit, PD_list):
+def sample_iter(circuit, is_optimised):
     ''' Performs Monte Carlo sampling as outlined in Pashayan et al. (2015)
         for given circuit and the list of Gamma quasi-probability distributions
         of circuit elements.
     '''
     state_string, gate_sequence, meas_string = circuit
+
+    # If is_optimised==1, set PD_list as PD_list_Gammas (the optimised one).
+    # Otherwise, use the Wigner one.
+    if is_optimised==0:
+        PD_list = PD_list_Wigner
+    else:
+        PD_list = PD_list_Gammas
 
     # The list of Gamma quasi-probability distributions for circuit elements
     PD_list_states, PD_list_gates, PD_list_meas = PD_list
