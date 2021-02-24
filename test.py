@@ -4,7 +4,7 @@ from circuit_components import(makeGate, makeState)
 from random_circuit_generator import(random_circuit, compress_circuit,
                                      show_circuit, solve_circuit_symbolic)
 from opt_neg import(optimize_neg, optimize_neg_compressed)
-from prob_estimation import(sample)
+from prob_estimation import(sample, compare_Wigner_optimised)
 
 # from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt

@@ -67,19 +67,19 @@ def optimize_neg_compressed(circuit, opt_method='B', path='test_directory'):
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
 
-    # Saving data
-    directory = os.path.join('data', path)
-    if not os.path.isdir(directory): os.mkdir(directory)
-    np.save(os.path.join('data', path, 'QUBIT_state_string_compressed.npy'),
-            state_string)
-    np.save(os.path.join('data', path, 'QUBIT_gate_sequence_compressed.npy'),
-            gate_sequence)
-    np.save(os.path.join('data', path, 'QUBIT_meas_string_compressed.npy'),
-            meas_string)
-    np.save(os.path.join('data', path, 'QUBIT_optimized_x_compressed.npy'),
-            optimized_x)
-    np.save(os.path.join('data', path, 'QUBIT_optimized_neg_compressed.npy'),
-            optimized_value)
+    # # Saving data
+    # directory = os.path.join('data', path)
+    # if not os.path.isdir(directory): os.mkdir(directory)
+    # np.save(os.path.join('data', path, 'QUBIT_state_string_compressed.npy'),
+    #         state_string)
+    # np.save(os.path.join('data', path, 'QUBIT_gate_sequence_compressed.npy'),
+    #         gate_sequence)
+    # np.save(os.path.join('data', path, 'QUBIT_meas_string_compressed.npy'),
+    #         meas_string)
+    # np.save(os.path.join('data', path, 'QUBIT_optimized_x_compressed.npy'),
+    #         optimized_x)
+    # np.save(os.path.join('data', path, 'QUBIT_optimized_neg_compressed.npy'),
+    #         optimized_value)
 
     return optimized_x, optimized_value
 
