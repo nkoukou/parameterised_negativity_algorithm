@@ -29,9 +29,10 @@ method = 0
 # 1: run optimisation and use the optimised parameters, 
 # or x_list: when you want to run sampling with a particular parameter list.
 test_sampling = sample(Bernstein_Vazirani_circuit, method, 1000)
-test_sampling.MC_sampling()
+p_esimate, p_estimate_list = test_sampling.MC_sampling() 
+# return the sampling result (p_estimate) and the full list of p_estimate of each iteration
 
-### When you want to plot the difference between the Wigner and the optmised cases.
+### When you want to plot the difference between the Wigner and the optmised cases (it also saves the full list of each case):
 compare_Wigner_optimised(Bernstein_Vazirani_circuit, 1000)
 #######################################################
 
