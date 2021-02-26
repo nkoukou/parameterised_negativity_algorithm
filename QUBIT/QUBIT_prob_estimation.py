@@ -21,7 +21,7 @@ def compare_Wigner_optimised(circuit, niters=1000):
     Optimised = sample(circuit, 1, niters)
 
     p_sample_Wigner, plot_Wigner = Wigner.MC_sampling()
-    p_sample_opt, plot_opt = Wigner.MC_sampling()
+    p_sample_opt, plot_opt = Optimised.MC_sampling()
 
     ### Save the results
     path1 = 'Wigner.txt'
