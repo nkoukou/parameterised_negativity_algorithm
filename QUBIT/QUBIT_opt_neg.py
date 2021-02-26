@@ -189,10 +189,10 @@ def optimizer(cost_function, x0, opt_method='B'):
     return optimize_result, dt
 
 
-test = [np.eye(2)]*4
+#test = [np.eye(2)]*4
 # test[0] = test[0]*makeGate('H')
 # test[1] = test[1]*makeGate('H')
-print(test)
+#print(test)
 #print(np.dot(makeGate('H'),test[0]))
 
 

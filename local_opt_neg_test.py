@@ -35,56 +35,61 @@ circuit = [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
 kwargs = {'opt_method':'B', 'niter': 1, 'show_detailed_log': True}
 wig_neg_tot = show_Wigner_neg_x(circuit,**kwargs)
 x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot = get_opt_x(circuit,**kwargs)
+#print(np.array(x_rho_opt_list).flatten())
+#print(np.array(x_gate_out_opt_list).flatten())
+#print(np.array(x_meas_opt_list).flatten())
+#print(np.append(np.append(np.array(x_rho_opt_list).flatten(),np.array(x_gate_out_opt_list).flatten()),np.array(x_meas_opt_list).flatten()))
+
 print('--------------------------------')
 print('Wig_neg/Opt_neg:',wig_neg_tot/neg_tot)
 print('--------------------------------')
 
-'''Compressed Circuit'''
-print('\n')
-print('\n')
-print('Test Compressed Circuit')
-circuit = ['011', [
-            [[2], 'H'],
-            [[0], 'S'],
-            [[1], 'T'],
-            [[0], 'T'],
-            [[2, 0], 'C+'],
-            [[1], 'H'],
-            [[1], 'S'],
-            [[0], 'T'],
-            [[2, 0], 'C+'],
-            [[0], 'S'],
-            [[1], 'T'],
-            [[0], 'H'],
-            [[1], 'S'],
-            [[1, 2], 'C+'],
-            [[1], 'H']
-            ], '1T/']
-show_circuit(circuit)
-circuit_compressed = compress_circuit(circuit)
-#show_circuit(circuit_compressed)
-    
-circuit_loc = get_circuit_loc(circuit_compressed)
-kwargs = {'opt_method':'B', 'niter': 1, 'show_detailed_log': False}
-wig_neg_tot = show_Wigner_neg_x(circuit_loc,**kwargs)
-x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot = get_opt_x(circuit_loc,**kwargs)
-print('--------------------------------')
-print('Wig_neg/Opt_neg:',wig_neg_tot/neg_tot)
-print('--------------------------------')
-
-
-'''Random Circuit'''
-print('\n')
-print('\n')
-print('Test Random Circuit')
-kwargs = {'type': 'c', 'Tgate_prob': 0.9}
-qudit_num = 10
-circuit_length = 20
-circuit = get_rand_circuit(qudit_num,circuit_length,**kwargs)
-
-kwargs = {'opt_method':'B', 'niter': 3, 'show_detailed_log': False}
-wig_neg_tot = show_Wigner_neg_x(circuit,**kwargs)
-x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot = get_opt_x(circuit,**kwargs)
-print('--------------------------------')
-print('Wig_neg/Opt_neg:',wig_neg_tot/neg_tot)
-print('--------------------------------')
+#'''Compressed Circuit'''
+#print('\n')
+#print('\n')
+#print('Test Compressed Circuit')
+#circuit = ['011', [
+#            [[2], 'H'],
+#            [[0], 'S'],
+#            [[1], 'T'],
+#            [[0], 'T'],
+#            [[2, 0], 'C+'],
+#            [[1], 'H'],
+#            [[1], 'S'],
+#            [[0], 'T'],
+#            [[2, 0], 'C+'],
+#            [[0], 'S'],
+#            [[1], 'T'],
+#            [[0], 'H'],
+#            [[1], 'S'],
+#            [[1, 2], 'C+'],
+#            [[1], 'H']
+#            ], '1T/']
+#show_circuit(circuit)
+#circuit_compressed = compress_circuit(circuit)
+##show_circuit(circuit_compressed)
+#
+#circuit_loc = get_circuit_loc(circuit_compressed)
+#kwargs = {'opt_method':'B', 'niter': 1, 'show_detailed_log': False}
+#wig_neg_tot = show_Wigner_neg_x(circuit_loc,**kwargs)
+#x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot = get_opt_x(circuit_loc,**kwargs)
+#print('--------------------------------')
+#print('Wig_neg/Opt_neg:',wig_neg_tot/neg_tot)
+#print('--------------------------------')
+#
+#
+#'''Random Circuit'''
+#print('\n')
+#print('\n')
+#print('Test Random Circuit')
+#kwargs = {'type': 'c', 'Tgate_prob': 0.9}
+#qudit_num = 10
+#circuit_length = 20
+#circuit = get_rand_circuit(qudit_num,circuit_length,**kwargs)
+#
+#kwargs = {'opt_method':'B', 'niter': 3, 'show_detailed_log': False}
+#wig_neg_tot = show_Wigner_neg_x(circuit,**kwargs)
+#x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot = get_opt_x(circuit,**kwargs)
+#print('--------------------------------')
+#print('Wig_neg/Opt_neg:',wig_neg_tot/neg_tot)
+#print('--------------------------------')

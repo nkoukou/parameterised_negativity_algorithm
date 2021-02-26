@@ -19,7 +19,7 @@ Bernstein_Vazirani_circuit = ['001', [[[0],'H'], [[2],'H'], [[2],'H'],
                                       [[0,2],'C+'], [[1],'T'], [[2],'T'],
                                       [[0,1],'C+'], [[2],'H'], [[0],'T'],
                                       [[1],'t'], [[0,1],'C+'], [[0],'H']],
-                              '1//']
+                              '0//']
 
 ######### New 'prob_estimation.py' example ##########
 ### When you just want to run sampling once
@@ -28,12 +28,12 @@ method = 0
 # 0: Wigner, 
 # 1: run optimisation and use the optimised parameters, 
 # or x_list: when you want to run sampling with a particular parameter list.
-test_sampling = sample(Bernstein_Vazirani_circuit, method, 1000)
+test_sampling = sample(Bernstein_Vazirani_circuit, method, 500000)
 p_esimate, p_estimate_list = test_sampling.MC_sampling() 
 # return the sampling result (p_estimate) and the full list of p_estimate of each iteration
 
 ### When you want to plot the difference between the Wigner and the optmised cases (it also saves the full list of each case):
-compare_Wigner_optimised(Bernstein_Vazirani_circuit, 1000)
+compare_Wigner_optimised(Bernstein_Vazirani_circuit, 500000)
 #######################################################
 
 #plt.close('all')
