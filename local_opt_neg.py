@@ -64,12 +64,14 @@ def get_local_opt_x(circuit_compressed,**kwargs):
     options.update(kwargs)
     
     [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list] = get_circuit_loc(circuit_compressed)
-    
+
+    print('----------Local_Opt_Dist--------------\n',options)
+
     x_rho_opt_list = []
     neg_rho_opt_list = []
     neg_tot = 1.
     for rho in rho_list:
-        x_opt = local_opt_State1q(rho,**kwargs)
+        x_opt = local_opt_State1q(rho,**options)
         x_rho_opt_list.append(x_opt)
         neg = neg_state_1q(rho, x2Gamma(x_opt))
         neg_rho_opt_list.append(neg)
@@ -85,7 +87,7 @@ def get_local_opt_x(circuit_compressed,**kwargs):
         [qudit_index1,qudit_index2] = gate_qudit_index_list[gate_index]
         x_in1 = x_running[qudit_index1]
         x_in2 = x_running[qudit_index2]
-        [x_out_opt1,x_out_opt2] = local_opt_Gate2q(U2q, x_in1, x_in2,**kwargs)
+        [x_out_opt1,x_out_opt2] = local_opt_Gate2q(U2q, x_in1, x_in2,**options)
         x_gate_out_opt_list.append([x_out_opt1,x_out_opt2].copy())
         neg = neg_gate_2q_max(U2q, x2Gamma(x_in1),x2Gamma(x_in2),x2Gamma(x_out_opt1),x2Gamma(x_out_opt2))
         neg_gate_opt_list.append(neg)
@@ -108,7 +110,6 @@ def get_local_opt_x(circuit_compressed,**kwargs):
             print('neg_meas:',neg)
         
 #    print('local_opt_neg_tot:', neg_tot)
-    print('----------Local_Opt_Dist--------------',kwargs)
     print('Local Opt Log Neg:', np.log(neg_tot))
     print('Computation time:',time.time() - t0)
     
@@ -167,10 +168,9 @@ def get_circuit_loc(circuit_compressed):
         
     meas_list = []
     for meas_string in meas_string_list:
-        if meas_string=='/':
-            continue
-        E = makeState(meas_string)
-        meas_list.append(E)
+        if meas_string != '/':
+            E = makeState(meas_string)
+            meas_list.append(E)
         
     return [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
 

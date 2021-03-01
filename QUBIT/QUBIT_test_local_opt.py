@@ -10,32 +10,39 @@ from QUBIT_local_opt_neg import (get_local_opt_x,show_Wigner_neg_x)
 # from mpl_toolkits.mplot3d import Axes3D
 # import matplotlib.pyplot as plt
 
-
-#circuit = ['000', [[[0], 'X'],[[0], 'H'],[[0,1], 'C+'],[[2],'H']], '00/']
+circuit = random_circuit(qudit_num=6,
+                         C1qGate_num=203, TGate_num=30, CSUMGate_num=13,
+                         given_state='000000', given_measurement='00////')
+show_circuit(circuit)
+#p_born = solve_circuit_symbolic(circuit)
+cc = compress_circuit(circuit)
 
 ### s = 0, 1-qubit case
-Bernstein_Vazirani_circuit = ['001', [[[0],'H'], [[2],'H'], [[2],'H'],
-                                      [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
-                                      [[2],'T'], [[1,2],'C+'], [[2],'t'],
-                                      [[0,2],'C+'], [[1],'T'], [[2],'T'],
-                                      [[0,1],'C+'], [[2],'H'], [[0],'T'],
-                                      [[1],'t'], [[0,1],'C+'], [[0],'H']],
-                              '0//']
-cc = compress_circuit(Bernstein_Vazirani_circuit)
+#Bernstein_Vazirani_circuit = ['001', [[[0],'H'], [[2],'H'], [[2],'H'],
+#                                      [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
+#                                      [[2],'T'], [[1,2],'C+'], [[2],'t'],
+#                                      [[0,2],'C+'], [[1],'T'], [[2],'T'],
+#                                      [[0,1],'C+'], [[2],'H'], [[0],'T'],
+#                                      [[1],'t'], [[0,1],'C+'], [[0],'H']],
+#                              '0//']
+#circuit = Bernstein_Vazirani_circuit
+#show_circuit(circuit)
+#p_born = solve_circuit_symbolic(circuit)
+#cc = compress_circuit(circuit)
 
 niters = 1000000
 
-Wigner = sample(Bernstein_Vazirani_circuit, 0, niters)
+Wigner = sample(circuit, 0, niters)
 p_sample_Wigner, plot_Wigner = Wigner.MC_sampling()
 
-kwargs = {'show_detailed_log': False, 'opt_method':'B', 'niter': 3}
+Optimised = sample(circuit, 1, niters)
+p_sample_opt, plot_opt = Optimised.MC_sampling()
+
+#kwargs = {'show_detailed_log': False, 'opt_method':'B', 'niter': 3}
 #show_Wigner_neg_x(cc,**kwargs)
-local_opt_x, local_opt_neg = get_local_opt_x(cc,**kwargs)
-local_Optimised = sample(cc, local_opt_x, niters)
+local_Optimised = sample(circuit, 2, niters)
 p_sample_local_opt, plot_local_opt = local_Optimised.MC_sampling()
 
-Optimised = sample(Bernstein_Vazirani_circuit, 1, niters)
-p_sample_opt, plot_opt = Optimised.MC_sampling()
 
 x_axis = np.arange(niters)
 plt.plot(x_axis, plot_Wigner, linestyle='solid', color='tab:blue', label='Wigner')

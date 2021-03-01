@@ -13,7 +13,7 @@ from QUBIT_phase_space import(D1q_list,x2Gamma, neg_state_1q, neg_gate_1q_max,
                    neg_gate_2q_max, neg_meas_1q, W_state_1q, W_gate_1q, W_gate_2q, W_meas_1q)
 
 def local_optimizer(cost_function, x0, **kwargs):
-    options = {'opt_method':'B', 'niter': 1}
+    options = {'opt_method':'B', 'niter': 3}
     options.update(kwargs)
     opt_method = options['opt_method']
     if opt_method=='B': # autograd
@@ -60,7 +60,7 @@ def local_opt_Gate2q(U2q,x_in1,x_in2,**kwargs):
 
 def get_local_opt_x(circuit_compressed,**kwargs):
     t0 = time.time()
-    options = {'show_detailed_log':False}
+    options = {'show_detailed_log':False, 'opt_method':'B', 'niter': 3}
     options.update(kwargs)
     
     [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list] = get_circuit_loc(circuit_compressed)
@@ -69,7 +69,7 @@ def get_local_opt_x(circuit_compressed,**kwargs):
     neg_rho_opt_list = []
     neg_tot = 1.
     for rho in rho_list:
-        x_opt = local_opt_State1q(rho,**kwargs)
+        x_opt = local_opt_State1q(rho,**options)
         x_rho_opt_list.append(x_opt)
         neg = neg_state_1q(rho, x2Gamma(x_opt))
         neg_rho_opt_list.append(neg)
@@ -85,7 +85,7 @@ def get_local_opt_x(circuit_compressed,**kwargs):
         [qudit_index1,qudit_index2] = gate_qudit_index_list[gate_index]
         x_in1 = x_running[qudit_index1]
         x_in2 = x_running[qudit_index2]
-        [x_out_opt1,x_out_opt2] = local_opt_Gate2q(U2q, x_in1, x_in2,**kwargs)
+        [x_out_opt1,x_out_opt2] = local_opt_Gate2q(U2q, x_in1, x_in2,**options)
         x_gate_out_opt_list.append([x_out_opt1,x_out_opt2].copy())
         neg = neg_gate_2q_max(U2q, x2Gamma(x_in1),x2Gamma(x_in2),x2Gamma(x_out_opt1),x2Gamma(x_out_opt2))
         neg_gate_opt_list.append(neg)
@@ -108,12 +108,11 @@ def get_local_opt_x(circuit_compressed,**kwargs):
             print('neg_meas:',neg)
         
 #    print('local_opt_neg_tot:', neg_tot)
-    print('----------Local_Opt_Dist--------------',kwargs)
+    print('----------Local_Opt_Dist--------------\n',options)
     print('Local Opt Log Neg:', np.log(neg_tot))
     print('Computation time:',time.time() - t0)
     
     x_opt_list_tot = np.append(np.append(np.array(x_rho_opt_list).flatten(),np.array(x_gate_out_opt_list).flatten()),np.array(x_meas_opt_list).flatten())
-        
     return x_opt_list_tot, np.log(neg_tot)
 #    return x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot
 
