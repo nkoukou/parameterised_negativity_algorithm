@@ -10,8 +10,8 @@ from prob_estimation import(sample, compare_Wigner_optimised)
 import matplotlib.pyplot as plt
 
 
-circuit = random_circuit(qudit_num=3,
-                         C1qGate_num=4, TGate_num=1, CSUMGate_num=1,
+circuit = random_circuit(qudit_num=5,
+                         C1qGate_num=6, TGate_num=3, CSUMGate_num=7,
                          given_state=None, given_measurement=1,
                          symbolic=True)
 # circuit = ['011', [
@@ -32,7 +32,7 @@ circuit = random_circuit(qudit_num=3,
 #             [[1], 'H']
 #             ], '1T/']
 show_circuit(circuit)
-# circuit_compressed = compress_circuit(circuit)
+circuit_compressed = compress_circuit(circuit)
 # # optimize_neg(circuit)
 # print('¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬')
 # optimize_neg_compressed(circuit_compressed)

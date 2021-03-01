@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.random as nr
+from QUBIT_state_functions import evolve
 from QUBIT_circuit_components import(makeGate)
 
 def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
