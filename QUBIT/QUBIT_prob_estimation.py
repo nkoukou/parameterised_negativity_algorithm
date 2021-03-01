@@ -10,6 +10,8 @@ from QUBIT_random_circuit_generator import(compress_circuit)
 from QUBIT_phase_space import(x2Gamma, W_state_1q, neg_state_1q, W_gate_1q,
                         neg_gate_1q, W_gate_2q, neg_gate_2q, W_meas_1q,
                         neg_meas_1q)
+from QUBIT_local_opt_neg import (get_local_opt_x,show_Wigner_neg_x)
+
 DIM = 2
 
 def compare_Wigner_optimised(circuit, niters=1000):
@@ -81,6 +83,9 @@ class sample(object):
             elif x==1: # When x=1, run optimisation and find the optimised x_list.
                 self.x_list = optimize_neg_compressed(self.compressed_circuit)[0]
                 self.method = 'Optimised'
+            elif x==2: # When x=2, run local optimisation and find the optimised x_list.
+                self.x_list = get_local_opt_x(self.compressed_circuit)[0]
+                self.method = 'Local-Optimised'
         else: # When x_list is given.
             self.x_list = x
             self.method = 'Given'
