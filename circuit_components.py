@@ -79,6 +79,7 @@ def makeGate1q(gate_string, dim=DIM):
         'H' - Hadamard
         'S' - Phase gate
         'T' - T gate (magic gate)
+        't' - Inverse T gate
     '''
     if gate_string=='1':
         gate = np.eye(dim)
@@ -94,7 +95,8 @@ def makeGate1q(gate_string, dim=DIM):
         gate = np.roll(np.eye(dim), 1, axis=0)
     elif gate_string=='T':
         gate = np.diag([ksi, 1., ksi.conj()])
-        # gate = np.diag([1, np.exp(1j*np.pi/8),0,np.exp(1j*np.pi/4)])
+    elif gate_string=='t':
+        gate = np.diag([ksi.conj(), 1., ksi])
     else:
         raise Exception('Invalid 1-q gate string')
     return gate
