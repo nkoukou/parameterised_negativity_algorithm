@@ -10,7 +10,7 @@ class QD_circuit(object):
         self.circuit = circuit
 
 #### Non-symbolic circuit compression####
-    def compress_circuit(self,**kwargs):
+    def compress_circuit(self, **kwargs):
         cc = self.circuit #Need to be added#
         self.compressed_circuit = cc
         return cc
@@ -20,15 +20,15 @@ class QD_circuit(object):
         options = {'opt_method': 'B','niter': 3}
         options.update(kwargs)
         if Method == 'Wigner':
-            x_opt_list, log_neg_tot = wigner_neg_compressed(self.compressed_circuit,**kwargs)
+            x_opt_list, log_neg_tot = wigner_neg_compressed(self.compressed_circuit, **kwargs)
             self.x_list_wig = x_opt_list
         elif Method == 'Local_opt':
-            x_opt_list, log_neg_tot = local_opt_neg_compressed(self.compressed_circuit,**kwargs)
+            x_opt_list, log_neg_tot = local_opt_neg_compressed(self.compressed_circuit, **kwargs)    ### Old name: get_local_opt_x in QUBIT_local_opt_neg.py (old version)
             self.x_list_local_opt = x_opt_list
         elif Method == 'Opt':
-            x_opt_list, log_neg_tot = optimize_neg_compressed(self.compressed_circuit,**kwargs)
+            x_opt_list, log_neg_tot = optimize_neg_compressed(self.compressed_circuit, **kwargs)     ### Old function: optimize_neg_compressed in QUBIT_opt_neg.py (old version)
             self.x_list_opt = x_opt_list
-        return x_opt_list
+        return x_opt_list, log_neg_tot
 
 #### Get quasi-prob, negativity, sign, & normalised probabilit####
     def get_QD_list(self, Method = 'Wigner', **kwargs):
@@ -38,16 +38,16 @@ class QD_circuit(object):
             x_list = self.x_list_local_opt
         elif Method == 'Opt':
             x_list = self.x_list_opt
-        return get_prob_list(self.compressed_circuit,x_list, **kwargs)
+        return get_prob_list(self.compressed_circuit,x_list, **kwargs)  ### Old function: See 'QUBIT_prob_estimation.py'
 
 #### Sample the circuit: # Output is the all sampled outcome list ####
     def sample(self, Method = 'Wigner', sample_size=10000, **kwargs):
         QD_output = self.get_QD_list(Method, **kwargs)
-        sample_list = sample_circuit(self.compressed_circuit, QD_output, sample_size, **kwargs)
+        sample_list = sample_circuit(self.compressed_circuit, QD_output, sample_size, **kwargs) ### Old function: See 'QUBIT_prob_estimation.py'
         return sample_list
 
 
-######################SAMPLE CODE###########################################################
+######################################################SAMPLE CODE###########################################################
 if __name__ == "__main__":
     from QUBIT_temp_functions import (string_to_circuit, accum_sum)
     import autograd.numpy as np
@@ -66,17 +66,17 @@ if __name__ == "__main__":
     AA = QD_circuit(circuit)
     AA.compress_circuit()
 
-    sample_size = 100000
+    sample_size = 1000000
 
     AA.opt_x(Method = 'Wigner')
     AA.get_QD_list(Method = 'Wigner')
     wigner_out_list = AA.sample(Method = 'Wigner', sample_size= sample_size)
 
-    AA.opt_x(Method = 'Opt',**{'niter':1})
+    AA.opt_x(Method = 'Opt',**{'niter':10})
     AA.get_QD_list(Method = 'Opt')
     opt_out_list = AA.sample(Method = 'Opt', sample_size= sample_size)
 
-    AA.opt_x(Method = 'Local_opt',**{'niter':1})
+    AA.opt_x(Method = 'Local_opt',**{'niter':10})
     AA.get_QD_list(Method = 'Local_opt')
     local_opt_out_list = AA.sample(Method = 'Local_opt', sample_size = sample_size)
         
