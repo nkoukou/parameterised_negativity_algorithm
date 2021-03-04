@@ -23,6 +23,10 @@ def makeGate(gate_string):
         gate = makeCsum(gate_string)
         return gate
 
+    if gate_string=='S':
+        gate = np.array([[1.,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+        return gate
+
     gate = 1
     for g in gate_string:
         #print(g)

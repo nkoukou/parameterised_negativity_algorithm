@@ -10,7 +10,7 @@ from QUBIT_phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max, neg_gate_2
 def optimize_neg_compressed(compressed_circuit, **kwargs):
     options = {'opt_method': 'B', 'niter': 100}
     options.update(kwargs)
-    
+
     x_len = int(len(compressed_circuit['state_list']) + 2*len(compressed_circuit['gate_list']))
 
     def cost_function(x):
@@ -22,12 +22,12 @@ def optimize_neg_compressed(compressed_circuit, **kwargs):
             neg = neg * neg_state_1q(state, Gamma)
             Gammas.append(Gamma)
             Gamma_index += 1
-        
+
         gate_index = 0
         for gate in compressed_circuit['gate_list']:
-            idx = compressed_circuit['qudit_index_list'][gate_index]
+            idx = compressed_circuit['index_list'][gate_index]
             gate_index += 1
-            
+
             if len(idx)==1: raise Exception('There are disentangled wires.')
             GammaC_in = Gammas[idx[0]]
             GammaT_in = Gammas[idx[1]]
@@ -37,7 +37,7 @@ def optimize_neg_compressed(compressed_circuit, **kwargs):
             Gammas[idx[0]] = GammaC_out
             Gammas[idx[1]] = GammaT_out
             Gamma_index += 2
-        
+
         qudit_index = 0
         for meas in compressed_circuit['meas_list']:
             if str(meas) == '/': continue
@@ -54,27 +54,27 @@ def optimize_neg_compressed(compressed_circuit, **kwargs):
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
     print('---------------------------------------------------------------')
-    
+
     return optimized_x, optimized_value
-    
+
 def optimizer(cost_function, x0, opt_method='B', niter = 10):
     start_time = time.time()
-    
+
     if opt_method=='B': # autograd
         grad_cost_function = grad(cost_function)
         def func(x):
             return cost_function(x), grad_cost_function(x)
         optimize_result = basinhopping(func, x0, minimizer_kwargs={"method":"L-BFGS-B","jac":True},niter=niter)
-    
+
     elif opt_method=='NG': # Powell
         optimize_result = minimize(cost_function, x0, method='Powell')
-    
+
     elif opt_method=='G': # Without autograd
         optimize_result = minimize(cost_function, x0, method='L-BFGS-B',jac=grad_cost_function)
-         
+
     else:
         raise Exception('Invalid optimisation method')
-        
+
     dt = time.time()-start_time
-    
+
     return optimize_result, dt

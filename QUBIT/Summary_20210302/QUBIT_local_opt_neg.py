@@ -15,7 +15,7 @@ from QUBIT_phase_space import(D1q_list,x2Gamma, neg_state_1q, neg_gate_1q_max,
 def local_optimizer(cost_function, x0, **kwargs):
     options = {'opt_method' : 'B', 'niter' : 3}
     options.update(kwargs)
-    
+
     opt_method = options['opt_method']
     if opt_method=='B': # autograd
         grad_cost_function = grad(cost_function)
@@ -29,7 +29,7 @@ def local_optimizer(cost_function, x0, **kwargs):
         optimize_result = minimize(cost_function, x0, method='L-BFGS-B',jac=grad_cost_function)
     else: raise Exception('Invalid optimisation method')
     return optimize_result
-    
+
 para_len = DIM*DIM-1
 x0w = [1,1/2,1/2]
 def weight(Gamma):
@@ -63,12 +63,12 @@ def local_opt_neg_compressed(compressed_circuit,**kwargs):
     t0 = time.time()
     options = {'opt_method':'B', 'niter': 3, 'show_detailed_log':False}
     options.update(kwargs)
-    
+
     rho_list = compressed_circuit['state_list']
     gate_U2q_list = compressed_circuit['gate_list']
-    gate_qudit_index_list = compressed_circuit['qudit_index_list']
+    gate_qudit_index_list = compressed_circuit['index_list']
     meas_list = compressed_circuit['meas_list']
-    
+
     x_rho_opt_list = []
     neg_rho_opt_list = []
     neg_tot = 1.
@@ -80,7 +80,7 @@ def local_opt_neg_compressed(compressed_circuit,**kwargs):
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_state:',neg,'\t weight:\t',weight(x2Gamma(x_opt)))
-    
+
     x_running = x_rho_opt_list.copy()
     x_gate_out_opt_list = []
     neg_gate_opt_list = []
@@ -98,7 +98,7 @@ def local_opt_neg_compressed(compressed_circuit,**kwargs):
             print('neg_gate(',gate_index+1,'):',neg,'\t weight:\t',[weight(x2Gamma(x_out_opt1)),weight(x2Gamma(x_out_opt2))])
         x_running[qudit_index1] = x_out_opt1
         x_running[qudit_index2] = x_out_opt2
-    
+
     x_meas_opt_list = x_running
     qudit_index = 0
     neg_meas_opt_list = []
@@ -111,11 +111,11 @@ def local_opt_neg_compressed(compressed_circuit,**kwargs):
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_meas:',neg)
-        
+
     print('-------------------LOCAL OPTIMIZATION--------------------------\n',options)
     print('Local Opt Log Neg:', np.log(neg_tot))
     print('Computation time:',time.time() - t0)
     print('---------------------------------------------------------------')
-    
+
     x_opt_list_tot = np.append(np.array(x_rho_opt_list).flatten(),np.array(x_gate_out_opt_list).flatten())
     return x_opt_list_tot, np.log(neg_tot)
