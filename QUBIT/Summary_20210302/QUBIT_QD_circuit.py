@@ -1,7 +1,8 @@
 from QUBIT_wig_neg import (wigner_neg_compressed)
 from QUBIT_opt_neg import (optimize_neg_compressed)
 from QUBIT_local_opt_neg import (local_opt_neg_compressed)
-from QUBIT_circuit_generator import (random_circuit, compress2q_circuit)
+from QUBIT_circuit_generator import (random_circuit, compress2q_circuit,
+                                     string_to_circuit)
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
 
@@ -34,15 +35,15 @@ class QD_circuit(object):
         '''
         options = {'opt_method': 'B', 'niter': 3}
         options.update(kwargs)
-        if method == 'Wigner':
+        if method=='Wigner':
             x_opt_list, log_neg_tot = wigner_neg_compressed(
                 self.circuit_compressed, **kwargs)
             self.x_list_wig = x_opt_list
-        elif method == 'Local_opt':
+        elif method=='Local_opt':
             x_opt_list, log_neg_tot = local_opt_neg_compressed(
                 self.circuit_compressed, **kwargs)
             self.x_list_local_opt = x_opt_list
-        elif method == 'Opt':
+        elif method=='Opt':
             x_opt_list, log_neg_tot = optimize_neg_compressed(
                 self.circuit_compressed, **kwargs)
             self.x_list_opt = x_opt_list
@@ -51,22 +52,22 @@ class QD_circuit(object):
         self.log_neg_tot = log_neg_tot
         return x_opt_list, log_neg_tot
 
-    def get_QD_list(self, method = 'Wigner', **kwargs):
+    def get_QD_list(self, method='Wigner', **kwargs):
         ''' Get quasi-prob, negativity, sign, & normalised probability.
 
             method - string ('Wigner', 'Local_opt', 'Opt')
         '''
-        if method == 'Wigner':
+        if method=='Wigner':
             x_list = self.x_list_wig
-        elif method == 'Local_opt':
+        elif method=='Local_opt':
             x_list = self.x_list_local_opt
-        elif method == 'Opt':
+        elif method=='Opt':
             x_list = self.x_list_opt
         else:
             raise Exception('Invalid optimisation method.')
         return get_prob_list(self.circuit_compressed, x_list, **kwargs)
 
-    def sample(self, method = 'Wigner', sample_size=10000, **kwargs):
+    def sample(self, method='Wigner', sample_size=int(1e5), **kwargs):
         ''' Sample the circuit
 
             method - string ('Wigner', 'Local_opt', 'Opt')
@@ -79,50 +80,51 @@ class QD_circuit(object):
         return sample_list
 
 
-#################################SAMPLE CODE###################################
-if __name__ == "__main__":
-    from QUBIT_temp_functions import (string_to_circuit, accum_sum)
-    import autograd.numpy as np
-    import matplotlib.pylab as plt
+################################ SAMPLE CODE ##################################
+import autograd.numpy as np
+import matplotlib.pylab as plt
 
-    Bernstein_Vazirani_circuit = ['001', [
-                                  [[0],'H'], [[2],'H'], [[2],'H'],
-                                  [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
-                                  [[2],'T'], [[1,2],'C+'], [[2],'t'],
-                                  [[0,2],'C+'], [[1],'T'], [[2],'T'],
-                                  [[0,1],'C+'], [[2],'H'], [[0],'T'],
-                                  [[1],'t'], [[0,1],'C+'], [[0],'H']],
-                                  '0//']
+Bernstein_Vazirani_circuit = ['001', [
+                              [[0],'H'], [[2],'H'], [[2],'H'],
+                              [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
+                              [[2],'T'], [[1,2],'C+'], [[2],'t'],
+                              [[0,2],'C+'], [[1],'T'], [[2],'T'],
+                              [[0,1],'C+'], [[2],'H'], [[0],'T'],
+                              [[1],'t'], [[0,1],'C+'], [[0],'H']],
+                              '0//']
+circuit = string_to_circuit(Bernstein_Vazirani_circuit)
 
-    circuit = string_to_circuit(Bernstein_Vazirani_circuit)
-    circuit = compress2q_circuit(circuit)
+circ = QD_circuit(circuit)
+circ.compress_circuit()
 
-    AA = QD_circuit(circuit)
-    AA.compress_circuit()
+sample_size = int(1e5)
+x_list = np.linspace(1, sample_size, sample_size)
 
-    sample_size = 100
+circ.opt_x(method='Wigner')
+circ.get_QD_list(method='Wigner')
+wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
+prob_wigner = np.cumsum(wigner_out_list)/x_list
 
-    AA.opt_x(method = 'Wigner')
-    AA.get_QD_list(method = 'Wigner')
-    wigner_out_list = AA.sample(method = 'Wigner', sample_size= sample_size)
+circ.opt_x(method='Opt', **{'niter':10})
+circ.get_QD_list(method = 'Opt')
+opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
+prob_opt = np.cumsum(opt_out_list)/x_list
 
-    AA.opt_x(method = 'Opt',**{'niter':10})
-    AA.get_QD_list(method = 'Opt')
-    opt_out_list = AA.sample(method = 'Opt', sample_size= sample_size)
+circ.opt_x(method='Local_opt', **{'niter':10})
+circ.get_QD_list(method='Local_opt')
+local_opt_out_list = circ.sample(method='Local_opt',
+                                  sample_size=sample_size)
+prob_local_opt = np.cumsum(local_opt_out_list)/x_list
 
-    AA.opt_x(method = 'Local_opt',**{'niter':10})
-    AA.get_QD_list(method = 'Local_opt')
-    local_opt_out_list = AA.sample(method = 'Local_opt',
-                                    sample_size = sample_size)
 
-    x_list = np.linspace(1,sample_size,sample_size)
-    plt.plot(x_list,accum_sum(wigner_out_list)/x_list, linestyle='solid',
-              color='tab:blue', label='Wigner')
-    plt.plot(x_list,accum_sum(opt_out_list)/x_list, linestyle='solid',
-              color='tab:orange', label='Optimised')
-    plt.plot(x_list,accum_sum(local_opt_out_list)/x_list, linestyle='solid',
-              color='tab:red', label='Local_Optimised')
-    plt.xlabel('sample #')
-    plt.ylabel('p_estimate')
-    plt.legend()
-    plt.show()
+plt.close('all')
+plt.plot(x_list, prob_wigner, linestyle='solid',
+          color='tab:blue', label='Wigner')
+plt.plot(x_list, prob_opt, linestyle='solid',
+          color='tab:orange', label='Optimised')
+plt.plot(x_list, prob_local_opt, linestyle='solid',
+          color='tab:red', label='Local_Optimised')
+plt.xlabel('sample #')
+plt.ylabel('p_estimate')
+plt.legend(loc='upper right')
+plt.show()

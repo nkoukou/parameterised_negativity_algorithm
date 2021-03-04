@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.random as nr
 from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
+from QUBIT_state_functions import(evolve)
 
 def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
                    given_state=None, given_measurement=1):
@@ -156,16 +157,24 @@ def compress2q_circuit(circuit):
         else:
             swap = makeGate('S')
             gate_next = np.dot(gate_next, np.dot(swap, np.dot(gate, swap)))
+        gates_compressed[i+1] = gate_next
         duplicates.append(i)
     for i in duplicates:
         gates_compressed.pop(i)
         indices_compressed.pop(i)
 
-    circuit['gate_list'] = gates_compressed
-    circuit['index_list'] = indices_compressed
-    return circuit
+    circuit_compressed = {'state_list': circuit['state_list'],
+                          'gate_list': gates_compressed,
+                          'index_list': indices_compressed,
+                          'meas_list': circuit['meas_list']}
+    return circuit_compressed
 
 def string_to_circuit(circuit_string):
+    ''' Converts symbolic circuit to:
+
+        circuit = {'state_list': states, 'gate_list': gates,
+                   'index_list': indices, 'meas_list': measurements}
+    '''
     state_string_list = circuit_string[0]
     gate_string_list  = circuit_string[1]
     meas_string_list  = circuit_string[2]
@@ -181,6 +190,7 @@ def string_to_circuit(circuit_string):
 
     meas_list = []
     for meas_string in meas_string_list:
+        if meas_string=='/': continue
         meas_list.append(makeMeas(meas_string))
 
     circuit = {'state_list': state_list, 'gate_list': gate_list,
@@ -188,15 +198,45 @@ def string_to_circuit(circuit_string):
 
     return circuit
 
-def removearray(L, arr):
-    ind = 0
-    size = len(L)
-    while ind != size and not np.array_equal(L[ind],arr):
-        ind += 1
-    if ind != size:
-        L.pop(ind)
-    else:
-        raise ValueError('array not found in list.')
+def solve_circuit(circuit):
+    ''' Solves compressed BV circuit.
+    '''
+
+    states = circuit['state_list']
+    s0 = np.kron(states[0], np.kron(states[1], states[2]))
+
+    gates = circuit['gate_list']
+    index = circuit['index_list']
+
+    meas = circuit['meas_list'][0]
+
+    gates3q = []
+    swap = makeGate('S')
+    identity = makeGate('1')
+
+    g = np.kron(identity, gates[0])
+    gates3q.append(g)
+    g = np.kron(identity, gates[1])
+    h = np.kron(swap, identity)
+    g = evolve(g, h, is_state=0)
+    gates3q.append(g)
+    g = np.kron(identity, gates[2])
+    gates3q.append(g)
+    g = np.kron(identity, gates[3])
+    h = np.kron(swap, identity)
+    g = evolve(g, h, is_state=0)
+    gates3q.append(g)
+    g = np.kron(gates[4], identity)
+    gates3q.append(g)
+
+    s = s0
+    for gate in gates3q:
+        s = evolve(s, gate)
+    meas = np.kron(meas, np.kron(identity, identity))
+
+    prob = np.trace(np.dot(s, meas))
+    return prob
+
 
 
 

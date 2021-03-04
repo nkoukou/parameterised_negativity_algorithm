@@ -112,10 +112,10 @@ def local_opt_neg_compressed(compressed_circuit,**kwargs):
         if options['show_detailed_log']:
             print('neg_meas:',neg)
 
-    print('-------------------LOCAL OPTIMIZATION--------------------------\n',options)
+    print('--------------------- LOCAL OPTIMIZATION ---------------------\n', options)
     print('Local Opt Log Neg:', np.log(neg_tot))
     print('Computation time:',time.time() - t0)
-    print('---------------------------------------------------------------')
+    print('--------------------------------------------------------------')
 
     x_opt_list_tot = np.append(np.array(x_rho_opt_list).flatten(),np.array(x_gate_out_opt_list).flatten())
     return x_opt_list_tot, np.log(neg_tot)

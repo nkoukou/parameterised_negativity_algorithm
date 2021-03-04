@@ -50,10 +50,10 @@ def optimize_neg_compressed(compressed_circuit, **kwargs):
     optimize_result, dt = optimizer(cost_function, x0, options['opt_method'], niter = options['niter'])
     optimized_x = optimize_result.x
     optimized_value = cost_function(optimized_x)
-    print('------------------GLOBAL OPTIMIZATION--------------------------\n',options)
+    print('--------------------- GLOBAL OPTIMIZATION --------------------\n', options)
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
-    print('---------------------------------------------------------------')
+    print('--------------------------------------------------------------')
 
     return optimized_x, optimized_value
 

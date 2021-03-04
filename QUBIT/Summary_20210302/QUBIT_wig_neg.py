@@ -40,9 +40,9 @@ def wigner_neg_compressed(compressed_circuit, **kwargs):
         neg = neg * neg_meas_1q(meas, Gamma)
 
     dt = time.time() - start_time
-    print('-------------------WIGNER NEGATIVITY---------------------------')
+    print('--------------------- WIGNER NEGATIVITY ----------------------')
     print('Wigner Log Neg:  ', np.log(neg))
     print('Computation time:', dt)
-    print('---------------------------------------------------------------')
+    print('--------------------------------------------------------------')
     return [1,1/2,1/2]*x_len, np.log(neg)
 

@@ -71,10 +71,10 @@ def sample_circuit(compressed_circuit, QD_output, sample_size = 10000, **kwargs)
     sampling_time = time.time() - start_time
 
     # Print the final results
-    print('==================Sampling Results=============================')
+    print('====================== Sampling Results ======================')
     print('p_estimate: ', np.sum(outcome_list)/sample_size)
     print('Sample size: ', sample_size)
     print('Sampling time: ', sampling_time)
-    print('===============================================================')
+    print('==============================================================')
 
     return np.array(outcome_list)
