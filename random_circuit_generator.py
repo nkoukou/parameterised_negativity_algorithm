@@ -4,87 +4,89 @@ from state_functions import(evolve)
 from circuit_components import(makeState, makeGate, makeMeas)
 
 def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
-                   given_state=None, given_measurement=1, symbolic=True):
-    ''' Creates a random circuit in the form
-        [state_string, gate_sequence, meas_string]
-        qudit_num, C1qGate_num, TGate_num, CSUMGate_num - int
-        given_state       - None or string (state_string)
-        given_measurement - string (measurement_string) or
-                            int (number of measurement modes)
-        symbolic          - True to return gate strings, e.g. 'H', '1', etc. or
-                            False to return gate matrices , e.g. makeGate('H'),
-                            makeGate('1') etc.
+                   given_state=None, given_measurement=1):
+    ''' Inputs:
+        qudit_num         - int
+        C1qGate_num       - int
+        TGate_num         - int
+        CSUMGate_num      - int
+        given_state       - None or 0 (all zeros) or string
+        given_measurement - string or int (number of measurement modes)
+
+        Output:
+        circuit = {'state': states, 'gates': gates, 'indices': indices,
+                   'meas': measurements}
     '''
-    ### state_string
+    # States
     if given_state is None:
-        # Full state list: ['0', '1', '2', '+', 'm', 'S', 'N', 'T']
-        char1q = ['0', '1', '2', 'T']
-        # Equal probability
-        prob1q = [1/len(char1q)]*len(char1q)
+        char = ['0', '1', '2'] # Full list: ['0','1','2','+','m','S','N','T']
+        prob = [1/len(char)]*len(char)
 
-        state_string = ''
+        given_state = ''
         for i in range(qudit_num):
-            state_string += nr.choice(char1q, p=prob1q)
-
+            given_state += nr.choice(char, p=prob)
+    elif given_state==0:
+        given_state = '0'*qudit_num
     else:
         if len(given_state)!=qudit_num:
             raise Exception('Number of qudits must be %d'%(qudit_num))
-        state_string = given_state
+    states = []
+    for s in given_state:
+        states.append(makeState(s))
 
-    ### gate_sequence
-    # Full 1q gate list: ['H', 'S', '1']
-    char1q = ['H', 'S']
-    # Equal probability
+    # Gates
+    char1q = ['H', 'S'] # Full list: ['H', 'S', '1']
     prob1q = [1/len(char1q)]*len(char1q)
-
-    gates_sequence = []
+    gates_seq = []
     for i in range(C1qGate_num):
-        char = nr.choice(char1q, p=prob1q)
-        g = char if symbolic else makeGate(char)
-        gate = [[nr.randint(qudit_num)], g]
-        gates_sequence.append(gate)
+        gate = makeGate(nr.choice(char1q, p=prob1q))
+        index = [nr.randint(qudit_num)]
+        gates_seq.append((gate, index))
     for i in range(TGate_num):
-        g = 'T' if symbolic else makeGate('T')
-        gate = [[nr.randint(qudit_num)], g]
-        gates_sequence.append(gate)
+        gate = makeGate('T')
+        index = [nr.randint(qudit_num)]
+        gates_seq.append((gate, index))
     for i in range(CSUMGate_num):
-        g = 'C+' if symbolic else makeGate('C+')
-        gate = [list(nr.choice(qudit_num, size=2, replace=False)), g]
-        gates_sequence.append(gate)
-    nr.shuffle(gates_sequence)
+        gate = makeGate('C+')
+        index = list(nr.choice(qudit_num, size=2, replace=False))
+        gates_seq.append((gate, index))
+    nr.shuffle(gates_seq)
+    gates, indices = zip(*gates_seq)
+    gates, indices = list(gates), list(indices)
 
-    # measurement_string
+    # Measurements
     if type(given_measurement)==int:
-        # Full meas list: ['0', '+', 'T']
-        char1q = ['0', '+', 'T']
-        # Equal probability
-        prob1q = [1/len(char1q)]*len(char1q)
+        char = ['0'] # Full list: ['0','1','2','+','m','S','N','T']
+        prob = [1/len(char)]*len(char)
 
-        measurement = ['/']*qudit_num
+        meas = ['/']*qudit_num
         for i in range(given_measurement):
-            measurement[i] = nr.choice(char1q, p=prob1q)
+            meas[i] = nr.choice(char, p=prob)
 
-        measurement_string = ''
-        for m in measurement:
-            measurement_string += m
+        given_measurement = ''
+        for m in meas:
+            given_measurement += m
     else:
         if len(given_measurement)!=qudit_num:
             raise Exception('Number of qudits is %d'%(qudit_num))
-        measurement_string = given_measurement
+    measurements = []
+    for m in given_measurement:
+        measurements.append(makeMeas(m))
 
-    circuit = [state_string] + [gates_sequence] + [measurement_string]
+    circuit = {'state': states, 'gates': gates, 'indices': indices,
+               'meas': measurements}
     return circuit
 
-def compress_circuit(circuit):
+def compress2q_circuit(circuit):
     ''' Returns an equivalent circuit that contains only 2-qudit gates
-        Input: symbolic circuit (i.e. contains gate strings, e.g. 'H', '1',
-                                 etc.)
-        Output: non-symbolic circuit (i.e. contains gate matrices , e.g.
-                                      makeGate('H'), makeGate('1'), etc.)
     '''
-    state_string, gate_seq, measurement_string = circuit
-    qudit_num = len(state_string)
-    gate_num = len(gate_seq)
+    states, gates, indices = circuit['gates'], circuit['indices']
+
+    if isinstance(gates[0], str):
+        raise ValueError("Gates should be arrays")
+
+    qudit_num = len(states)
+    gate_num = len(gates)
 
     gate_seq_compressed = []
     cnot_counts = []

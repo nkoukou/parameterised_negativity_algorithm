@@ -31,17 +31,15 @@ def makeGate(gate_string):
     return gate
 
 def makeMeas(meas_string):
-    ''' Returns the measurement output and mode from the generating all-qubit
+    ''' Returns the measurement projector from the generating all-qudit
     measurement string ('/' - Trace out).
     '''
-    MeasO_list = []
-    Meas_mode_list = []
-    for meas_index in range(len(meas_string)):
-        if meas_string[meas_index]=='/':
-            continue
-        MeasO_list.append(makeState1q(meas_string[meas_index]))
-        Meas_mode_list.append(meas_index)
-    return MeasO_list, Meas_mode_list
+    meas = 1
+    for m in meas_string:
+        # print(m)
+        temp = makeMeas1q(m)
+        meas = np.kron(meas, temp)
+    return meas
 
 def makeState1q(state_string, dim=DIM):
     ''' Returns a 1-qudit state matrix from the generating state string:
@@ -74,7 +72,7 @@ def makeGate1q(gate_string, dim=DIM):
     ''' Returns a 1-qubit gate matrix from the generating gate string:
         '1' - Identity
         'H' - Hadamard
-        'K' - Pi/4-Phase shift gate ([[1,0],[0,i]]) 
+        'K' - Pi/4-Phase shift gate ([[1,0],[0,i]])
         'T' - qubit T-gate (magic gate)
         't' - Conjugate transpose of the T-gate
         Followed the definition of T-gates in Wikipedia
@@ -137,58 +135,12 @@ def makeCsum(gate_string, dim=DIM):
     gate = np.kron( np.kron(np.eye(ids[0]), gate), np.eye(ids[2]) )
     return gate
 
-# def gate2F(gate_string, invert_ct=False, dim=DIM):
-#     ''' Creates index matrix from gate_string, e.g. '1SH', 'C1+'.
-#     '''
-#     Fs, zs = [], []
-#     for g in gate_string:
-#         F, z = gate2F_aux(g, invert_ct, dim)
-#         Fs.append(F); zs.append(z)
-#     return Fs, zs # np.vstack(Fs), np.vstack(zs)
-
-# def gate2F_aux(gate_string, invert_ct=False, dim=DIM):
-#     ''' Creates index matrix from gate_strings '1', 'H', 'S', 'C' and '+'.
-#     '''
-#     if gate_string=='1':
-#         F = np.array([[1,0],[0,1]])
-#         z = np.array([0,0])
-#     if gate_string=='H':
-#         F = np.array([[0,-1],[1,0]])
-#         z = np.array([0,0])
-#     if gate_string=='S':
-#         F = np.array([[1,0],[1,1]])
-#         z = np.array([0,inverse(2, dim)])
-#     if gate_string=='C':
-#         if invert_ct:
-#             F = np.array([[0,0,1,0],[0,-1,0,1]])
-#         else:
-#             F = np.array([[1,0,0,0],[0,1,0,-1]])
-#         z = np.array([0,0,0,0])
-#     if gate_string=='+':
-#         if invert_ct:
-#             F = np.array([[1,0,1,0],[0,1,0,0]])
-#         else:
-#             F = np.array([[1,0,1,0],[0,0,0,1]])
-#         z = np.array([])
-#     return F, z
-
-# def makeMeas1q(meas_string, dim=DIM):
-#     ''' Returns the measurement output and mode from the generating 1-qudit
-#     measurement string:
-#         'Z' - Projection on |0>
-#         'X' - Projection on |+>
-#         'T' - Projection on |T>
-#     '''
-#     MeasO = makeState1q(meas_string)
-#     Meas_mode = meas_string.find(meas_string)
-#     return MeasO, Meas_mode
-
-
-'''Sample Code'''
-# state = makeState('1S+')
-# gate1q = makeGate('HS1')
-# gate2q = makeGate('1C+')
-# symp1q = gate2F('H')
-# symp2q = gate2F('C+')
-# MeasO_list, Meas_mode_list = makeMeas('TT1T1+01//')
-# print(len(Meas_mode_list))
+def makeMeas1q(meas_string, dim=DIM):
+    ''' Returns the measurement projector from the generating 1-qudit
+    measurement string ('/' - Trace out)
+    '''
+    if meas_string=='/':
+        meas = np.eye(dim)
+    else:
+        meas = makeState1q(meas_string, dim)
+    return meas

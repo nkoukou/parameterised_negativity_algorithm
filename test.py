@@ -1,8 +1,8 @@
 import numpy as np
 from state_functions import(evolve)
 from circuit_components import(makeGate, makeState)
-from random_circuit_generator import(random_circuit, compress_circuit,
-                                     show_circuit, solve_circuit_symbolic)
+from random_circuit_generator import(random_circuit, compress2q_circuit,
+                                     show_circuit)
 from opt_neg import(optimize_neg, optimize_neg_compressed)
 from prob_estimation import(sample, compare_Wigner_optimised)
 
@@ -10,10 +10,9 @@ from prob_estimation import(sample, compare_Wigner_optimised)
 import matplotlib.pyplot as plt
 
 
-circuit = random_circuit(qudit_num=5,
-                         C1qGate_num=6, TGate_num=3, CSUMGate_num=7,
-                         given_state=None, given_measurement=1,
-                         symbolic=True)
+circuit = random_circuit(qudit_num=10,
+                         C1qGate_num=100, TGate_num=20, CSUMGate_num=15,
+                         given_state=0, given_measurement=2)
 # circuit = ['011', [
 #             [[2], 'H'],
 #             [[0], 'S'],
@@ -23,7 +22,7 @@ circuit = random_circuit(qudit_num=5,
 #             [[1], 'H'],
 #             [[1], 'S'],
 #             [[0], 'T'],
-#             [[2, 0], 'C+'],
+#             [[0, 2], 'C+'],
 #             [[0], 'S'],
 #             [[1], 'T'],
 #             [[0], 'H'],
@@ -31,8 +30,9 @@ circuit = random_circuit(qudit_num=5,
 #             [[1, 2], 'C+'],
 #             [[1], 'H']
 #             ], '1T/']
-show_circuit(circuit)
-circuit_compressed = compress_circuit(circuit)
+# show_circuit(circuit)
+# circuit_compressed = compress2q_circuit(circuit)
+# test = compress2q_circuit(circuit_compressed)
 # # optimize_neg(circuit)
 # print('¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬¬')
 # optimize_neg_compressed(circuit_compressed)
@@ -40,6 +40,34 @@ circuit_compressed = compress_circuit(circuit)
 # # p= sample(circuit, 0)
 # # q= sample(circuit, np.load('data/test_directory/optimized_x.npy'))
 
+def string_to_circuit(circuit_string):
+    circuit_compressed = compress2q_circuit(circuit_string)
+    state_string_list = circuit_compressed[0]
+    gate_compressed_list = circuit_compressed[1]
+    meas_string_list = circuit_compressed[2]
+
+    rho_list = []
+    for state_string in state_string_list:
+        rho_list.append(makeState(state_string))
+
+    gate_U2q_list = []
+    gate_qudit_index_list = []
+    for gate_compressed in gate_compressed_list:
+        gate_qudit_index_list.append(gate_compressed[0])
+        gate_U2q_list.append(gate_compressed[1])
+
+    meas_list = []
+    for meas_string in meas_string_list:
+        if meas_string=='/':
+            continue
+        E = makeState(meas_string)
+        meas_list.append(E)
+
+    circuit = {'state_list': rho_list, 'gate_list': gate_U2q_list,
+               'qudit_index_list': gate_qudit_index_list,
+               'meas_list': meas_list}
+
+    return circuit
 
 # def test_solver():
 #     check1 = solve_circuit_symbolic(circuit)
@@ -59,11 +87,11 @@ circuit_compressed = compress_circuit(circuit)
 
 #     # p_born = 1/3
 
-#     # print('----------------------------------------------------------------')
+#     # print('--------------------------------------------------------------')
 #     # show_circuit(circuit)
 #     # print('Wigner sample p    =', out_wig)
 #     # print('Exact Born p       =', p_born)
-#     # print('----------------------------------------------------------------')
+#     # print('--------------------------------------------------------------')
 
 #     # Test T state & 2-qutrit measurement
 #     # circuit = ['0T', [[[1,0], 'C+']], '++']
@@ -83,12 +111,12 @@ circuit_compressed = compress_circuit(circuit)
 #     # plt.legend(handles=[wig_plot,opt_plot,born_plot])
 #     # plt.show()
 
-#     # print('----------------------------------------------------------------')
+#     # print('--------------------------------------------------------------')
 #     # show_circuit(circuit)
 #     # print('Wigner sample p    =', out_wig)
 #     # print('Optimised sample p =', out_opt)
 #     # print('Exact Born p       =', p_born)
-#     # print('----------------------------------------------------------------')
+#     # print('--------------------------------------------------------------')
 
 #     # Test complicated circuit
 #     circuit = ['1T0', [[[0], 'S'], [[1], 'H'], [[1], 'T'], [[2], 'H'],

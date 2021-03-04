@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from circuit_components import(makeState, makeGate)
 from opt_neg import(optimize_neg_compressed)
-from random_circuit_generator import(compress_circuit)
+from random_circuit_generator import(compress2q_circuit)
 from phase_space import(x2Gamma, W_state_1q, neg_state_1q, W_gate_1q,
                         neg_gate_1q, W_gate_2q, neg_gate_2q, W_meas_1q,
                         neg_meas_1q)
@@ -54,7 +54,7 @@ class sample(object):
     '''
     def __init__(self, circuit, x=0, niters=1000):
         '''
-        [INPUT] 
+        [INPUT]
         - circuit : the given circuit.
         - x : the list of parameters for Gammas.
               If x=0, use the Wigner parameters.
@@ -70,14 +70,14 @@ class sample(object):
         - self.PD_list : the pre-saved list of quasi-prob. distribution of each element in the compressed circuit.
         - self.neg_list: the pre-saved list of quasi-prob. negativity of each element in the compressed circuit.
         '''
-        self.compressed_circuit = compress_circuit(circuit) # Compress the circuit
+        self.compressed_circuit = compress2q_circuit(circuit) # Compress the circuit
         self.niters = niters
         self.len_Gammas = self.n_Gammas()
 
         if isinstance(x,int): # If x is not a list, depending on the value, set 'x_list'.
             if x==0: # When x=0, 'x_list' is the Wigner parameters.
-                self.x_list = [1,0,0,0,0,0,1,0]*self.len_Gammas 
-                self.method = 'Wigner' 
+                self.x_list = [1,0,0,0,0,0,1,0]*self.len_Gammas
+                self.method = 'Wigner'
             elif x==1: # When x=1, run optimisation and find the optimised x_list.
                 self.x_list = optimize_neg_compressed(self.compressed_circuit)[0]
                 self.method = 'Optimised'
@@ -113,7 +113,7 @@ class sample(object):
         return (p_sample/self.niters), plot
 
     def sample_iter(self):
-        ''' 
+        '''
         One iteration of the Monte Carlo sampling.
         '''
         state_string, gate_sequence, meas_string = self.compressed_circuit
@@ -192,7 +192,7 @@ class sample(object):
 
         neg_list_states = [] # The state part of the quasi-prob. negativity list
         neg_list_gates = [] # The gate part of the quasi-prob. negativity list
-        
+
         # Input states
         for s in state_string:
             state = makeState(s)
@@ -200,13 +200,13 @@ class sample(object):
             WF = W_state_1q(state, Gamma)
             neg = np.abs(WF).sum()
             prob = WF/neg
-            
+
             PD_list_states.append(prob)
             neg_list_states.append(neg)
 
             Gammas.append(Gamma)
             Gamma_index += 1
-            
+
         # Gates
         for g in gate_sequence:
             idx, gate = g[0], g[1]
@@ -214,18 +214,18 @@ class sample(object):
                 if g[1]=='H': # When the gate is Hadamard gate, we have a particular way to assign Gamma_out.
                     Gamma_in = Gammas[idx[0]]
                     Gamma_out = np.dot(np.dot(gate, Gamma_in),np.conjugate(gate.T))
-                else:    
+                else:
                     Gamma_in = Gammas[idx[0]]
                     Gamma_out = x2Gamma(self.x_list[8*Gamma_index:8*(Gamma_index+1)])
                     Gamma_index += 1
                 WF = W_gate_1q(gate, Gamma_in, Gamma_out) # [p_in, q_in, p_out, q_out] index
                 neg = np.abs(WF).sum(axis=(2,3)) # [p_in, q_in] index
-                prob = np.array([WF[p_in, q_in]/neg[p_in, q_in] for p_in, q_in 
+                prob = np.array([WF[p_in, q_in]/neg[p_in, q_in] for p_in, q_in
                     in it.product(range(DIM), repeat=2)]).reshape((DIM, DIM, DIM, DIM))
 
                 PD_list_gates.append(prob)
                 neg_list_gates.append(neg)
-                Gammas[idx[0]] = Gamma_out    
+                Gammas[idx[0]] = Gamma_out
             elif len(idx)==2:
                 Gamma_in1 = Gammas[idx[0]]
                 Gamma_in2 = Gammas[idx[1]]
@@ -233,7 +233,7 @@ class sample(object):
                 Gamma_out2 = x2Gamma(self.x_list[8*(Gamma_index+1):8*(Gamma_index+2)])
                 WF = W_gate_2q(gate,Gamma_in1,Gamma_in2,Gamma_out1,Gamma_out2) # [p1_in,q1_in,p2_in,q2_in,p1_out,q1_out,p2_out,q2_out]
                 neg = np.abs(WF).sum(axis=(4,5,6,7)) # [p1_in,q1_in,p2_in,q2_in]
-                prob = np.array([WF[p1_in,q1_in,p2_in,q2_in]/neg[p1_in,q1_in,p2_in,q2_in] for p1_in,q1_in,p2_in,q2_in 
+                prob = np.array([WF[p1_in,q1_in,p2_in,q2_in]/neg[p1_in,q1_in,p2_in,q2_in] for p1_in,q1_in,p2_in,q2_in
                     in it.product(range(DIM), repeat=4)]).reshape((DIM,DIM,DIM,DIM,DIM,DIM,DIM,DIM))
 
                 PD_list_gates.append(prob)

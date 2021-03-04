@@ -182,7 +182,7 @@ def makeMeas1q(meas_string, dim=DIM):
     if meas_string=='/':
         meas = np.eye(dim)
     else:
-        meas = makeState1q(meas_string)
+        meas = makeState1q(meas_string, dim)
     return meas
 
 
