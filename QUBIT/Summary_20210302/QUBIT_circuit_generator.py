@@ -77,6 +77,41 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
                'index_list': indices, 'meas_list': measurements}
     return circuit
 
+def random_connected_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
+                   given_state=None, given_measurement=1):
+    ''' Inputs:
+        qudit_num         - int
+        C1qGate_num       - int
+        TGate_num         - int
+        CSUMGate_num      - int
+        given_state       - None or 0 (all zeros) or string
+        given_measurement - string or int (number of measurement modes)
+
+        Output:
+        circuit = {'state_list': states, 'gate_list': gates,
+                   'index_list': indices, 'meas_list': measurements}
+
+        circuit is fully connected, i.e. there are no disentangled wires.
+    '''
+    if CSUMGate_num < qudit_num/2:
+        raise Exception('Not enough CSUMs for circuit to be fully connected.')
+
+    check = False
+    while check is False:
+        circuit = random_circuit(qudit_num, C1qGate_num, TGate_num,
+                                 CSUMGate_num, given_state, given_measurement)
+        check = []
+        for idx in circuit['index_list']:
+            if len(idx)==1: continue
+            for i in [0,1]:
+                if idx[i] in check: continue
+                check.append(idx[i])
+        check = (set(check)==set(np.arange(qudit_num)))
+
+    return circuit
+
+
+
 def compress2q_circuit(circuit):
     ''' Returns an equivalent circuit that contains only 2-qudit gates
     '''
