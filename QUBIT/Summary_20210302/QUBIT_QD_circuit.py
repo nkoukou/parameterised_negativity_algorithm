@@ -2,7 +2,7 @@ from QUBIT_wig_neg import (wigner_neg_compressed)
 from QUBIT_opt_neg import (optimize_neg_compressed)
 from QUBIT_local_opt_neg import (local_opt_neg_compressed)
 from QUBIT_circuit_generator import (random_circuit, compress2q_circuit,
-                                     string_to_circuit)
+                                     string_to_circuit, show_connectivity)
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
 
@@ -27,6 +27,10 @@ class QD_circuit(object):
         '''
         self.circuit_compressed = compress2q_circuit(self.circuit)
         # !!! Change to compress_circuit
+
+    def show_connectivity(self, compressed=True):
+        circuit = self.circuit_compressed if compressed else self.circuit
+        self.diagram = show_connectivity(circuit)
 
     def opt_x(self, method = 'Wigner', **kwargs):
         ''' Optimise quasi-probability distribution.
@@ -94,10 +98,20 @@ Bernstein_Vazirani_circuit = ['001', [
                               '0//']
 circuit = string_to_circuit(Bernstein_Vazirani_circuit)
 
+circuit = random_circuit(qudit_num=10,
+                          C1qGate_num=100, TGate_num=20, CSUMGate_num=15,
+                          given_state=0, given_measurement=2)
+
 circ = QD_circuit(circuit)
 circ.compress_circuit()
 
-sample_size = int(1e5)
+print()
+circ.show_connectivity(compressed=False)
+print()
+circ.show_connectivity(compressed=True)
+print()
+
+sample_size = int(1e4)
 x_list = np.linspace(1, sample_size, sample_size)
 
 circ.opt_x(method='Wigner')

@@ -169,6 +169,35 @@ def compress2q_circuit(circuit):
                           'meas_list': circuit['meas_list']}
     return circuit_compressed
 
+def show_connectivity(circuit):
+    ''' Prints a visual circuit representation.
+    '''
+    qudit_num = len(circuit['state_list'])
+    indices = circuit['index_list']
+    meas = circuit['meas_list']
+
+    circ_repr = [['> '] for i in range(qudit_num)]
+    for i in range(len(indices)):
+        idx = indices[i]
+        if len(idx)==1: continue
+        elif len(idx)==2:
+            idle_wires = np.delete(np.arange(qudit_num), idx)
+            for j in idle_wires: circ_repr[j].extend(['-'])
+            circ_repr[idx[0]].append('o')
+            circ_repr[idx[1]].append('+')
+        else: raise Exception('show_connectivity not implemented for m>2')
+    identity = makeGate('1')
+    for i in range(qudit_num):
+        m = '/' if np.allclose(meas[i], identity) else 'D'
+        circ_repr[i].append(' '+m)
+
+
+    circ_repr = [''.join(wire) for wire in circ_repr]
+    for wire in circ_repr:
+        print(wire)
+    return circ_repr
+
+
 def string_to_circuit(circuit_string):
     ''' Converts symbolic circuit to:
 
@@ -190,7 +219,7 @@ def string_to_circuit(circuit_string):
 
     meas_list = []
     for meas_string in meas_string_list:
-        if meas_string=='/': continue
+        # if meas_string=='/': continue
         meas_list.append(makeMeas(meas_string))
 
     circuit = {'state_list': state_list, 'gate_list': gate_list,
@@ -199,7 +228,7 @@ def string_to_circuit(circuit_string):
     return circuit
 
 def solve_circuit(circuit):
-    ''' Solves compressed BV circuit.
+    ''' Solves compressed 1-qubit BV circuit.
     '''
 
     states = circuit['state_list']
