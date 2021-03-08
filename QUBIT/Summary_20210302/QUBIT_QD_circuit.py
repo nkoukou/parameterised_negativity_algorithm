@@ -6,6 +6,7 @@ from QUBIT_circuit_generator import (random_connected_circuit,
        solve_qubit_circuit)
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
+from QUBIT_BVcircuit import(BValg_circuit)
 
 class QD_circuit(object):
     ''' Represents quasi-probability circuit.
@@ -90,33 +91,19 @@ import time
 import autograd.numpy as np
 import matplotlib.pylab as plt
 
-# Bernstein_Vazirani_circuit = ['001', [
-#                               [[0],'H'], [[2],'H'], [[2],'H'],
-#                               [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
-#                               [[2],'T'], [[1,2],'C+'], [[2],'t'],
-#                               [[0,2],'C+'], [[1],'T'], [[2],'T'],
-#                               [[0,1],'C+'], [[2],'H'], [[0],'T'],
-#                               [[1],'t'], [[0,1],'C+'], [[0],'H']],
-#                               '0//']
-# circuit = string_to_circuit(Bernstein_Vazirani_circuit)
+t0 = time.time()
 
-# circuit = random_connected_circuit(qudit_num=3,
-#                              C1qGate_num=2, TGate_num=1, CSUMGate_num=2,
-#                              given_state=None, given_measurement=2)
+# For s='11'. Composed of two-qubit gates.
+Bernstein_Vazirani_circuit = BValg_circuit('101', 0)
 
-circuit = ['000', [[[0],   'H'],
-                   [[0,1], 'C+'],
-                   [[2,1], 'C+'],
-                   [[1],   'H']],
-           '00/']
-circuit = string_to_circuit(circuit)
+circuit = random_connected_circuit(qudit_num=10,
+                             C1qGate_num=100, TGate_num=20, CSUMGate_num=15,
+                             given_state=0, given_measurement=2)
 
-circ = QD_circuit(circuit)
+circ = QD_circuit(Bernstein_Vazirani_circuit)
 circ.compress_circuit()
 
-print()
 circ.show_connectivity()
-print()
 
 p1 = solve_qubit_circuit(circ.circuit)
 p2 = solve_qubit_circuit(circ.circuit_compressed)

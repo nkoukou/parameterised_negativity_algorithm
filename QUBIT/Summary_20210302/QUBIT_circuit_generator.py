@@ -267,7 +267,7 @@ def solve_qubit_circuit(circuit):
     ''' Solves !!! qubit circuits.
     '''
     state = reduce(np.kron, circuit['state_list'])
-    qudit_num = np.log(state.shape[0])
+    qudit_num = int(np.log(state.shape[0]))
 
     identity = makeGate('1')
     for i in range(len(circuit['index_list'])):
@@ -275,6 +275,7 @@ def solve_qubit_circuit(circuit):
 
         for j in range(qudit_num - len(idx)):
             gate = np.kron(gate, identity)
+            pass
 
 
     meas = reduce(np.kron, circuit['meas_list'])
