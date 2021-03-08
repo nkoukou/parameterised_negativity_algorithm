@@ -1,3 +1,4 @@
+from functools import reduce
 import numpy as np
 import numpy.random as nr
 from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
@@ -262,10 +263,27 @@ def string_to_circuit(circuit_string):
 
     return circuit
 
-def solve_circuit(circuit):
+def solve_qubit_circuit(circuit):
+    ''' Solves !!! qubit circuits.
+    '''
+    state = reduce(np.kron, circuit['state_list'])
+    qudit_num = np.log(state.shape[0])
+
+    identity = makeGate('1')
+    for i in range(len(circuit['index_list'])):
+        idx, gate = circuit['index_list'][i], circuit['gate_list'][i]
+
+        for j in range(qudit_num - len(idx)):
+            gate = np.kron(gate, identity)
+
+
+    meas = reduce(np.kron, circuit['meas_list'])
+    prob = np.trace(np.dot(meas, state))
+    return prob
+
+def solve_BV1q_circuit(circuit):
     ''' Solves compressed 1-qubit BV circuit.
     '''
-
     states = circuit['state_list']
     s0 = np.kron(states[0], np.kron(states[1], states[2]))
 

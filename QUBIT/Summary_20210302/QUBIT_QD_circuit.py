@@ -2,7 +2,8 @@ from QUBIT_wig_neg import (wigner_neg_compressed)
 from QUBIT_opt_neg import (optimize_neg_compressed)
 from QUBIT_local_opt_neg import (local_opt_neg_compressed)
 from QUBIT_circuit_generator import (random_connected_circuit,
-       compress2q_circuit, string_to_circuit, show_connectivity)
+       compress2q_circuit, string_to_circuit, show_connectivity,
+       solve_qubit_circuit)
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
 
@@ -89,20 +90,26 @@ import time
 import autograd.numpy as np
 import matplotlib.pylab as plt
 
-t0 = time.time()
-Bernstein_Vazirani_circuit = ['001', [
-                              [[0],'H'], [[2],'H'], [[2],'H'],
-                              [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
-                              [[2],'T'], [[1,2],'C+'], [[2],'t'],
-                              [[0,2],'C+'], [[1],'T'], [[2],'T'],
-                              [[0,1],'C+'], [[2],'H'], [[0],'T'],
-                              [[1],'t'], [[0,1],'C+'], [[0],'H']],
-                              '0//']
-circuit = string_to_circuit(Bernstein_Vazirani_circuit)
+# Bernstein_Vazirani_circuit = ['001', [
+#                               [[0],'H'], [[2],'H'], [[2],'H'],
+#                               [[1,2],'C+'], [[2],'t'], [[0,2],'C+'],
+#                               [[2],'T'], [[1,2],'C+'], [[2],'t'],
+#                               [[0,2],'C+'], [[1],'T'], [[2],'T'],
+#                               [[0,1],'C+'], [[2],'H'], [[0],'T'],
+#                               [[1],'t'], [[0,1],'C+'], [[0],'H']],
+#                               '0//']
+# circuit = string_to_circuit(Bernstein_Vazirani_circuit)
 
-circuit = random_connected_circuit(qudit_num=10,
-                             C1qGate_num=100, TGate_num=20, CSUMGate_num=15,
-                             given_state=0, given_measurement=2)
+# circuit = random_connected_circuit(qudit_num=3,
+#                              C1qGate_num=2, TGate_num=1, CSUMGate_num=2,
+#                              given_state=None, given_measurement=2)
+
+circuit = ['000', [[[0],   'H'],
+                   [[0,1], 'C+'],
+                   [[2,1], 'C+'],
+                   [[1],   'H']],
+           '00/']
+circuit = string_to_circuit(circuit)
 
 circ = QD_circuit(circuit)
 circ.compress_circuit()
@@ -111,34 +118,37 @@ print()
 circ.show_connectivity()
 print()
 
-sample_size = int(1e2)
-x_list = np.linspace(1, sample_size, sample_size)
+p1 = solve_qubit_circuit(circ.circuit)
+p2 = solve_qubit_circuit(circ.circuit_compressed)
 
-circ.opt_x(method='Wigner')
-circ.get_QD_list(method='Wigner')
-wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
-prob_wigner = np.cumsum(wigner_out_list)/x_list
+# sample_size = int(1e2)
+# x_list = np.linspace(1, sample_size, sample_size)
 
-circ.opt_x(method='Opt', **{'niter':10})
-circ.get_QD_list(method = 'Opt')
-opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
-prob_opt = np.cumsum(opt_out_list)/x_list
+# circ.opt_x(method='Wigner')
+# circ.get_QD_list(method='Wigner')
+# wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
+# prob_wigner = np.cumsum(wigner_out_list)/x_list
 
-circ.opt_x(method='Local_opt', **{'niter':10})
-circ.get_QD_list(method='Local_opt')
-local_opt_out_list = circ.sample(method='Local_opt',
-                                  sample_size=sample_size)
-prob_local_opt = np.cumsum(local_opt_out_list)/x_list
+# circ.opt_x(method='Opt', **{'niter':10})
+# circ.get_QD_list(method = 'Opt')
+# opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
+# prob_opt = np.cumsum(opt_out_list)/x_list
+
+# circ.opt_x(method='Local_opt', **{'niter':10})
+# circ.get_QD_list(method='Local_opt')
+# local_opt_out_list = circ.sample(method='Local_opt',
+#                                   sample_size=sample_size)
+# prob_local_opt = np.cumsum(local_opt_out_list)/x_list
 
 
-plt.close('all')
-plt.plot(x_list, prob_wigner, linestyle='solid',
-          color='tab:blue', label='Wigner')
-plt.plot(x_list, prob_opt, linestyle='solid',
-          color='tab:orange', label='Optimised')
-plt.plot(x_list, prob_local_opt, linestyle='solid',
-          color='tab:red', label='Local_Optimised')
-plt.xlabel('sample #')
-plt.ylabel('p_estimate')
-plt.legend(loc='upper right')
-plt.show()
+# plt.close('all')
+# plt.plot(x_list, prob_wigner, linestyle='solid',
+#           color='tab:blue', label='Wigner')
+# plt.plot(x_list, prob_opt, linestyle='solid',
+#           color='tab:orange', label='Optimised')
+# plt.plot(x_list, prob_local_opt, linestyle='solid',
+#           color='tab:red', label='Local_Optimised')
+# plt.xlabel('sample #')
+# plt.ylabel('p_estimate')
+# plt.legend(loc='upper right')
+# plt.show()
