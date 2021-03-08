@@ -6,6 +6,10 @@ def BValg_circuit(s_string, toffoli=0):
     Create a circuit of the 'n'-bit Bernstein-Vazirani algorithm.
     Bernstein-Vazirani algorithm
     - For a given function f(x) = x.s, find the string s using the function once.
+    [INPUT]
+    - s_string: the string s in the function f(x)
+    - toffoli: if toffoli==0, the output circuit is composed of up to two-qubit gates,
+               if toffoli==1, then the ouput circuit includes the Toffoli gates (3-qubit gate).
     '''
     n_bit = len(s_string)
     Toffoli_matrix = np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
@@ -66,6 +70,9 @@ def BValg_circuit(s_string, toffoli=0):
     return circuit
 
 def Toffoli_gate_in_2q(index):
+    '''
+    Decompose a Toffoli gate into one- and two-qubit gates.
+    '''
     c1, c2, t = index
 
     Gate_list = [makeGate('H'), makeGate('C+'), makeGate('t'), makeGate('C+'), makeGate('T'),
