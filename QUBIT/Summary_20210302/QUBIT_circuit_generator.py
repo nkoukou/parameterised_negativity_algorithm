@@ -194,7 +194,7 @@ def compress2q_circuit(circuit):
             gate_next = np.dot(gate_next, np.dot(swap, np.dot(gate, swap)))
         gates_compressed[i+1] = gate_next
         duplicates.append(i)
-    for i in duplicates:
+    for i in duplicates[::-1]:
         gates_compressed.pop(i)
         indices_compressed.pop(i)
 
