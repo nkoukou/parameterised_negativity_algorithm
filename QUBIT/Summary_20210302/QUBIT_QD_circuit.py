@@ -93,20 +93,21 @@ import matplotlib.pylab as plt
 
 t0 = time.time()
 
-# For s='11'. Composed of two-qubit gates.
-Bernstein_Vazirani_circuit = BValg_circuit('101', 0)
+Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
 
-circuit = random_connected_circuit(qudit_num=10,
-                             C1qGate_num=100, TGate_num=20, CSUMGate_num=15,
-                             given_state=0, given_measurement=2)
+circuit, Tcount = random_connected_circuit(qudit_num=10, circuit_length=60,
+            Tgate_prob=1/3, given_state=None, given_measurement=2, method='r')
 
-circ = QD_circuit(Bernstein_Vazirani_circuit)
+
+circ = QD_circuit(circuit)
 circ.compress_circuit()
-
 circ.show_connectivity()
+print()
+circ.show_connectivity(compressed=False)
 
-p1 = solve_qubit_circuit(circ.circuit)
-p2 = solve_qubit_circuit(circ.circuit_compressed)
+
+# p1 = solve_qubit_circuit(circ.circuit) # Not implemented yet
+# p2 = solve_qubit_circuit(circ.circuit_compressed) # Not implemented yet
 
 # sample_size = int(1e2)
 # x_list = np.linspace(1, sample_size, sample_size)

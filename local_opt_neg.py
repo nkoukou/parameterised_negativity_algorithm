@@ -28,7 +28,7 @@ def local_optimizer(cost_function, x0, **kwargs):
         optimize_result = minimize(cost_function, x0, method='L-BFGS-B',jac=grad_cost_function)
     else: raise Exception('Invalid optimisation method')
     return optimize_result
-    
+
 x_len = DIM*DIM-1
 x0w = [1,0,0,0,0,0,1,0]
 def weight(Gamma):
@@ -62,7 +62,7 @@ def get_local_opt_x(circuit_compressed,**kwargs):
     t0 = time.time()
     options = {'show_detailed_log':False}
     options.update(kwargs)
-    
+
     [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list] = get_circuit_loc(circuit_compressed)
 
     print('----------Local_Opt_Dist--------------\n',options)
@@ -78,7 +78,7 @@ def get_local_opt_x(circuit_compressed,**kwargs):
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_state:',neg,'\t weight:\t',weight(x2Gamma(x_opt)))
-    
+
     x_running = x_rho_opt_list.copy()
     x_gate_out_opt_list = []
     neg_gate_opt_list = []
@@ -96,7 +96,7 @@ def get_local_opt_x(circuit_compressed,**kwargs):
             print('neg_gate(',gate_index+1,'):',neg,'\t weight:\t',[weight(x2Gamma(x_out_opt1)),weight(x2Gamma(x_out_opt2))])
         x_running[qudit_index1] = x_out_opt1
         x_running[qudit_index2] = x_out_opt2
-    
+
     x_meas_opt_list = x_running
     qudit_index = 0
     neg_meas_opt_list = []
@@ -108,13 +108,13 @@ def get_local_opt_x(circuit_compressed,**kwargs):
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_meas:',neg)
-        
+
 #    print('local_opt_neg_tot:', neg_tot)
     print('Local Opt Log Neg:', np.log(neg_tot))
     print('Computation time:',time.time() - t0)
-    
+
     x_opt_list_tot = np.append(np.append(np.array(x_rho_opt_list).flatten(),np.array(x_gate_out_opt_list).flatten()),np.array(x_meas_opt_list).flatten())
-        
+
     return x_opt_list_tot, np.log(neg_tot)
 #    return x_rho_opt_list, x_gate_out_opt_list, x_meas_opt_list, neg_rho_opt_list, neg_gate_opt_list, neg_meas_opt_list, neg_tot
 
@@ -122,7 +122,7 @@ def show_Wigner_neg_x(circuit_compressed,**kwargs):
     options = {'show_detailed_log':False}
     options.update(kwargs)
     [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list] = get_circuit_loc(circuit_compressed)
-    
+
     print('----------Wigner----------------')
     neg_tot = 1.
     for rho in rho_list:
@@ -130,7 +130,7 @@ def show_Wigner_neg_x(circuit_compressed,**kwargs):
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_state:',neg)
-    
+
     for gate_index in range(len(gate_U2q_list)):
         U2q = gate_U2q_list[gate_index]
         [qudit_index1,qudit_index2] = gate_qudit_index_list[gate_index]
@@ -138,14 +138,14 @@ def show_Wigner_neg_x(circuit_compressed,**kwargs):
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_gate(',gate_index+1,'):',neg)
-    
+
     for qudit_index in range(len(meas_list)):
         E = meas_list[qudit_index]
         neg = neg_meas_1q(E, x2Gamma(x0w))
         neg_tot *= neg
         if options['show_detailed_log']:
             print('neg_meas:',neg)
-        
+
     print('neg_tot:', neg_tot)
     print('log_neg_tot:', np.log(neg_tot))
     return neg_tot
@@ -159,88 +159,88 @@ def get_circuit_loc(circuit_compressed):
     rho_list = []
     for state_string in state_string_list:
         rho_list.append(makeState(state_string))
-        
+
     gate_U2q_list = []
     gate_qudit_index_list = []
     for gate_compressed in gate_compressed_list:
         gate_qudit_index_list.append(gate_compressed[0])
         gate_U2q_list.append(gate_compressed[1])
-        
+
     meas_list = []
     for meas_string in meas_string_list:
         if meas_string != '/':
             E = makeState(meas_string)
             meas_list.append(E)
-        
+
     return [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
 
 
 #'''Random Circuit Generator (no more available)'''
-#rho_string_list = ['0','1','2','+']
-## rho_string_list = ['0','1','2','+','m','S','N','T']
-#def get_rand_rho_list(qudit_num):
-#    rho_list = []
-#    for n in range(qudit_num):
-#        rho_list.append(makeState(np.random.choice(rho_string_list)))
-#    return rho_list
-#
-#gate_string_1q_list = ['1','H','S','T']
-#def get_rand_gate_U2q_list(circuit_length,**kwargs):
-#    options = {'Tgate_prob': 0.3}
-#    options.update(kwargs)
-#
-#    Tgate_prob = options['Tgate_prob']
-#    prob_list = [(1-Tgate_prob)/3, (1-Tgate_prob)/3, (1-Tgate_prob)/3, Tgate_prob]
-#    gate_U2q_list = []
-#    for gate_index in range(circuit_length):
-#        U1qA = makeGate(np.random.choice(gate_string_1q_list,p=prob_list))
-#        U1qB = makeGate(np.random.choice(gate_string_1q_list,p=prob_list))
-#        U_AB_loc = np.kron(U1qA,U1qB)
-#        U_AB_tot = np.dot(U_AB_loc,makeCsum(np.random.choice(['C+','+C'])))
-#        gate_U2q_list.append(U_AB_tot)
-#    return gate_U2q_list
-#
-#def get_rand_gate_qudit_index_list(circuit_length,qudit_num,**kwargs):
-#    options = {'type': 'r'}
-#    options.update(kwargs)
-#
-#    gate_qudit_index_list = []
-#    if options['type']=='r':
-#        for gate_index in range(circuit_length):
-#            rng = default_rng()
-#            gate_qudit_index = rng.choice(qudit_num, size=2, replace=False)
-#            gate_qudit_index_list.append(gate_qudit_index)
-#
-#    elif options['type']=='c':
-#        qudit_index = 0
-#        for gate_index in range(circuit_length):
-#            gate_qudit_index_list.append([qudit_index,qudit_index+1])
-#            qudit_index += 2
-#            if qudit_index == qudit_num-2 and qudit_num%2 == 0:
-#                qudit_index = 1
-#            elif qudit_index == qudit_num-1 and qudit_num%2 == 0:
-#                qudit_index = 0
-#            elif qudit_index == qudit_num-2 and qudit_num%2 == 1:
-#                qudit_index = 0
-#            elif qudit_index == qudit_num-1 and qudit_num%2 == 1:
-#                qudit_index = 1
-#    return gate_qudit_index_list
-#
-#def get_rand_meas_list(qudit_num):
-#    meas_list = []
-#    for n in range(qudit_num):
-#        meas_string = np.random.choice(['0','/'])
-#        if meas_string=='0':
-#            E = makeState(np.random.choice(rho_string_list))
-#        elif meas_string=='/':
-#            E = np.eye(DIM)
-#        meas_list.append(E)
-#    return meas_list
-#
-#def get_rand_circuit(qudit_num,circuit_length,**kwargs):
-#    rho_list = get_rand_rho_list(qudit_num)
-#    gate_U2q_list = get_rand_gate_U2q_list(circuit_length,**kwargs)
-#    gate_qudit_index_list = get_rand_gate_qudit_index_list(circuit_length,qudit_num,**kwargs)
-#    meas_list = get_rand_meas_list(qudit_num)
-#    circuit = [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
-#    return circuit
+rho_string_list = ['0','1','2','+']
+# rho_string_list = ['0','1','2','+','m','S','N','T']
+def get_rand_rho_list(qudit_num):
+    rho_list = []
+    for n in range(qudit_num):
+        rho_list.append(makeState(np.random.choice(rho_string_list)))
+    return rho_list
+
+gate_string_1q_list = ['1','H','S','T']
+def get_rand_gate_U2q_list(circuit_length,**kwargs):
+    options = {'Tgate_prob': 0.3}
+    options.update(kwargs)
+
+    Tgate_prob = options['Tgate_prob']
+    prob_list = [(1-Tgate_prob)/3, (1-Tgate_prob)/3, (1-Tgate_prob)/3, Tgate_prob]
+    gate_U2q_list = []
+    for gate_index in range(circuit_length):
+        U1qA = makeGate(np.random.choice(gate_string_1q_list,p=prob_list))
+        U1qB = makeGate(np.random.choice(gate_string_1q_list,p=prob_list))
+        U_AB_loc = np.kron(U1qA,U1qB)
+        U_AB_tot = np.dot(U_AB_loc,makeCsum(np.random.choice(['C+','+C'])))
+        gate_U2q_list.append(U_AB_tot)
+    return gate_U2q_list
+
+def get_rand_gate_qudit_index_list(circuit_length,qudit_num,**kwargs):
+    options = {'type': 'r'}
+    options.update(kwargs)
+
+    gate_qudit_index_list = []
+    if options['type']=='r':
+        for gate_index in range(circuit_length):
+            rng = default_rng()
+            gate_qudit_index = rng.choice(qudit_num, size=2, replace=False)
+            gate_qudit_index_list.append(gate_qudit_index)
+
+    elif options['type']=='c':
+        qudit_index = 0
+        for gate_index in range(circuit_length):
+            gate_qudit_index_list.append([qudit_index,qudit_index+1])
+            qudit_index += 2
+            if qudit_index == qudit_num-2 and qudit_num%2 == 0:
+                qudit_index = 1
+            elif qudit_index == qudit_num-1 and qudit_num%2 == 0:
+                qudit_index = 0
+            elif qudit_index == qudit_num-2 and qudit_num%2 == 1:
+                qudit_index = 0
+            elif qudit_index == qudit_num-1 and qudit_num%2 == 1:
+                qudit_index = 1
+    return gate_qudit_index_list
+
+def get_rand_meas_list(qudit_num):
+    meas_list = []
+    for n in range(qudit_num):
+        meas_string = np.random.choice(['0','/'])
+        if meas_string=='0':
+            E = makeState(np.random.choice(rho_string_list))
+        elif meas_string=='/':
+            E = np.eye(DIM)
+        meas_list.append(E)
+    return meas_list
+
+def get_rand_circuit(qudit_num,circuit_length,**kwargs):
+    rho_list = get_rand_rho_list(qudit_num)
+    gate_U2q_list = get_rand_gate_U2q_list(circuit_length,**kwargs)
+    gate_qudit_index_list = get_rand_gate_qudit_index_list(circuit_length,qudit_num,**kwargs)
+    meas_list = get_rand_meas_list(qudit_num)
+    circuit = [rho_list,gate_U2q_list,gate_qudit_index_list,meas_list]
+    return circuit

@@ -78,13 +78,12 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
                'index_list': indices, 'meas_list': measurements}
     return circuit
 
-def random_connected_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
-                   given_state=None, given_measurement=1):
+def random_connected_circuit(qudit_num, circuit_length, Tgate_prob=1/3,
+                   given_state=None, given_measurement=1, method='r'):
     ''' Inputs:
         qudit_num         - int
-        C1qGate_num       - int
-        TGate_num         - int
-        CSUMGate_num      - int
+        circuit_length    - int
+        Tgate_prob        - float
         given_state       - None or 0 (all zeros) or string
         given_measurement - string or int (number of measurement modes)
 
@@ -94,24 +93,92 @@ def random_connected_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
 
         circuit is fully connected, i.e. there are no disentangled wires.
     '''
-    if CSUMGate_num < qudit_num/2:
-        raise Exception('Not enough CSUMs for circuit to be fully connected.')
+    # States
+    if given_state is None:
+        char = ['0', '1']
+        prob = [1/len(char)]*len(char)
 
-    check = False
-    while check is False:
-        circuit = random_circuit(qudit_num, C1qGate_num, TGate_num,
-                                 CSUMGate_num, given_state, given_measurement)
-        check = []
-        for idx in circuit['index_list']:
-            if len(idx)==1: continue
-            for i in [0,1]:
-                if idx[i] in check: continue
-                check.append(idx[i])
-        check = (set(check)==set(np.arange(qudit_num)))
+        given_state = ''
+        for i in range(qudit_num):
+            given_state += nr.choice(char, p=prob)
+    elif given_state==0:
+        given_state = '0'*qudit_num
+    else:
+        if len(given_state)!=qudit_num:
+            raise Exception('Number of qudits must be %d'%(qudit_num))
+    states = []
+    for s in given_state:
+        states.append(makeState(s))
 
-    return circuit
+    # Indices
+    indices = get_index_list(circuit_length, qudit_num, method='r')
 
+    # Gates
+    char = ['1', 'H', 'K', 'T']
+    prob_list = [(1-Tgate_prob)/3]*(len(char)-1) + [Tgate_prob]
+    gates = []
+    Tcount = 0
+    for g in range(circuit_length):
+        U1qA = nr.choice(char, p=prob_list)
+        U1qB = nr.choice(char, p=prob_list)
+        Tcount +=(U1qA=='T')+(U1qA=='T')
+        U1qA = makeGate(U1qA)
+        U1qB = makeGate(U1qB)
+        U_AB_loc = np.kron(U1qA, U1qB)
+        csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
+        csum = makeGate(csum)
+        U_AB_tot = np.dot(U_AB_loc, csum)
+        gates.append(U_AB_tot)
 
+    # Measurements
+    if type(given_measurement)==int:
+        char = ['0']
+        prob = [1/len(char)]*len(char)
+
+        meas = ['/']*qudit_num
+        for i in range(given_measurement):
+            meas[i] = nr.choice(char, p=prob)
+
+        given_measurement = ''
+        for m in meas:
+            given_measurement += m
+    else:
+        if len(given_measurement)!=qudit_num:
+            raise Exception('Number of qudits is %d'%(qudit_num))
+    measurements = []
+    for m in given_measurement:
+        measurements.append(makeMeas(m))
+
+    circuit = {'state_list': states, 'gate_list': gates,
+               'index_list': indices, 'meas_list': measurements}
+
+    return circuit, Tcount
+
+def get_index_list(circuit_length, qudit_num, method='r'):
+    ''' Creates index_list for circuit of given circuit_length, qudit_num
+        with given method ('r': random, 'c':canonical)
+    '''
+    gate_qudit_index_list = []
+    if method=='r':
+        for gate_index in range(circuit_length):
+            rng = nr.default_rng()
+            gate_qudit_index = rng.choice(qudit_num, size=2, replace=False)
+            gate_qudit_index_list.append(list(gate_qudit_index))
+
+    elif method=='c':
+        qudit_index = 0
+        for gate_index in range(circuit_length):
+            gate_qudit_index_list.append([qudit_index, qudit_index+1])
+            qudit_index += 2
+            if qudit_index == qudit_num-2 and qudit_num%2 == 0:
+                qudit_index = 1
+            elif qudit_index == qudit_num-1 and qudit_num%2 == 0:
+                qudit_index = 0
+            elif qudit_index == qudit_num-2 and qudit_num%2 == 1:
+                qudit_index = 0
+            elif qudit_index == qudit_num-1 and qudit_num%2 == 1:
+                qudit_index = 1
+    return gate_qudit_index_list
 
 def compress2q_circuit(circuit):
     ''' Returns an equivalent circuit that contains only 2-qudit gates
@@ -198,6 +265,10 @@ def compress2q_circuit(circuit):
     for i in duplicates[::-1]:
         gates_compressed.pop(i)
         indices_compressed.pop(i)
+    #     gates_compressed[i] = None
+    #     indices_compressed[i] = None
+    # gates_compressed = [val for val in gates_compressed if val is not None]
+    # indices_compressed=[val for val in indices_compressed if val is not None]
 
     circuit_compressed = {'state_list': circuit['state_list'],
                           'gate_list': gates_compressed,
