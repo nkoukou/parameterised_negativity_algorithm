@@ -111,7 +111,7 @@ def random_connected_circuit(qudit_num, circuit_length, Tgate_prob=1/3,
         states.append(makeState(s))
 
     # Indices
-    indices = get_index_list(circuit_length, qudit_num, method='r')
+    indices = get_index_list(circuit_length, qudit_num, method='c')
 
     # Gates
     char = ['1', 'H', 'K', 'T']
@@ -170,11 +170,11 @@ def get_index_list(circuit_length, qudit_num, method='r'):
         for gate_index in range(circuit_length):
             gate_qudit_index_list.append([qudit_index, qudit_index+1])
             qudit_index += 2
-            if qudit_index == qudit_num-2 and qudit_num%2 == 0:
+            if qudit_index == qudit_num and qudit_num%2 == 0:
                 qudit_index = 1
             elif qudit_index == qudit_num-1 and qudit_num%2 == 0:
                 qudit_index = 0
-            elif qudit_index == qudit_num-2 and qudit_num%2 == 1:
+            elif qudit_index == qudit_num and qudit_num%2 == 1:
                 qudit_index = 0
             elif qudit_index == qudit_num-1 and qudit_num%2 == 1:
                 qudit_index = 1
@@ -239,9 +239,9 @@ def compress2q_circuit(circuit):
 
     u1qs = [makeGate('1')]*len(disentangled_wires)
     for i in range(len(gates)):
-        if indices[0] not in disentangled_wires: continue
+        if indices[i] not in disentangled_wires: continue
 
-        idx = disentangled_wires.index(indices[0])
+        idx = disentangled_wires.index(indices[i])
         u1qs[idx] = np.dot(makeGate(gates[i]), u1qs[idx])
 
         gate_masked[i] +=1
