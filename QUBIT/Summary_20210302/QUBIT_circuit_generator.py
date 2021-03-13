@@ -121,7 +121,7 @@ def random_connected_circuit(qudit_num, circuit_length, Tgate_prob=1/3,
     for g in range(circuit_length):
         U1qA = nr.choice(char, p=prob_list)
         U1qB = nr.choice(char, p=prob_list)
-        Tcount +=(U1qA=='T')+(U1qA=='T')
+        Tcount +=(U1qA=='T')+(U1qB=='T')
         U1qA = makeGate(U1qA)
         U1qB = makeGate(U1qB)
         U_AB_loc = np.kron(U1qA, U1qB)
