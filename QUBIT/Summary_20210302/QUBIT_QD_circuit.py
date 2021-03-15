@@ -87,23 +87,23 @@ class QD_circuit(object):
 
 
 ################################ SAMPLE CODE ##################################
-import time
-import autograd.numpy as np
-import matplotlib.pylab as plt
+# import time
+# import autograd.numpy as np
+# import matplotlib.pylab as plt
 
-t0 = time.time()
+# t0 = time.time()
 
-Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
+# Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
 
-circuit, Tcount = random_connected_circuit(qudit_num=10, circuit_length=60,
-            Tgate_prob=1/3, given_state=None, given_measurement=2, method='r')
+# circuit, Tcount = random_connected_circuit(qudit_num=4, circuit_length=10,
+#             Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
 
 
-circ = QD_circuit(circuit)
-circ.compress_circuit()
-circ.show_connectivity()
-print()
-circ.show_connectivity(compressed=False)
+# circ = QD_circuit(circuit)
+# circ.compress_circuit()
+# circ.show_connectivity()
+# print()
+# circ.show_connectivity(compressed=False)
 
 
 # p1 = solve_qubit_circuit(circ.circuit) # Not implemented yet
