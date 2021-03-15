@@ -38,12 +38,17 @@ def hist_vs_T(n_qubit, n_CNOT):
         plt.ylabel(r'$\log{{\cal N}}$', fontsize=16)
         plt.legend()
 
-def scatter_logneg(n_qubit):
+def scatter_logneg(n_qubit, diff=True):
     n_cnot = np.arange(n_qubit-1, 2*n_qubit+1)
     n_tgat = np.arange(0, 2*n_cnot.max()+1)
-    data = [np.zeros((n_cnot.size, n_tgat.size))]*4
-    labels = [r'Wigner $\log{{\cal N}}$', r'Global Opt $\log{{\cal N}}$',
-              r'Local Opt $\log{{\cal N}}$', r'Comp Time ($s$)']
+    data = np.zeros((4, n_cnot.size, n_tgat.size))
+    labels = [r'$\log{{\cal N}_{\rm{Wigner}}}$',
+              r'$\log{{\cal N}_{\rm{Global}}}$',
+              r'$\log{{\cal N}_{\rm{Local}}}$',
+              r'Comp Time ($s$)']
+    if diff:
+        for k in [1,2]:
+            labels[k] = r'$\log{{\cal N}_{\rm{Wigner}}} - $' + labels[k]
 
     for k in range(4):
         for i in range(n_cnot.size):
@@ -51,12 +56,14 @@ def scatter_logneg(n_qubit):
             fname = os.path.join(path, fname)
             temp = np.load(fname)
             temp = groupby_mean(temp)
-            data[k][i,temp[:,0].astype(int)] = temp[:,1]
+            data[k, i,temp[:,0].astype(int)] = temp[:,1]
 
         fig = plt.figure()
         ax  = fig.add_subplot(111)
 
         logneg = data[k].T
+        if diff and (k in [1,2]):
+            logneg = data[0].T - logneg
         logneg[logneg==0.] = np.nan
         xx, yy = np.meshgrid(n_cnot, n_tgat)
         s = 10.
@@ -64,8 +71,7 @@ def scatter_logneg(n_qubit):
         sc = ax.scatter(xx, yy, c=logneg, s=s, alpha=1, marker='s',
                         cmap=plt.cm.get_cmap('YlOrRd'))
 
-        levels = np.linspace(logneg[logneg>0].min(),
-                             logneg[logneg<1e100].max(), 5)
+        levels = np.linspace(np.nanmin(logneg), np.nanmax(logneg), 5)
         # ax.contour(xx, yy, logneg, levels=levels,
         #             linewidths=0.5, colors='k')
         cc = fig.colorbar(sc)
@@ -88,7 +94,7 @@ def scatter_logneg(n_qubit):
 
 plt.close('all')
 hist_vs_T(n_qubit, 19)
-scatter_logneg(n_qubit)
+data = scatter_logneg(n_qubit, diff=True)
 
 
 
