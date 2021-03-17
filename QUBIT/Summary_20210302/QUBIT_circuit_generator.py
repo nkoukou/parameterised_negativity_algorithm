@@ -289,13 +289,13 @@ def compress3q_circuit(circuit):
     gates, indices = circuit['gate_list'], circuit['index_list']
     gate_num = len(indices)
 
-    if isinstance(gates[0], str):
-        raise ValueError("Gates should be arrays")
+    if isinstance(gates[0], str): raise ValueError("Gates should be arrays")
+    if qudit_num<3: raise Exception("qudit_num must be at least 3")
 
     gates_compressed = []
     indices_compressed = []
     u3q_counts = []
-    gate_masked = [0]*gate_num
+    gate_masked = [0 for i in range(gate_num)]
     disentangled_wires = list(range(qudit_num))
 
     for count, gate in enumerate(gates):
@@ -310,31 +310,45 @@ def compress3q_circuit(circuit):
                 disentangled_wires.remove(indices[count][i])
 
     if len(disentangled_wires)>0:
-        raise Exception('Disentangled circuits not implemented yet - \
-                         Toffolis need to cover all wires')
-    # !!! Implement by passing to compress_2q / constructing makeGate('111') ?
+        print('Circuit contains wires that do not pass through a Toffoli')
+    while len(disentangled_wires)>2:
+        count +=1
+        gates_compressed.append(np.eye(8))
+        indices_compressed.append(disentangled_wires[:3])
+        u3q_counts.append(count)
+        gate_masked +=[1]
+        disentangled_wires = disentangled_wires[3:]
+    if len(disentangled_wires)>0:
+        count +=1
+        gates_compressed.append(np.eye(8))
+        index = disentangled_wires+list(np.delete(np.arange(qudit_num),
+                  disentangled_wires)[:(3-len(disentangled_wires))])
+        indices_compressed.append(index)
+        u3q_counts.append(count)
+        gate_masked +=[1]
+        disentangled_wires = []
 
     for k in range(len(indices_compressed)):
         u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
         u1q = makeGate('111')
         for i in range(u3q_counts[k]):
-            idx, gate = indices[i], gates[i]
             if gate_masked[i]: continue
+            idx, gate = indices[i], gates[i]
             if not set(idx).issubset(u3q_index): continue
 
-            u1q = np.dot(aligned_gate(u1q, idx, u3q_index), u1q)
+            u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
             gate_masked[i] +=1
         gates_compressed[k] = np.dot(u3q_gate, u1q)
 
     for k in range(len(indices_compressed)-1, 0, -1):
         u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
-        u1q = [IDC for i in range(3)]
+        u1q = makeGate('111')
         for i in range(gate_num-1, u3q_counts[k], -1):
-            idx, gate = indices[i], gates[i]
             if gate_masked[i]: continue
+            idx, gate = indices[i], gates[i]
             if not set(idx).issubset(u3q_index): continue
 
-            u1q = np.dot(aligned_gate(u1q, idx, u3q_index), u1q)
+            u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
             gate_masked[i] +=1
         gates_compressed[k] = np.dot(u3q_gate, u1q)
 
@@ -388,12 +402,12 @@ def aligned_gate(gate, index, target_index):
             gate = np.kron(gate, IDC)
     return gate
 
-def test_align():
+def test_aligned_gate():
     target = makeGate('+1C')
+    target_index = [1,7,3]
 
     gate = makeGate('C+')
     index = [3,1]
-    target_index = [1,7,3]
     gate = aligned_gate(gate, index, target_index)
 
     print(np.allclose(gate, target))
@@ -413,9 +427,13 @@ def show_connectivity(circuit):
         elif len(idx) in [2,3]:
             idle_wires = np.delete(np.arange(qudit_num), idx)
             for j in idle_wires: circ_repr[j].extend(['-'])
-            if len(idx)==3: circ_repr[idx[-3]].append('O')
-            circ_repr[idx[-2]].append('o')
-            circ_repr[idx[-1]].append('+')
+            if len(idx)==3:
+                circ_repr[idx[-3]].append('O')
+                circ_repr[idx[-2]].append('|')
+                circ_repr[idx[-1]].append('+')
+            if len(idx)==2:
+                circ_repr[idx[-2]].append('C')
+                circ_repr[idx[-1]].append('Z')
         else: raise Exception('show_connectivity not implemented for m>3')
     for i in range(qudit_num):
         m = '/' if np.allclose(meas[i], IDC) else 'D'
@@ -425,7 +443,7 @@ def show_connectivity(circuit):
     circ_repr = [''.join(wire) for wire in circ_repr]
     for wire in circ_repr:
         print(wire)
-    return circ_repr
+    # return circ_repr
 
 
 def string_to_circuit(circuit_string):

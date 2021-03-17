@@ -1,9 +1,9 @@
 from QUBIT_wig_neg import (wigner_neg_compressed)
 from QUBIT_opt_neg import (optimize_neg_compressed)
 from QUBIT_local_opt_neg import (local_opt_neg_compressed)
-from QUBIT_circuit_generator import (random_connected_circuit,
-       compress2q_circuit, string_to_circuit, show_connectivity,
-       solve_qubit_circuit)
+from QUBIT_circuit_generator import (random_connected_circuit, random_circuit,
+       compress2q_circuit, compress3q_circuit, string_to_circuit,
+       show_connectivity)
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
 from QUBIT_BVcircuit import(BValg_circuit)
@@ -27,8 +27,12 @@ class QD_circuit(object):
     def compress_circuit(self, m=2):
         ''' Compresses circuit, so that it consists of m-qudit gates.
         '''
-        self.circuit_compressed = compress2q_circuit(self.circuit)
-        # !!! Change to compress_circuit
+        if m==2:
+            self.circuit_compressed = compress2q_circuit(self.circuit)
+        elif m==3:
+            self.circuit_compressed = compress3q_circuit(self.circuit)
+        else:
+            raise Exception('m must be 2 or 3')
 
     def show_connectivity(self, compressed=True):
         circuit = self.circuit_compressed if compressed else self.circuit
@@ -87,23 +91,26 @@ class QD_circuit(object):
 
 
 ################################ SAMPLE CODE ##################################
-# import time
-# import autograd.numpy as np
-# import matplotlib.pylab as plt
+import time
+import autograd.numpy as np
+import matplotlib.pylab as plt
 
-# t0 = time.time()
+t0 = time.time()
 
-# Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
+Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
 
 # circuit, Tcount = random_connected_circuit(qudit_num=4, circuit_length=10,
-#             Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
+#            Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
 
+circuit = random_circuit(qudit_num=12, C1qGate_num=243, TGate_num=134,
+                         CSUMGate_num=25, Toff_num=10,
+                         given_state=0, given_measurement=2)
 
-# circ = QD_circuit(circuit)
-# circ.compress_circuit()
-# circ.show_connectivity()
-# print()
-# circ.show_connectivity(compressed=False)
+circ = QD_circuit(circuit)
+circ.compress_circuit(m=3)
+circ.show_connectivity(compressed=False)
+print()
+circ.show_connectivity()
 
 
 # p1 = solve_qubit_circuit(circ.circuit) # Not implemented yet
