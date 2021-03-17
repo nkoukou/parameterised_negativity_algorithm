@@ -27,6 +27,11 @@ def makeGate(gate_string):
         gate = np.array([[1.,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
         return gate
 
+    if gate_string=='A':
+        gate = np.block([[np.eye(6),       np.zeros((6,2))],
+                         [np.zeros((2,6)), makeGate('X')  ]])
+        return gate
+
     gate = 1
     for g in gate_string:
         #print(g)
@@ -77,6 +82,8 @@ def makeGate1q(gate_string, dim=DIM):
         '1' - Identity
         'H' - Hadamard
         'K' - Pi/4-Phase shift gate ([[1,0],[0,i]])
+        'X' - Pauli X
+        'Z' - Pauli Z
         'T' - qubit T-gate (magic gate)
         't' - Conjugate transpose of the T-gate
         Followed the definition of T-gates in Wikipedia

@@ -4,7 +4,10 @@ import numpy.random as nr
 from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
 from QUBIT_state_functions import(evolve)
 
-def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
+IDC  = makeGate('1')
+SWAP = makeGate('S')
+
+def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num, Toff_num,
                    given_state=None, given_measurement=1):
     ''' Inputs:
         qudit_num         - int
@@ -50,6 +53,10 @@ def random_circuit(qudit_num, C1qGate_num, TGate_num, CSUMGate_num,
     for i in range(CSUMGate_num):
         gate = makeGate('C+')
         index = list(nr.choice(qudit_num, size=2, replace=False))
+        gates_seq.append((gate, index))
+    for i in range(Toff_num):
+        gate = makeGate('A')
+        index = list(nr.choice(qudit_num, size=3, replace=False))
         gates_seq.append((gate, index))
     nr.shuffle(gates_seq)
     gates, indices = zip(*gates_seq)
@@ -209,7 +216,7 @@ def compress2q_circuit(circuit):
 
     for k in range(len(indices_compressed)):
         u2q_gate, u2q_index = gates_compressed[k], indices_compressed[k]
-        u1q = [makeGate('1')]*2
+        u1q = [IDC for i in range(2)]
         for i in range(u2q_counts[k]):
             idx, gate = indices[i], gates[i]
             if gate_masked[i]: continue
@@ -224,7 +231,7 @@ def compress2q_circuit(circuit):
 
     for k in range(len(indices_compressed)-1, 0, -1):
         u2q_gate, u2q_index = gates_compressed[k], indices_compressed[k]
-        u1q = [makeGate('1')]*2
+        u1q = [IDC for i in range(2)]
         for i in range(gate_num-1, u2q_counts[k], -1):
             idx, gate = indices[i], gates[i]
             if gate_masked[i]: continue
@@ -237,7 +244,7 @@ def compress2q_circuit(circuit):
             gate_masked[i] +=1
         gates_compressed[k] = np.dot(np.kron(u1q[0], u1q[1]), u2q_gate)
 
-    u1qs = [makeGate('1')]*len(disentangled_wires)
+    u1qs = [IDC for i in range(len(disentangled_wires))]
     for i in range(len(gates)):
         if indices[i] not in disentangled_wires: continue
 
@@ -258,8 +265,7 @@ def compress2q_circuit(circuit):
         if idx==idx_next:
             gate_next = np.dot(gate_next, gate)
         else:
-            swap = makeGate('S')
-            gate_next = np.dot(gate_next, np.dot(swap, np.dot(gate, swap)))
+            gate_next = np.dot(gate_next, np.dot(SWAP, np.dot(gate, SWAP)))
         gates_compressed[i+1] = gate_next
         duplicates.append(i)
     for i in duplicates[::-1]:
@@ -276,6 +282,123 @@ def compress2q_circuit(circuit):
                           'meas_list': circuit['meas_list']}
     return circuit_compressed
 
+def compress3q_circuit(circuit):
+    ''' Returns an equivalent circuit that contains only 3-qudit gates
+    '''
+    qudit_num = len(circuit['state_list'])
+    gates, indices = circuit['gate_list'], circuit['index_list']
+    gate_num = len(indices)
+
+    if isinstance(gates[0], str):
+        raise ValueError("Gates should be arrays")
+
+    gates_compressed = []
+    indices_compressed = []
+    u3q_counts = []
+    gate_masked = [0]*gate_num
+    disentangled_wires = list(range(qudit_num))
+
+    for count, gate in enumerate(gates):
+        if len(indices[count])!=3: continue
+
+        gates_compressed.append(gate)
+        indices_compressed.append(indices[count])
+        u3q_counts.append(count)
+        gate_masked[count] = 1
+        for i in [0, 1, 2]:
+            if indices[count][i] in disentangled_wires:
+                disentangled_wires.remove(indices[count][i])
+
+    if len(disentangled_wires)>0:
+        raise Exception('Disentangled circuits not implemented yet - \
+                         Toffolis need to cover all wires')
+    # !!! Implement by passing to compress_2q / constructing makeGate('111') ?
+
+    for k in range(len(indices_compressed)):
+        u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
+        u1q = makeGate('111')
+        for i in range(u3q_counts[k]):
+            idx, gate = indices[i], gates[i]
+            if gate_masked[i]: continue
+            if not set(idx).issubset(u3q_index): continue
+
+            u1q = np.dot(aligned_gate(u1q, idx, u3q_index), u1q)
+            gate_masked[i] +=1
+        gates_compressed[k] = np.dot(u3q_gate, u1q)
+
+    for k in range(len(indices_compressed)-1, 0, -1):
+        u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
+        u1q = [IDC for i in range(3)]
+        for i in range(gate_num-1, u3q_counts[k], -1):
+            idx, gate = indices[i], gates[i]
+            if gate_masked[i]: continue
+            if not set(idx).issubset(u3q_index): continue
+
+            u1q = np.dot(aligned_gate(u1q, idx, u3q_index), u1q)
+            gate_masked[i] +=1
+        gates_compressed[k] = np.dot(u3q_gate, u1q)
+
+    duplicates = []
+    for i in range(len(gates_compressed)-1):
+        gate, gate_next = gates_compressed[i], gates_compressed[i+1]
+        idx, idx_next = indices_compressed[i], indices_compressed[i+1]
+        if set(idx)!=set(idx_next): continue
+
+        if idx==idx_next:
+            gate_next = np.dot(gate_next, gate)
+        else:
+            gate_next = np.dot(gate_next, aligned_gate(gate, idx, idx_next))
+        gates_compressed[i+1] = gate_next
+        duplicates.append(i)
+        gates_compressed[i] = None
+        indices_compressed[i] = None
+    gates_compressed = [val for val in gates_compressed if val is not None]
+    indices_compressed=[val for val in indices_compressed if val is not None]
+
+    circuit_compressed = {'state_list': circuit['state_list'],
+                          'gate_list': gates_compressed,
+                          'index_list': indices_compressed,
+                          'meas_list': circuit['meas_list']}
+    return circuit_compressed
+
+def aligned_gate(gate, index, target_index):
+    ''' Converts gate with index so that it matches target_index.
+        gate         - array
+        index        - list of int
+        target_index - list of int
+    '''
+    if not set(index).issubset(target_index):
+        raise Exception('Indices do not match')
+    if len(index)==1:
+        temp = target_index.index(index[0])
+        gate = np.kron(np.eye(2**temp), np.kron(gate, np.eye(2**(2-temp))))
+    if len(index)==2:
+        if target_index.index(index[0])>target_index.index(index[1]):
+            gate = gate.reshape((2,2,2,2)).swapaxes(0,1).swapaxes(2,3
+                                ).reshape((4,4))
+        temp = target_index.index(list(set(target_index
+                                           ).difference(index))[0])
+        if temp==0:
+            gate = np.kron(IDC, gate)
+        if temp==1:
+            gate = np.kron(gate, IDC)
+            gate = gate.reshape((2,2,2,2,2,2)).swapaxes(0,3).swapaxes(1,2
+                                 ).swapaxes(4,5).reshape((8,8))
+        if temp==2:
+            gate = np.kron(gate, IDC)
+    return gate
+
+def test_align():
+    target = makeGate('+1C')
+
+    gate = makeGate('C+')
+    index = [3,1]
+    target_index = [1,7,3]
+    gate = aligned_gate(gate, index, target_index)
+
+    print(np.allclose(gate, target))
+    return gate
+
 def show_connectivity(circuit):
     ''' Prints a visual circuit representation.
     '''
@@ -287,15 +410,15 @@ def show_connectivity(circuit):
     for i in range(len(indices)):
         idx = indices[i]
         if len(idx)==1: continue
-        elif len(idx)==2:
+        elif len(idx) in [2,3]:
             idle_wires = np.delete(np.arange(qudit_num), idx)
             for j in idle_wires: circ_repr[j].extend(['-'])
-            circ_repr[idx[0]].append('o')
-            circ_repr[idx[1]].append('+')
-        else: raise Exception('show_connectivity not implemented for m>2')
-    identity = makeGate('1')
+            if len(idx)==3: circ_repr[idx[-3]].append('O')
+            circ_repr[idx[-2]].append('o')
+            circ_repr[idx[-1]].append('+')
+        else: raise Exception('show_connectivity not implemented for m>3')
     for i in range(qudit_num):
-        m = '/' if np.allclose(meas[i], identity) else 'D'
+        m = '/' if np.allclose(meas[i], IDC) else 'D'
         circ_repr[i].append(' '+m)
 
 
@@ -340,12 +463,11 @@ def solve_qubit_circuit(circuit):
     state = reduce(np.kron, circuit['state_list'])
     qudit_num = int(np.log(state.shape[0]))
 
-    identity = makeGate('1')
     for i in range(len(circuit['index_list'])):
         idx, gate = circuit['index_list'][i], circuit['gate_list'][i]
 
         for j in range(qudit_num - len(idx)):
-            gate = np.kron(gate, identity)
+            gate = np.kron(gate, IDC)
             pass
 
 
@@ -365,28 +487,26 @@ def solve_BV1q_circuit(circuit):
     meas = circuit['meas_list'][0]
 
     gates3q = []
-    swap = makeGate('S')
-    identity = makeGate('1')
 
-    g = np.kron(identity, gates[0])
+    g = np.kron(IDC, gates[0])
     gates3q.append(g)
-    g = np.kron(identity, gates[1])
-    h = np.kron(swap, identity)
+    g = np.kron(IDC, gates[1])
+    h = np.kron(SWAP, IDC)
     g = evolve(g, h, is_state=0)
     gates3q.append(g)
-    g = np.kron(identity, gates[2])
+    g = np.kron(IDC, gates[2])
     gates3q.append(g)
-    g = np.kron(identity, gates[3])
-    h = np.kron(swap, identity)
+    g = np.kron(IDC, gates[3])
+    h = np.kron(SWAP, IDC)
     g = evolve(g, h, is_state=0)
     gates3q.append(g)
-    g = np.kron(gates[4], identity)
+    g = np.kron(gates[4], IDC)
     gates3q.append(g)
 
     s = s0
     for gate in gates3q:
         s = evolve(s, gate)
-    meas = np.kron(meas, np.kron(identity, identity))
+    meas = np.kron(meas, np.kron(IDC, IDC))
 
     prob = np.trace(np.dot(s, meas))
     return prob
