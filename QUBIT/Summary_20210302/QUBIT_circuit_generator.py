@@ -308,49 +308,59 @@ def compress3q_circuit(circuit):
         for i in [0, 1, 2]:
             if indices[count][i] in disentangled_wires:
                 disentangled_wires.remove(indices[count][i])
-
     if len(disentangled_wires)>0:
-        print('Circuit contains wires that do not pass through a Toffoli')
-    while len(disentangled_wires)>2:
-        count +=1
-        gates_compressed.append(np.eye(8))
-        indices_compressed.append(disentangled_wires[:3])
-        u3q_counts.append(count)
-        gate_masked +=[1]
-        disentangled_wires = disentangled_wires[3:]
-    if len(disentangled_wires)>0:
-        count +=1
-        gates_compressed.append(np.eye(8))
-        index = disentangled_wires+list(np.delete(np.arange(qudit_num),
-                  disentangled_wires)[:(3-len(disentangled_wires))])
-        indices_compressed.append(index)
-        u3q_counts.append(count)
-        gate_masked +=[1]
-        disentangled_wires = []
+        print('Circuit contains wires that do not pass through a Toffoli\n')
 
-    for k in range(len(indices_compressed)):
-        u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
-        u1q = makeGate('111')
-        for i in range(u3q_counts[k]):
-            if gate_masked[i]: continue
-            idx, gate = indices[i], gates[i]
-            if not set(idx).issubset(u3q_index): continue
+    run_count=0
+    while 0 in gate_masked:
+        if run_count>1000:
+            raise Exception('There are gates that remain unmasked')
+        run_count +=1
 
-            u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
-            gate_masked[i] +=1
-        gates_compressed[k] = np.dot(u3q_gate, u1q)
+        if len(disentangled_wires)>2:
+            count +=1
+            gates_compressed.append(np.eye(8))
+            indices_compressed.append(disentangled_wires[:3].copy())
+            u3q_counts.append(count)
+            gate_masked +=[1]
+            disentangled_wires = disentangled_wires[3:]
+        else:
+            count +=1
+            gates_compressed.append(np.eye(8))
+            # candidates = [indices[i] for i in range(len(gate_masked))
+            #               if gate_masked[i]==0]
+            index = indices[gate_masked.index(0)].copy()
+            index += list(np.delete(np.arange(qudit_num), index)[:(
+                                                              3-len(index))])
+            indices_compressed.append(index)
+            u3q_counts.append(count)
+            gate_masked +=[1]
+            if len(disentangled_wires)>0: disentangled_wires = list(set(
+                                       disentangled_wires).difference(index))
 
-    for k in range(len(indices_compressed)-1, 0, -1):
-        u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
-        u1q = makeGate('111')
-        for i in range(gate_num-1, u3q_counts[k], -1):
-            if gate_masked[i]: continue
-            idx, gate = indices[i], gates[i]
-            if not set(idx).issubset(u3q_index): continue
+        for k in range(len(indices_compressed)):
+            u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
+            u1q = makeGate('111')
+            for i in range(u3q_counts[k]):
+                if gate_masked[i]: continue
+                idx, gate = indices[i], gates[i]
+                if not set(idx).issubset(u3q_index): continue
 
-            u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
-            gate_masked[i] +=1
-        gates_compressed[k] = np.dot(u3q_gate, u1q)
+                u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
+                gate_masked[i] +=1
+            gates_compressed[k] = np.dot(u3q_gate, u1q)
+
+        for k in range(len(indices_compressed)-1, 0, -1):
+            u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
+            u1q = makeGate('111')
+            for i in range(gate_num-1, u3q_counts[k], -1):
+                if gate_masked[i]: continue
+                idx, gate = indices[i], gates[i]
+                if not set(idx).issubset(u3q_index): continue
+
+                u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
+                gate_masked[i] +=1
+            gates_compressed[k] = np.dot(u3q_gate, u1q)
 
     duplicates = []
     for i in range(len(gates_compressed)-1):
@@ -432,8 +442,8 @@ def show_connectivity(circuit):
                 circ_repr[idx[-2]].append('|')
                 circ_repr[idx[-1]].append('+')
             if len(idx)==2:
-                circ_repr[idx[-2]].append('C')
-                circ_repr[idx[-1]].append('Z')
+                circ_repr[idx[-2]].append('c')
+                circ_repr[idx[-1]].append('z')
         else: raise Exception('show_connectivity not implemented for m>3')
     for i in range(qudit_num):
         m = '/' if np.allclose(meas[i], IDC) else 'D'

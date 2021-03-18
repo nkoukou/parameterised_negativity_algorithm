@@ -99,12 +99,12 @@ t0 = time.time()
 
 Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
 
-# circuit, Tcount = random_connected_circuit(qudit_num=4, circuit_length=10,
-#            Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
+circuit, Tcount = random_connected_circuit(qudit_num=3, circuit_length=6,
+            Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
 
-circuit = random_circuit(qudit_num=12, C1qGate_num=243, TGate_num=134,
-                         CSUMGate_num=25, Toff_num=10,
-                         given_state=0, given_measurement=2)
+# circuit = random_circuit(qudit_num=5, C1qGate_num=4, TGate_num=2,
+#                          CSUMGate_num=1, Toff_num=20,
+#                          given_state=0, given_measurement=2)
 
 circ = QD_circuit(circuit)
 circ.compress_circuit(m=3)
@@ -113,24 +113,22 @@ print()
 circ.show_connectivity()
 
 
-# p1 = solve_qubit_circuit(circ.circuit) # Not implemented yet
-# p2 = solve_qubit_circuit(circ.circuit_compressed) # Not implemented yet
 
-# sample_size = int(1e2)
+# sample_size = int(1e5)
 # x_list = np.linspace(1, sample_size, sample_size)
 
-# circ.opt_x(method='Wigner')
-# circ.get_QD_list(method='Wigner')
+circ.opt_x(method='Wigner')
+circ.get_QD_list(method='Wigner')
 # wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
 # prob_wigner = np.cumsum(wigner_out_list)/x_list
 
-# circ.opt_x(method='Opt', **{'niter':10})
-# circ.get_QD_list(method = 'Opt')
+circ.opt_x(method='Opt', **{'niter':10})
+circ.get_QD_list(method = 'Opt')
 # opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
 # prob_opt = np.cumsum(opt_out_list)/x_list
 
-# circ.opt_x(method='Local_opt', **{'niter':10})
-# circ.get_QD_list(method='Local_opt')
+circ.opt_x(method='Local_opt', **{'niter':10})
+circ.get_QD_list(method='Local_opt')
 # local_opt_out_list = circ.sample(method='Local_opt',
 #                                   sample_size=sample_size)
 # prob_local_opt = np.cumsum(local_opt_out_list)/x_list
