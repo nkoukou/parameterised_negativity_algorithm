@@ -5,7 +5,7 @@ from autograd import(grad)
 
 from scipy.optimize import(Bounds, minimize)
 from scipy.optimize import(basinhopping)
-from QUBIT_phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max, neg_gate_2q_max, neg_meas_1q)
+from QUBIT_phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max, neg_gate_2q_max, neg_gate_3q_max,neg_meas_1q)
 
 def optimize_neg_compressed(compressed_circuit, **kwargs):
     options = {'opt_method': 'B', 'niter': 100}
@@ -37,6 +37,59 @@ def optimize_neg_compressed(compressed_circuit, **kwargs):
             Gammas[idx[0]] = GammaC_out
             Gammas[idx[1]] = GammaT_out
             Gamma_index += 2
+
+        qudit_index = 0
+        for meas in compressed_circuit['meas_list']:
+            if str(meas) == '/': continue
+            Gamma = Gammas[qudit_index]
+            qudit_index += 1
+            neg = neg * neg_meas_1q(meas, Gamma)
+        return np.log(neg)
+
+    x0 = 2*np.random.rand(3*x_len)-1
+    optimize_result, dt = optimizer(cost_function, x0, options['opt_method'], niter = options['niter'])
+    optimized_x = optimize_result.x
+    optimized_value = cost_function(optimized_x)
+    print('--------------------- GLOBAL OPTIMIZATION --------------------\n', options)
+    print('Optimized Log Neg:', optimized_value)
+    print('Computation time: ', dt)
+    print('--------------------------------------------------------------')
+
+    return optimized_x, optimized_value
+
+def optimize_neg_compressed_3q(compressed_circuit, **kwargs):
+    options = {'opt_method': 'B', 'niter': 100}
+    options.update(kwargs)
+
+    x_len = int(len(compressed_circuit['state_list']) + 3*len(compressed_circuit['gate_list']))
+
+    def cost_function(x):
+        neg = 1.
+        Gamma_index = 0
+        Gammas = []
+        for state in compressed_circuit['state_list']:
+            Gamma = x2Gamma(x[3*Gamma_index:3*(Gamma_index+1)])
+            neg = neg * neg_state_1q(state, Gamma)
+            Gammas.append(Gamma)
+            Gamma_index += 1
+
+        gate_index = 0
+        for gate in compressed_circuit['gate_list']:
+            idx = compressed_circuit['index_list'][gate_index]
+            gate_index += 1
+
+            if len(idx)==1 or len(idx)==2 : raise Exception('There are disentangled wires.')
+            Gamma_in1 = Gammas[idx[0]]
+            Gamma_in2 = Gammas[idx[1]]
+            Gamma_in3 = Gammas[idx[2]]
+            Gamma_out1 = x2Gamma(x[3*Gamma_index:3*(Gamma_index+1)])
+            Gamma_out2 = x2Gamma(x[3*(Gamma_index+1):3*(Gamma_index+2)])
+            Gamma_out3 = x2Gamma(x[3*(Gamma_index+2):3*(Gamma_index+3)])
+            neg = neg * neg_gate_3q_max(gate, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3)
+            Gammas[idx[0]] = Gamma_out1
+            Gammas[idx[1]] = Gamma_out2
+            Gammas[idx[2]] = Gamma_out3
+            Gamma_index += 3
 
         qudit_index = 0
         for meas in compressed_circuit['meas_list']:
