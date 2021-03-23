@@ -3,3 +3,10 @@ Summary_20210315/__pycache__/*
 QUBIT/__pycache__/*
 QUBIT/Summary_20210302/__pycache__/*
 QUBIT/BV*
+
+.DS_Store
+Summary_20210315/.DS_Store
+QUBIT/.DS_Store
+QUBIT/Summary_20210302/.DS_Store
+QUBIT/Summary_20210302/data/.DS_Store
+QUBIT/Summary_20210302/data_Q10/.DS_Store
