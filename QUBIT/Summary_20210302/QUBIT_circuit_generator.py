@@ -292,92 +292,121 @@ def compress3q_circuit(circuit):
     if isinstance(gates[0], str): raise ValueError("Gates should be arrays")
     if qudit_num<3: raise Exception("qudit_num must be at least 3")
 
+    gates_mask = [gates[i] for i in range(gate_num)]
+    indices_mask = [indices[i] for i in range(gate_num)]
     gates_compressed = []
     indices_compressed = []
-    u3q_counts = []
-    gate_masked = [0 for i in range(gate_num)]
-    disentangled_wires = list(range(qudit_num))
 
-    for count, gate in enumerate(gates):
-        if len(indices[count])!=3: continue
+    while len(gates_mask)!=0:
+        gate, idx = gates_mask[0], indices_mask[0]
+        grouped_gates = [gate]
+        grouped_idx = [idx]
+        idx_set = [idx[i] for i in range(len(idx))]
+        to_be_removed = [0]
 
-        gates_compressed.append(gate)
-        indices_compressed.append(indices[count])
-        u3q_counts.append(count)
-        gate_masked[count] = 1
-        for i in [0, 1, 2]:
-            if indices[count][i] in disentangled_wires:
-                disentangled_wires.remove(indices[count][i])
-    if len(disentangled_wires)>0:
-        print('Circuit contains wires that do not pass through a Toffoli\n')
+        # If it is the last gate, append an identity matrix to make a 3-qubit gate
+        # And end the while loop
+        if len(gates_mask)==1:
+            if len(idx)==2: # If the last gate is a 2-qubit gate
+                # Find the nearest wire for the identity matrix
+                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1) 
+                else: idx_set.append(idx_set[1]+1)
 
-    run_count=0
-    while 0 in gate_masked:
-        if run_count>1000:
-            raise Exception('There are gates that remain unmasked')
-        run_count +=1
+                u3q = makeGate('111')
+                gates_compressed.append(np.dot(aligned_gate(gate, idx, idx_set), u3q))
+                indices_compressed.append(idx_set)
 
-        if len(disentangled_wires)>2:
-            count +=1
-            gates_compressed.append(np.eye(8))
-            indices_compressed.append(disentangled_wires[:3].copy())
-            u3q_counts.append(count)
-            gate_masked +=[1]
-            disentangled_wires = disentangled_wires[3:]
-        else:
-            count +=1
-            gates_compressed.append(np.eye(8))
-            # candidates = [indices[i] for i in range(len(gate_masked))
-            #               if gate_masked[i]==0]
-            index = indices[gate_masked.index(0)].copy()
-            index += list(np.delete(np.arange(qudit_num), index)[:(
-                                                              3-len(index))])
-            indices_compressed.append(index)
-            u3q_counts.append(count)
-            gate_masked +=[1]
-            if len(disentangled_wires)>0: disentangled_wires = list(set(
-                                       disentangled_wires).difference(index))
+                for i in to_be_removed: # Remove the gate from the gate_list
+                    gates_mask.pop(i)
+                    indices_mask.pop(i)
+            elif len(idx)==3:# If the last gate is a 3-qubit gate (convenient!)
+                gates_compressed.append(gate)
+                indices_compressed.append(idx)
+            break
+    
+        # Finding the appropriate 3 indices when the gate is a 2-qubit gate
+        if len(idx)==2: # Only when the gate is a 2-qubit gate
+            for s in range(1,len(gates_mask)): # Check all the gates coming next
+                check_idx = indices_mask[s]
+                if set(idx)==set(check_idx): 
+                    continue
+                elif check_idx[0] in idx:
+                    # If we found another connected wire, check whether there is any preceding gate
+                    for d in range(1, s): 
+                        if check_idx[1] in indices_mask[d]: 
+                            break
+                        if d==(s-1):
+                            idx_set.append(check_idx[1])
+                    if s==1: idx_set.append(check_idx[1]) # For the case when the code does not go into the above for-loop because s=1.
+                elif check_idx[1] in idx:
+                    # If we found another connected wire, check whether there is any preceding gate
+                    for d in range(1, s):
+                        if check_idx[0] in indices_mask[d]: break
+                        if d==(s-1): idx_set.append(check_idx[0])
+                    if s==1: idx_set.append(check_idx[0]) # For the case when the code does not go into the above for-loop because s=1.
+                
+                if len(idx_set)==3: break # End the loop after finding an appropriate 3 indices
 
-        for k in range(len(indices_compressed)):
-            u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
-            u1q = makeGate('111')
-            for i in range(u3q_counts[k]):
-                if gate_masked[i]: continue
-                idx, gate = indices[i], gates[i]
-                if not set(idx).issubset(u3q_index): continue
+        # If there is no appropriate connected wire, just append an identity matrix to make a 3-qubit gate
+        # And continue to the next while step
+        if len(idx_set)==2:
+            # print("Came here!")
+            if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1)
+            else: idx_set.append(idx_set[1]+1)
+            u3q = makeGate('111')
+            gates_compressed.append(np.dot(aligned_gate(gate, idx, idx_set), u3q))
+            indices_compressed.append(idx_set)
+            for i in to_be_removed: # Remove the gate from the gate_list
+                gates_mask.pop(i)
+                indices_mask.pop(i)
+            continue
+                
+        # Group the gates: group the gates which can be combined together for the obtained idx_set
+        for s in range(1, len(gates_mask)): # Check for all gates coming next
+            check_idx = indices_mask[s]
+            if len(check_idx)==2:
+                if check_idx[0] in idx_set and check_idx[1] in idx_set: # If a gate is applied to idx_set
+                    for d in range(1, s): # Check whether there is any preceding gate
+                        if d in to_be_removed: 
+                            continue
+                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]: 
+                            break
+                        if d==(s-1): # If there is no preceding gate then put it into the group
+                            grouped_gates.append(gates_mask[s])
+                            grouped_idx.append(check_idx)
+                            to_be_removed.append(s)
+                    if s==1: # If it is the next gate, put it into the group
+                        grouped_gates.append(gates_mask[s])
+                        grouped_idx.append(check_idx)
+                        to_be_removed.append(s)
+                else: continue
+            elif len(check_idx)==3: # Do the same for the case of 3-qubit gates
+                if set(check_idx)==set(idx_set):
+                    for d in range(1, s):
+                        if d in to_be_removed: continue
+                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d] or check_idx[2] in indices_mask[d]:
+                            break
+                        if d==(s-1):
+                            grouped_gates.append(gates_mask[s])
+                            grouped_idx.append(check_idx)
+                            to_be_removed.append(s)
+                    if s==1:
+                        grouped_gates.append(gates_mask[s])
+                        grouped_idx.append(check_idx)
+                        to_be_removed.append(s)
+            else: raise Exception("A gate must be a 2- or 3-qubit gates.")
+    
+        # Add the grouped gates into the compressed sequence
+        u3q_combined = makeGate('111')
+        for k in range(len(grouped_gates)):
+            u3q_combined = np.dot(aligned_gate(grouped_gates[k], grouped_idx[k], idx_set), u3q_combined)
+        gates_compressed.append(u3q_combined)
+        indices_compressed.append(idx_set)
 
-                u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
-                gate_masked[i] +=1
-            gates_compressed[k] = np.dot(u3q_gate, u1q)
-
-        for k in range(len(indices_compressed)-1, 0, -1):
-            u3q_gate, u3q_index = gates_compressed[k], indices_compressed[k]
-            u1q = makeGate('111')
-            for i in range(gate_num-1, u3q_counts[k], -1):
-                if gate_masked[i]: continue
-                idx, gate = indices[i], gates[i]
-                if not set(idx).issubset(u3q_index): continue
-
-                u1q = np.dot(aligned_gate(gate, idx, u3q_index), u1q)
-                gate_masked[i] +=1
-            gates_compressed[k] = np.dot(u3q_gate, u1q)
-
-    duplicates = []
-    for i in range(len(gates_compressed)-1):
-        gate, gate_next = gates_compressed[i], gates_compressed[i+1]
-        idx, idx_next = indices_compressed[i], indices_compressed[i+1]
-        if set(idx)!=set(idx_next): continue
-
-        if idx==idx_next:
-            gate_next = np.dot(gate_next, gate)
-        else:
-            gate_next = np.dot(gate_next, aligned_gate(gate, idx, idx_next))
-        gates_compressed[i+1] = gate_next
-        duplicates.append(i)
-        gates_compressed[i] = None
-        indices_compressed[i] = None
-    gates_compressed = [val for val in gates_compressed if val is not None]
-    indices_compressed=[val for val in indices_compressed if val is not None]
+        # Remove the compressed gates from the gate sequence
+        for k in to_be_removed[::-1]:
+            gates_mask.pop(k)
+            indices_mask.pop(k)
 
     circuit_compressed = {'state_list': circuit['state_list'],
                           'gate_list': gates_compressed,

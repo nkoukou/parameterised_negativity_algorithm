@@ -30,7 +30,8 @@ class QD_circuit(object):
         if m==2:
             self.circuit_compressed = compress2q_circuit(self.circuit)
         elif m==3:
-            self.circuit_compressed = compress3q_circuit(self.circuit)
+            self.circuit_compressed = compress2q_circuit(self.circuit)
+            self.circuit_compressed = compress3q_circuit(self.circuit_compressed)
         else:
             raise Exception('m must be 2 or 3')
 
@@ -123,18 +124,21 @@ class QD_circuit(object):
 
 # Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
 
-# circuit, Tcount = random_connected_circuit(qudit_num=3, circuit_length=6,
-#             Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
+circuit, Tcount = random_connected_circuit(qudit_num=9, circuit_length=20,
+            Tgate_prob=1/3, given_state=None, given_measurement=2, method='c')
 
 # # circuit = random_circuit(qudit_num=5, C1qGate_num=4, TGate_num=2,
 # #                          CSUMGate_num=1, Toff_num=20,
 # #                          given_state=0, given_measurement=2)
 
-# circ = QD_circuit(circuit)
-# circ.compress_circuit(m=3)
-# circ.show_connectivity(compressed=False)
-# print()
-# circ.show_connectivity()
+circ = QD_circuit(circuit)
+
+circ.show_connectivity(compressed=False)
+circ.compress_circuit()
+circ.show_connectivity()
+
+circ.compress_circuit(m=3)
+circ.show_connectivity()
 
 
 
