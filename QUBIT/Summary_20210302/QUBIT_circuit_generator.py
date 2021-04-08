@@ -1,4 +1,5 @@
 from functools import reduce
+from itertools import permutations
 import numpy as np
 import numpy.random as nr
 from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
@@ -309,7 +310,7 @@ def compress3q_circuit(circuit):
         if len(gates_mask)==1:
             if len(idx)==2: # If the last gate is a 2-qubit gate
                 # Find the nearest wire for the identity matrix
-                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1) 
+                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1)
                 else: idx_set.append(idx_set[1]+1)
 
                 u3q = makeGate('111')
@@ -323,17 +324,17 @@ def compress3q_circuit(circuit):
                 gates_compressed.append(gate)
                 indices_compressed.append(idx)
             break
-    
+
         # Finding the appropriate 3 indices when the gate is a 2-qubit gate
         if len(idx)==2: # Only when the gate is a 2-qubit gate
             for s in range(1,len(gates_mask)): # Check all the gates coming next
                 check_idx = indices_mask[s]
-                if set(idx)==set(check_idx): 
+                if set(idx)==set(check_idx):
                     continue
                 elif check_idx[0] in idx:
                     # If we found another connected wire, check whether there is any preceding gate
-                    for d in range(1, s): 
-                        if check_idx[1] in indices_mask[d]: 
+                    for d in range(1, s):
+                        if check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1):
                             idx_set.append(check_idx[1])
@@ -344,7 +345,7 @@ def compress3q_circuit(circuit):
                         if check_idx[0] in indices_mask[d]: break
                         if d==(s-1): idx_set.append(check_idx[0])
                     if s==1: idx_set.append(check_idx[0]) # For the case when the code does not go into the above for-loop because s=1.
-                
+
                 if len(idx_set)==3: break # End the loop after finding an appropriate 3 indices
 
         # If there is no appropriate connected wire, just append an identity matrix to make a 3-qubit gate
@@ -360,16 +361,16 @@ def compress3q_circuit(circuit):
                 gates_mask.pop(i)
                 indices_mask.pop(i)
             continue
-                
+
         # Group the gates: group the gates which can be combined together for the obtained idx_set
         for s in range(1, len(gates_mask)): # Check for all gates coming next
             check_idx = indices_mask[s]
             if len(check_idx)==2:
                 if check_idx[0] in idx_set and check_idx[1] in idx_set: # If a gate is applied to idx_set
                     for d in range(1, s): # Check whether there is any preceding gate
-                        if d in to_be_removed: 
+                        if d in to_be_removed:
                             continue
-                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]: 
+                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1): # If there is no preceding gate then put it into the group
                             grouped_gates.append(gates_mask[s])
@@ -395,7 +396,7 @@ def compress3q_circuit(circuit):
                         grouped_idx.append(check_idx)
                         to_be_removed.append(s)
             else: raise Exception("A gate must be a 2- or 3-qubit gates.")
-    
+
         # Add the grouped gates into the compressed sequence
         u3q_combined = makeGate('111')
         for k in range(len(grouped_gates)):
@@ -417,8 +418,8 @@ def compress3q_circuit(circuit):
 def aligned_gate(gate, index, target_index):
     ''' Converts gate with index so that it matches target_index.
         gate         - array
-        index        - list of int
-        target_index - list of int
+        index        - list of int (len = 1 or 2)
+        target_index - list of int (len = 3)
     '''
     if not set(index).issubset(target_index):
         raise Exception('Indices do not match')
@@ -439,17 +440,6 @@ def aligned_gate(gate, index, target_index):
                                  ).swapaxes(4,5).reshape((8,8))
         if temp==2:
             gate = np.kron(gate, IDC)
-    return gate
-
-def test_aligned_gate():
-    target = makeGate('+1C')
-    target_index = [1,7,3]
-
-    gate = makeGate('C+')
-    index = [3,1]
-    gate = aligned_gate(gate, index, target_index)
-
-    print(np.allclose(gate, target))
     return gate
 
 def show_connectivity(circuit):
@@ -515,61 +505,150 @@ def string_to_circuit(circuit_string):
     return circuit
 
 def solve_qubit_circuit(circuit):
-    ''' Solves !!! qubit circuits.
+    ''' Solves small qubit circuits.
     '''
+    dim = 2
     state = reduce(np.kron, circuit['state_list'])
-    qudit_num = int(np.log(state.shape[0]))
+    qudit_num = int(np.log2(state.shape[0]))
+    print('\n---------------\n','state:\n', state, '\n---------------')
 
     for i in range(len(circuit['index_list'])):
         idx, gate = circuit['index_list'][i], circuit['gate_list'][i]
 
-        for j in range(qudit_num - len(idx)):
-            gate = np.kron(gate, IDC)
-            pass
+        order = np.array([sorted(idx).index(i) for i in idx])
+        gate0 = gate.reshape(len(idx)*2*(dim,)).transpose(np.concatenate(
+                 (order, order+len(idx)))).reshape(2*(dim**len(idx),))
+
+        id_count = np.cumsum(np.diff(np.sort(np.append(idx,
+                                               (-1,qudit_num))))-1)
+        perm = np.arange(len(idx),len(idx)+id_count[0])
+        for i in range(len(idx)):
+            next_idc = np.arange(len(idx)+id_count[i],
+                                 len(idx)+id_count[i+1])
+            perm = np.concatenate((perm,np.insert(next_idc, 0, i)))
+        perm = np.concatenate((perm,perm+qudit_num))
+        gate = np.kron(gate0, np.eye(2**(qudit_num-len(idx))))
+        gate = gate.reshape(qudit_num*2*(dim,)).transpose(perm
+                                  ).reshape(2*(dim**qudit_num,))
+
+        # if len(idx)==1:
+        #     gate = np.kron(np.eye(2**idx[0]), np.kron(gate,
+        #                    np.eye(2**(qudit_num-1-idx[0]))))
+        # elif len(idx)==2:
+        #     order = np.array([sorted(idx).index(i) for i in idx])
+        #     gate0 = gate.reshape(len(idx)*2*(dim,)).transpose(np.concatenate(
+        #              (order, order+len(idx)))).reshape(2*(dim**len(idx),))
+
+        #     id_count = np.cumsum(np.diff(np.sort(np.append(idx,
+        #                                            (-1,qudit_num))))-1)
+        #     perm = np.arange(len(idx),len(idx)+id_count[0])
+        #     for i in range(len(idx)):
+        #         next_idc = np.arange(len(idx)+id_count[i],
+        #                              len(idx)+id_count[i+1])
+        #         perm = np.concatenate((perm,np.insert(next_idc, 0, i)))
+        #     perm = np.concatenate((perm,perm+qudit_num))
+        #     gate = np.kron(gate0, np.eye(2**(qudit_num-len(idx))))
+        #     gate = gate.reshape(qudit_num*2*(dim,)).transpose(perm
+        #                               ).reshape(2*(dim**qudit_num,))
+        #     # print(np.allclose(test, gate))
+        #     # valid_perms = []
+        #     # for perm in permutations(range(2*qudit_num)):
+        #     #     temp = test.reshape(qudit_num*2*(dim,)).transpose(perm
+        #     #                           ).reshape(2*(dim**qudit_num,))
+        #     #     if np.allclose(temp, gate): valid_perms.append(perm)
+        #     # print(idx)
+        #     # print(valid_perms[0])
+        #     # print('--------------------')
+        #     # print(gate)
+
+        #     # temp = [np.kron(np.eye(2**(max(idx)-min(idx)-1)), i) for i in
+        #     #         list(gate0.reshape(2, 2, -1, 2).swapaxes(1, 2).reshape(
+        #     #              -1, 2, 2))]
+        #     # temp = np.block([[temp[0],temp[1]],[temp[2],temp[3]]])
+        #     # gate = np.kron(np.eye(2**(min(idx))), np.kron(temp,
+        #     #                np.eye(2**(qudit_num-1-max(idx)))))
+
+        # elif len(idx)==3:
+        #     order = np.array([sorted(idx).index(i) for i in idx])
+        #     gate = gate.reshape(2*len(idx)*(dim,)).transpose(np.concatenate(
+        #              (order, order+len(idx)))).reshape(2*(dim**len(idx),))
+
+        # else:
+        #     raise Exception('Only implemented for 1-, 2- and 3-qubit gates')
+        # print(idx)
+        # print(state.shape, gate.shape)
+        state = evolve(state, gate)
 
 
     meas = reduce(np.kron, circuit['meas_list'])
     prob = np.trace(np.dot(meas, state))
-    return prob
+    if not np.isclose(prob.imag, 0):
+        print(prob)
+        raise Exception('Probability is not real')
+    return prob.real
 
-def solve_BV1q_circuit(circuit):
-    ''' Solves compressed 1-qubit BV circuit.
-    '''
-    states = circuit['state_list']
-    s0 = np.kron(states[0], np.kron(states[1], states[2]))
+def find_perms():
+    D, N = 2, 3
+    gate = np.arange(1,(D*D)**N+1).reshape((D**N,D**N))
+    sub_states = [np.array([1,2]), np.array([3,5]), np.array([7,11])]
+    indices = [np.array(idx) for idx in list(permutations(range(N)))]
 
-    gates = circuit['gate_list']
-    index = circuit['index_list']
+    state0 = reduce(np.kron, sub_states)
 
-    meas = circuit['meas_list'][0]
+    all_perms = []
+    for idx in indices:
+        state = reduce(np.kron, [sub_states[idx[i]] for i in range(N)])
 
-    gates3q = []
+        valid_perms = []
+        for perm in permutations(range(2*N)):
+            temp = gate.reshape((D,D,)*N).transpose(perm).reshape((D**N,D**N))
+            target = np.sort(evolve(state0, gate))
+            if np.allclose(np.sort(evolve(state, temp)), target):
+                valid_perms.append(list(perm))
+        all_perms.append(valid_perms)
+    return indices, all_perms
 
-    g = np.kron(IDC, gates[0])
-    gates3q.append(g)
-    g = np.kron(IDC, gates[1])
-    h = np.kron(SWAP, IDC)
-    g = evolve(g, h, is_state=0)
-    gates3q.append(g)
-    g = np.kron(IDC, gates[2])
-    gates3q.append(g)
-    g = np.kron(IDC, gates[3])
-    h = np.kron(SWAP, IDC)
-    g = evolve(g, h, is_state=0)
-    gates3q.append(g)
-    g = np.kron(gates[4], IDC)
-    gates3q.append(g)
+def test_solver():
+    truths = []
+    tests = []
 
-    s = s0
-    for gate in gates3q:
-        s = evolve(s, gate)
-    meas = np.kron(meas, np.kron(IDC, IDC))
-
-    prob = np.trace(np.dot(s, meas))
-    return prob
-
+    tests.append( ['00',
+                   [[[0],'H'],
+                    [[0],'K'],
+                    [[1],'K']],
+                   '10'] )
+    truths.append(0.5)
 
 
+    tests.append( ['00',
+                    [[[0], 'H'],
+                    [[1,0], 'C+'],
+                    [[0,1], 'C+']],
+                    '0/'] )
+    truths.append(1/2)
+
+    q = 2
+    tests.append( ['0000',
+                    [[[q], 'H'],
+                    [[q], 'T'],
+                    [[q], 'H'],
+                    [[1], 'K'],
+                    [[1,q], 'C+'],
+                    [[q,1], 'C+'],
+                    [[q], 'H']],
+                    '0100'] )
+    truths.append(0.07322330470336305)
+
+    tests.append( ['011',
+                    [[[2,0,1],'A']],
+                    '111'] )
+    truths.append(1)
+
+    all_check = [np.isclose(solve_qubit_circuit(string_to_circuit(tests[i])),
+                            truths[i]) for i in range(len(truths))]
+    if np.all(all_check): print(True)
+    else: print(all_check)
+test_solver()
 
 
 
