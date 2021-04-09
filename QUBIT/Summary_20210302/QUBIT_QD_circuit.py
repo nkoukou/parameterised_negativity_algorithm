@@ -124,26 +124,29 @@ import matplotlib.pylab as plt
 
 # Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
 
-circuit, Tcount = random_connected_circuit(qudit_num=10, circuit_length=20,
+circuit, Tcount = random_connected_circuit(qudit_num=6, circuit_length=25,
             Tgate_prob=1/3, given_state=None, given_measurement=4, method='c')
+
+# circuit = random_circuit(qudit_num=6, C1qGate_num=15, TGate_num=4,
+#                           CSUMGate_num=12, Toff_num=0,
+#                           given_state=0, given_measurement=3)
 
 
 circ = QD_circuit(circuit)
-
-pborn1 = solve_qubit_circuit(circ.circuit)
-
 # circ.show_connectivity(compressed=False)
+pborn1 = solve_qubit_circuit(circ.circuit, 0)
+
 circ.compress_circuit(m=2)
 # circ.show_connectivity()
-
-pborn2 = solve_qubit_circuit(circ.circuit_compressed)
+pborn2 = solve_qubit_circuit(circ.circuit_compressed, 0)
+# pborn2 = -1
 
 circ.compress_circuit(m=3)
-# # circ.show_connectivity()
+# circ.show_connectivity()
+pborn3 = solve_qubit_circuit(circ.circuit_compressed, 0)
+# pborn3 = -1
 
-pborn3 = solve_qubit_circuit(circ.circuit_compressed)
-
-print(pborn1, pborn2, pborn3)
+print(np.allclose(pborn1, pborn2), pborn1, pborn2, pborn3)
 
 # sample_size = int(1e6)
 # x_list = np.linspace(1, sample_size, sample_size)
