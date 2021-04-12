@@ -188,6 +188,136 @@ def get_index_list(circuit_length, qudit_num, method='r'):
                 qudit_index = 1
     return gate_qudit_index_list
 
+def random_connected_circuit_2q3q(qudit_num, circuit_length, Tgate_prob=1/3, 
+                                  prob_2q=1/2, given_state=None, given_measurement=1):
+    ''' Inputs:
+        qudit_num         - int
+        circuit_length    - int
+        Tgate_prob        - float
+        prob_2q           - float (the probability of 2-qubit gates; others are 3-qubit gates.)
+        given_state       - None or 0 (all zeros) or string
+        given_measurement - string or int (number of measurement modes)
+
+        Output:
+        circuit = {'state_list': states, 'gate_list': gates,
+                   'index_list': indices, 'meas_list': measurements}
+
+        circuit is fully connected, i.e. there are no disentangled wires.
+    '''
+    Toffoli_matrix = np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
+                               [0., 1., 0., 0., 0., 0., 0., 0.],
+                               [0., 0., 1., 0., 0., 0., 0., 0.],
+                               [0., 0., 0., 1., 0., 0., 0., 0.],
+                               [0., 0., 0., 0., 1., 0., 0., 0.],
+                               [0., 0., 0., 0., 0., 1., 0., 0.],
+                               [0., 0., 0., 0., 0., 0., 0., 1.],
+                               [0., 0., 0., 0., 0., 0., 1., 0.]])
+
+    # States
+    if given_state is None:
+        char = ['0', '1']
+        prob = [1/len(char)]*len(char)
+
+        given_state = ''
+        for i in range(qudit_num):
+            given_state += nr.choice(char, p=prob)
+    elif given_state==0:
+        given_state = '0'*qudit_num
+    else:
+        if len(given_state)!=qudit_num:
+            raise Exception('Number of qudits must be %d'%(qudit_num))
+    states = []
+    for s in given_state:
+        states.append(makeState(s))
+
+    # Indices
+    indices = get_index_list_2q3q(circuit_length, qudit_num, prob_2q)
+
+    # Gates
+    char = ['1', 'H', 'K', 'T']
+    prob_list = [(1-Tgate_prob)/3]*(len(char)-1) + [Tgate_prob]
+    gates = []
+    Tcount = 0
+    toffoli_count = 0
+    for i in range(len(indices)):
+        if len(indices[i])==2:
+            U1qA = nr.choice(char, p=prob_list)
+            U1qB = nr.choice(char, p=prob_list)
+            Tcount +=(U1qA=='T')+(U1qB=='T')
+            U1qA = makeGate(U1qA)
+            U1qB = makeGate(U1qB)
+            U_AB_loc = np.kron(U1qA, U1qB)
+            csum = 'C+'
+            csum = makeGate(csum)
+            U_tot = np.dot(U_AB_loc, csum)
+        elif len(indices[i])==3:
+            U1qA = nr.choice(char, p=prob_list)
+            U1qB = nr.choice(char, p=prob_list)
+            U1qC = nr.choice(char, p=prob_list)
+            Tcount +=(U1qA=='T')+(U1qB=='T')+(U1qC=='T')
+            U1qA = makeGate(U1qA)
+            U1qB = makeGate(U1qB)
+            U1qC = makeGate(U1qC)
+            U_ABC_loc = np.kron(np.kron(U1qA, U1qB), U1qC)
+            U_tot = np.dot(U_ABC_loc, Toffoli_matrix)
+            toffoli_count += 1
+        gates.append(U_tot)
+
+    # Measurements
+    if type(given_measurement)==int:
+        char = ['0']
+        prob = [1/len(char)]*len(char)
+
+        meas = ['/']*qudit_num
+        for i in range(given_measurement):
+            meas[i] = nr.choice(char, p=prob)
+
+        given_measurement = ''
+        for m in meas:
+            given_measurement += m
+    else:
+        if len(given_measurement)!=qudit_num:
+            raise Exception('Number of qudits is %d'%(qudit_num))
+    measurements = []
+    for m in given_measurement:
+        measurements.append(makeMeas(m))
+
+    circuit = {'state_list': states, 'gate_list': gates,
+               'index_list': indices, 'meas_list': measurements}
+
+    return circuit, Tcount, toffoli_count
+
+def get_index_list_2q3q(circuit_length, qudit_num, prob_2q=1/2):
+    ''' Creates fully connected index_list for circuit of given circuit_length, qudit_num.
+    '''
+    if circuit_length<(qudit_num-1):
+        raise Exception("The length of the circuit is not enought to entangle all qubits in the circuit.")
+
+    gate_qudit_index_list = []
+    qudit_masked = list(range(qudit_num))
+    for i in range(circuit_length):
+        gate_type = nr.choice([2,3],p=[prob_2q,1-prob_2q]) # Randomly choose between 2- or 3-qubit gates
+        rng = nr.default_rng()
+        if len(qudit_masked)>2:
+            gate_qudit_index = rng.choice(qudit_masked, size=gate_type, replace=False)
+            gate_qudit_index_list.append(list(gate_qudit_index))
+            for i in gate_qudit_index:
+                qudit_masked.remove(i)
+        elif len(qudit_masked)!=0:
+            choice_pool = list(range(qudit_num))
+            for i in qudit_masked:
+                choice_pool.remove(i)
+            gate_qudit_index = list(rng.choice(choice_pool, size=(gate_type-len(qudit_masked)), replace=False))
+            for i in qudit_masked:
+                gate_qudit_index.append(i)
+            gate_qudit_index_list.append(list(gate_qudit_index))
+            qudit_masked.clear()
+        elif len(qudit_masked)==0:
+            gate_qudit_index = rng.choice(qudit_num, size=gate_type, replace=False)     
+            gate_qudit_index_list.append(list(gate_qudit_index))  
+
+    return gate_qudit_index_list
+
 def compress2q_circuit(circuit):
     ''' Returns an equivalent circuit that contains only 2-qudit gates
     '''
@@ -299,7 +429,8 @@ def compress2q_circuit(circuit):
         if idx==idx_next:
             gate_next = np.dot(gate_next, gate)
         else:
-            gate_next = np.dot(gate_next, np.dot(SWAP, np.dot(gate, SWAP)))
+            gate_next = np.dot(gate_next, aligned_gate(gate, idx, idx_next))
+            # gate_next = np.dot(gate_next, np.dot(SWAP, np.dot(gate, SWAP)))
         gates_compressed[i+1] = gate_next
         duplicates.append(i)
 
@@ -338,13 +469,13 @@ def compress3q_circuit(circuit):
         grouped_idx = [idx]
         idx_set = [idx[i] for i in range(len(idx))]
         to_be_removed = [0]
-
+        
         # If it is the last gate, append an identity matrix to make a 3-qubit gate
         # And end the while loop
         if len(gates_mask)==1:
             if len(idx)==2: # If the last gate is a 2-qubit gate
                 # Find the nearest wire for the identity matrix
-                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1)
+                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1) 
                 else: idx_set.append(idx_set[1]+1)
 
                 u3q = makeGate('111')
@@ -358,17 +489,18 @@ def compress3q_circuit(circuit):
                 gates_compressed.append(gate)
                 indices_compressed.append(idx)
             break
-
+        
         # Finding the appropriate 3 indices when the gate is a 2-qubit gate
         if len(idx)==2: # Only when the gate is a 2-qubit gate
-            for s in range(1,len(gates_mask)): # Check all the gates coming next
+            for s in range(1,len(gates_mask)): # Check all the gates coming next except 3-qubit gates
                 check_idx = indices_mask[s]
-                if set(idx)==set(check_idx):
+                if len(check_idx)==3: continue
+                if set(idx)==set(check_idx): 
                     continue
                 elif check_idx[0] in idx:
                     # If we found another connected wire, check whether there is any preceding gate
-                    for d in range(1, s):
-                        if check_idx[1] in indices_mask[d]:
+                    for d in range(1, s): 
+                        if check_idx[1] in indices_mask[d]: 
                             break
                         if d==(s-1):
                             idx_set.append(check_idx[1])
@@ -379,15 +511,18 @@ def compress3q_circuit(circuit):
                         if check_idx[0] in indices_mask[d]: break
                         if d==(s-1): idx_set.append(check_idx[0])
                     if s==1: idx_set.append(check_idx[0]) # For the case when the code does not go into the above for-loop because s=1.
-
+                
                 if len(idx_set)==3: break # End the loop after finding an appropriate 3 indices
-
+        
         # If there is no appropriate connected wire, just append an identity matrix to make a 3-qubit gate
         # And continue to the next while step
         if len(idx_set)==2:
             # print("Came here!")
-            if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1)
-            else: idx_set.append(idx_set[1]+1)
+            choice_pool = list(range(qudit_num))
+            rng = nr.default_rng()
+            for i in idx_set:
+                choice_pool.remove(i)
+            idx_set.append(rng.choice(choice_pool, size=1, replace=False)[0])
             u3q = makeGate('111')
             gates_compressed.append(np.dot(aligned_gate(gate, idx, idx_set), u3q))
             indices_compressed.append(idx_set)
@@ -395,16 +530,16 @@ def compress3q_circuit(circuit):
                 gates_mask.pop(i)
                 indices_mask.pop(i)
             continue
-
+        
         # Group the gates: group the gates which can be combined together for the obtained idx_set
         for s in range(1, len(gates_mask)): # Check for all gates coming next
             check_idx = indices_mask[s]
             if len(check_idx)==2:
                 if check_idx[0] in idx_set and check_idx[1] in idx_set: # If a gate is applied to idx_set
                     for d in range(1, s): # Check whether there is any preceding gate
-                        if d in to_be_removed:
+                        if d in to_be_removed: 
                             continue
-                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]:
+                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]: 
                             break
                         if d==(s-1): # If there is no preceding gate then put it into the group
                             grouped_gates.append(gates_mask[s])
@@ -430,7 +565,7 @@ def compress3q_circuit(circuit):
                         grouped_idx.append(check_idx)
                         to_be_removed.append(s)
             else: raise Exception("A gate must be a 2- or 3-qubit gates.")
-
+        
         # Add the grouped gates into the compressed sequence
         u3q_combined = makeGate('111')
         for k in range(len(grouped_gates)):
