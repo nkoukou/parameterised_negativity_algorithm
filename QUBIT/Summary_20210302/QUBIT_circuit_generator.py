@@ -200,7 +200,7 @@ def compress2q_circuit(circuit):
 
     gates_compressed = []
     indices_compressed = []
-    u2q_counts = []
+    u2or3q_counts = []
     gate_masked = [0]*gate_num
     disentangled_wires = list(range(qudit_num))
 
@@ -209,41 +209,73 @@ def compress2q_circuit(circuit):
 
         gates_compressed.append(gate)
         indices_compressed.append(indices[count])
-        u2q_counts.append(count)
+        u2or3q_counts.append(count)
         gate_masked[count] = 1
-        for i in [0, 1]:
+        for i in range(len(indices[count])):
             if indices[count][i] in disentangled_wires:
                 disentangled_wires.remove(indices[count][i])
 
     for k in range(len(indices_compressed)):
-        u2q_gate, u2q_index = gates_compressed[k], indices_compressed[k]
-        u1q = [IDC for i in range(2)]
-        for i in range(u2q_counts[k]):
-            idx, gate = indices[i], gates[i]
-            if gate_masked[i]: continue
-            if idx[0] not in u2q_index: continue
+        u_gate, u_index = gates_compressed[k], indices_compressed[k]
+        if len(u_index)==2:
+            u1q = [IDC for i in range(2)]
+            for i in range(u2or3q_counts[k]):
+                idx, gate = indices[i], gates[i]
+                if gate_masked[i]: continue
+                if idx[0] not in u_index: continue
 
-            if idx[0]==u2q_index[0]:
-                u1q[0] = np.dot(gate, u1q[0])
-            if idx[0]==u2q_index[1]:
-                u1q[1] = np.dot(gate, u1q[1])
-            gate_masked[i] +=1
-        gates_compressed[k] = np.dot(u2q_gate, np.kron(u1q[0], u1q[1]))
+                if idx[0]==u_index[0]:
+                    u1q[0] = np.dot(gate, u1q[0])
+                if idx[0]==u_index[1]:
+                    u1q[1] = np.dot(gate, u1q[1])
+                gate_masked[i] +=1
+            gates_compressed[k] = np.dot(u_gate, np.kron(u1q[0], u1q[1]))
+        elif len(u_index)==3:
+            u1q = [IDC for i in range(3)]
+            for i in range(u2or3q_counts[k]):
+                idx, gate = indices[i], gates[i]
+                if gate_masked[i]: continue
+                if idx[0] not in u_index: continue
 
-    for k in range(len(indices_compressed)-1, 0, -1):
-        u2q_gate, u2q_index = gates_compressed[k], indices_compressed[k]
-        u1q = [IDC for i in range(2)]
-        for i in range(gate_num-1, u2q_counts[k], -1):
-            idx, gate = indices[i], gates[i]
-            if gate_masked[i]: continue
-            if idx[0] not in u2q_index: continue
+                if idx[0]==u_index[0]:
+                    u1q[0] = np.dot(gate, u1q[0])
+                if idx[0]==u_index[1]:
+                    u1q[1] = np.dot(gate, u1q[1])
+                if idx[0]==u_index[2]:
+                    u1q[2] = np.dot(gate, u1q[2])
+                gate_masked[i] +=1
+            gates_compressed[k] = np.dot(u_gate, np.kron(np.kron(u1q[0], u1q[1]), u1q[2]))
 
-            if idx[0]==u2q_index[0]:
-                u1q[0] = np.dot(u1q[0], gate)
-            if idx[0]==u2q_index[1]:
-                u1q[1] = np.dot(u1q[1], gate)
-            gate_masked[i] +=1
-        gates_compressed[k] = np.dot(np.kron(u1q[0], u1q[1]), u2q_gate)
+    for k in range(len(indices_compressed)-1, -1, -1):
+        u_gate, u_index = gates_compressed[k], indices_compressed[k]
+        if len(u_index)==2:
+            u1q = [IDC for i in range(2)]
+            for i in range(gate_num-1, u2or3q_counts[k], -1):
+                idx, gate = indices[i], gates[i]
+                if gate_masked[i]: continue
+                if idx[0] not in u_index: continue
+
+                if idx[0]==u_index[0]:
+                    u1q[0] = np.dot(u1q[0], gate)
+                if idx[0]==u_index[1]:
+                    u1q[1] = np.dot(u1q[1], gate)
+                gate_masked[i] +=1
+            gates_compressed[k] = np.dot(np.kron(u1q[0], u1q[1]), u_gate)
+        elif len(u_index)==3:
+            u1q = [IDC for i in range(3)]
+            for i in range(gate_num-1, u2or3q_counts[k], -1):
+                idx, gate = indices[i], gates[i]
+                if gate_masked[i]: continue
+                if idx[0] not in u_index: continue
+
+                if idx[0]==u_index[0]:
+                    u1q[0] = np.dot(u1q[0], gate)
+                if idx[0]==u_index[1]:
+                    u1q[1] = np.dot(u1q[1], gate)
+                if idx[0]==u_index[2]:
+                    u1q[2] = np.dot(u1q[2], gate)
+                gate_masked[i] +=1
+            gates_compressed[k] = np.dot(np.kron(np.kron(u1q[0], u1q[1]), u1q[2]), u_gate)
 
     u1qs = [IDC for i in range(len(disentangled_wires))]
     for i in range(len(gates)):
@@ -253,6 +285,7 @@ def compress2q_circuit(circuit):
         u1qs[idx] = np.dot(makeGate(gates[i]), u1qs[idx])
 
         gate_masked[i] +=1
+
     for i, wire in enumerate(disentangled_wires):
         gates_compressed.append(u1qs[i])
         indices_compressed.append([wire])
@@ -269,6 +302,7 @@ def compress2q_circuit(circuit):
             gate_next = np.dot(gate_next, np.dot(SWAP, np.dot(gate, SWAP)))
         gates_compressed[i+1] = gate_next
         duplicates.append(i)
+
     for i in duplicates[::-1]:
         gates_compressed.pop(i)
         indices_compressed.pop(i)

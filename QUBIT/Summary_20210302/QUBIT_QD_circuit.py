@@ -7,6 +7,7 @@ from QUBIT_circuit_generator import (random_connected_circuit, random_circuit,
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
 from QUBIT_BVcircuit import(BValg_circuit)
+from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
 
 class QD_circuit(object):
     ''' Represents quasi-probability circuit.
@@ -122,31 +123,42 @@ import matplotlib.pylab as plt
 
 # t0 = time.time()
 
-# Bernstein_Vazirani_circuit = BValg_circuit('11', 0)
+Bernstein_Vazirani_circuit = BValg_circuit('1111', 1)
+Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
+Bernstein_Vazirani_circuit['index_list'].append([2,4])
+Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
+Bernstein_Vazirani_circuit['index_list'].append([1,7])
+print(Bernstein_Vazirani_circuit)
 
-circuit, Tcount = random_connected_circuit(qudit_num=6, circuit_length=25,
-            Tgate_prob=1/3, given_state=None, given_measurement=4, method='c')
-
-# circuit = random_circuit(qudit_num=6, C1qGate_num=15, TGate_num=4,
-#                           CSUMGate_num=12, Toff_num=0,
-#                           given_state=0, given_measurement=3)
-
-
-circ = QD_circuit(circuit)
-# circ.show_connectivity(compressed=False)
-pborn1 = solve_qubit_circuit(circ.circuit, 0)
-
-circ.compress_circuit(m=2)
-# circ.show_connectivity()
-pborn2 = solve_qubit_circuit(circ.circuit_compressed, 0)
-# pborn2 = -1
-
+circ = QD_circuit(Bernstein_Vazirani_circuit)
+circ.show_connectivity(compressed=False)
+print("00000000000000000000")
 circ.compress_circuit(m=3)
-# circ.show_connectivity()
-pborn3 = solve_qubit_circuit(circ.circuit_compressed, 0)
-# pborn3 = -1
+circ.show_connectivity()
 
-print(np.allclose(pborn1, pborn2), pborn1, pborn2, pborn3)
+# circuit, Tcount = random_connected_circuit(qudit_num=6, circuit_length=25,
+#             Tgate_prob=1/3, given_state=None, given_measurement=4, method='c')
+
+# # circuit = random_circuit(qudit_num=6, C1qGate_num=15, TGate_num=4,
+# #                           CSUMGate_num=12, Toff_num=0,
+# #                           given_state=0, given_measurement=3)
+
+
+# circ = QD_circuit(circuit)
+# # circ.show_connectivity(compressed=False)
+# pborn1 = solve_qubit_circuit(circ.circuit, 0)
+
+# circ.compress_circuit(m=2)
+# # circ.show_connectivity()
+# pborn2 = solve_qubit_circuit(circ.circuit_compressed, 0)
+# # pborn2 = -1
+
+# circ.compress_circuit(m=3)
+# # circ.show_connectivity()
+# pborn3 = solve_qubit_circuit(circ.circuit_compressed, 0)
+# # pborn3 = -1
+
+# print(np.allclose(pborn1, pborn2), pborn1, pborn2, pborn3)
 
 # sample_size = int(1e6)
 # x_list = np.linspace(1, sample_size, sample_size)
