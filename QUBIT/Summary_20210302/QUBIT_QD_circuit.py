@@ -128,20 +128,26 @@ Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
 Bernstein_Vazirani_circuit['index_list'].append([2,4])
 Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
 Bernstein_Vazirani_circuit['index_list'].append([1,7])
-print(Bernstein_Vazirani_circuit)
+# print(Bernstein_Vazirani_circuit)
 
-circ = QD_circuit(Bernstein_Vazirani_circuit)
-circ.show_connectivity(compressed=False)
-print("00000000000000000000")
-circ.compress_circuit(m=3)
-circ.show_connectivity()
-
+# circuit = Bernstein_Vazirani_circuit
 # circuit, Tcount = random_connected_circuit(qudit_num=6, circuit_length=25,
 #             Tgate_prob=1/3, given_state=None, given_measurement=4, method='c')
 
-# # circuit = random_circuit(qudit_num=6, C1qGate_num=15, TGate_num=4,
-# #                           CSUMGate_num=12, Toff_num=0,
-# #                           given_state=0, given_measurement=3)
+circuit = random_circuit(qudit_num=5, C1qGate_num=1, TGate_num=2,
+                          CSUMGate_num=3, Toff_num=4,
+                          given_state=0, given_measurement=1)
+
+circ = QD_circuit(circuit)
+circ.show_connectivity(compressed=False)
+print("\n-------------------------------------\n")
+circ.compress_circuit(m=3)
+circ.show_connectivity()
+
+print("\n-------------------------------------\n")
+pborn1 = solve_qubit_circuit(circ.circuit)
+pborn2 = solve_qubit_circuit(circ.circuit_compressed)
+print("Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
 
 
 # circ = QD_circuit(circuit)

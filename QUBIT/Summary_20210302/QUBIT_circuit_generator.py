@@ -794,7 +794,7 @@ def test_solver():
     else:
         print(all_check, '\n', checks)
         return(all_check)
-test_solver()
+# test_solver()
 
 
 
