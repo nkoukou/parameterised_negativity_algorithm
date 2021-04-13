@@ -2,6 +2,7 @@ from functools import reduce
 from itertools import permutations
 import numpy as np
 import numpy.random as nr
+import functools as fc
 from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
 from QUBIT_state_functions import(evolve)
 
@@ -297,6 +298,7 @@ def get_index_list_2q3q(circuit_length, qudit_num, prob_2q=1/2):
     qudit_masked = list(range(qudit_num))
     for i in range(circuit_length):
         gate_type = nr.choice([2,3],p=[prob_2q,1-prob_2q]) # Randomly choose between 2- or 3-qubit gates
+        
         rng = nr.default_rng()
         if len(qudit_masked)>2:
             gate_qudit_index = rng.choice(qudit_masked, size=gate_type, replace=False)
@@ -314,12 +316,12 @@ def get_index_list_2q3q(circuit_length, qudit_num, prob_2q=1/2):
             qudit_masked.clear()
         elif len(qudit_masked)==0:
             gate_qudit_index = rng.choice(qudit_num, size=gate_type, replace=False)     
-            gate_qudit_index_list.append(list(gate_qudit_index))  
-
+            gate_qudit_index_list.append(list(gate_qudit_index))
+        
     return gate_qudit_index_list
 
 def compress2q_circuit(circuit):
-    ''' Returns an equivalent circuit that contains only 2-qudit gates
+    ''' Returns an equivalent circuit that contains only 2- or 3-qudit gates
     '''
     qudit_num = len(circuit['state_list'])
     gates, indices = circuit['gate_list'], circuit['index_list']
@@ -474,9 +476,10 @@ def compress3q_circuit(circuit):
         # And end the while loop
         if len(gates_mask)==1:
             if len(idx)==2: # If the last gate is a 2-qubit gate
-                # Find the nearest wire for the identity matrix
-                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1) 
-                else: idx_set.append(idx_set[1]+1)
+                # Get a random wire
+                choice_pool = list(set(range(qudit_num)).difference(idx_set))
+                rng = nr.default_rng()
+                idx_set.append(rng.choice(choice_pool, size=1, replace=False)[0])
 
                 u3q = makeGate('111')
                 gates_compressed.append(np.dot(aligned_gate(gate, idx, idx_set), u3q))
@@ -492,36 +495,45 @@ def compress3q_circuit(circuit):
         
         # Finding the appropriate 3 indices when the gate is a 2-qubit gate
         if len(idx)==2: # Only when the gate is a 2-qubit gate
-            for s in range(1,len(gates_mask)): # Check all the gates coming next except 3-qubit gates
+            for s in range(1,len(gates_mask)): # Check all the gates coming next
                 check_idx = indices_mask[s]
-                if len(check_idx)==3: continue
                 if set(idx)==set(check_idx): 
                     continue
-                elif check_idx[0] in idx:
-                    # If we found another connected wire, check whether there is any preceding gate
-                    for d in range(1, s): 
-                        if check_idx[1] in indices_mask[d]: 
-                            break
-                        if d==(s-1):
-                            idx_set.append(check_idx[1])
-                    if s==1: idx_set.append(check_idx[1]) # For the case when the code does not go into the above for-loop because s=1.
-                elif check_idx[1] in idx:
-                    # If we found another connected wire, check whether there is any preceding gate
-                    for d in range(1, s):
-                        if check_idx[0] in indices_mask[d]: break
-                        if d==(s-1): idx_set.append(check_idx[0])
-                    if s==1: idx_set.append(check_idx[0]) # For the case when the code does not go into the above for-loop because s=1.
-                
+                elif len(check_idx)==2:
+                    if check_idx[0] in idx:
+                        # If we found another connected wire, check whether there is any preceding gate
+                        for d in range(1, s): 
+                            if check_idx[1] in indices_mask[d]: 
+                                break
+                            if d==(s-1):
+                                idx_set.append(check_idx[1])
+                        if s==1: idx_set.append(check_idx[1]) # For the case when the code does not go into the above for-loop because s=1.
+                    elif check_idx[1] in idx:
+                        # If we found another connected wire, check whether there is any preceding gate
+                        for d in range(1, s):
+                            if check_idx[0] in indices_mask[d]: break
+                            if d==(s-1): idx_set.append(check_idx[0])
+                        if s==1: idx_set.append(check_idx[0]) # For the case when the code does not go into the above for-loop because s=1.
+                elif len(check_idx)==3:
+                    if idx[0] in check_idx and idx[1] in check_idx:
+                        # If we found an overlapped 3-qubit gate, check whether there is any preceding gate
+                        for d in range(1,s):
+                            if check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d] or check_idx[2] in indices_mask[d]:
+                                break
+                            if d==(s-1):
+                                idx_set.append(list(set(check_idx).difference(idx))[0])
+                        if s==1:
+                                idx_set.append(list(set(check_idx).difference(idx))[0])
                 if len(idx_set)==3: break # End the loop after finding an appropriate 3 indices
         
         # If there is no appropriate connected wire, just append an identity matrix to make a 3-qubit gate
         # And continue to the next while step
         if len(idx_set)==2:
             # print("Came here!")
-            choice_pool = list(range(qudit_num))
+            choice_pool = list(set(range(qudit_num)).difference(idx_set))
+            # print(idx_set)
+            # print(choice_pool)
             rng = nr.default_rng()
-            for i in idx_set:
-                choice_pool.remove(i)
             idx_set.append(rng.choice(choice_pool, size=1, replace=False)[0])
             u3q = makeGate('111')
             gates_compressed.append(np.dot(aligned_gate(gate, idx, idx_set), u3q))
@@ -530,7 +542,7 @@ def compress3q_circuit(circuit):
                 gates_mask.pop(i)
                 indices_mask.pop(i)
             continue
-        
+
         # Group the gates: group the gates which can be combined together for the obtained idx_set
         for s in range(1, len(gates_mask)): # Check for all gates coming next
             check_idx = indices_mask[s]
@@ -587,29 +599,73 @@ def compress3q_circuit(circuit):
 def aligned_gate(gate, index, target_index):
     ''' Converts gate with index so that it matches target_index.
         gate         - array
-        index        - list of int (len = 1 or 2)
-        target_index - list of int (len = 3)
+        index        - list of int
+        target_index - list of int
     '''
     if not set(index).issubset(target_index):
         raise Exception('Indices do not match')
-    if len(index)==1:
-        temp = target_index.index(index[0])
-        gate = np.kron(np.eye(2**temp), np.kron(gate, np.eye(2**(2-temp))))
-    if len(index)==2:
-        if target_index.index(index[0])>target_index.index(index[1]):
-            gate = gate.reshape((2,2,2,2)).swapaxes(0,1).swapaxes(2,3
-                                ).reshape((4,4))
-        temp = target_index.index(list(set(target_index
-                                           ).difference(index))[0])
-        if temp==0:
-            gate = np.kron(IDC, gate)
-        if temp==1:
-            gate = np.kron(gate, IDC)
-            gate = gate.reshape((2,2,2,2,2,2)).swapaxes(0,3).swapaxes(1,2
-                                 ).swapaxes(4,5).reshape((8,8))
-        if temp==2:
-            gate = np.kron(gate, IDC)
+    
+    if len(index)!=len(target_index):
+        index_dup = [index[i] for i in range(len(index))]
+        added_dim = 0
+        for i in list(set(target_index).difference(index)):
+            index_dup.append(i)
+            added_dim += 1
+        gate = np.kron(gate, np.eye(2**added_dim))
+    else:
+        index_dup = index
+    
+    new_target_index = [index_dup.index(target_index[i]) for i in range(len(target_index))]
+    P_matrix = permutation_matrix(list(range(len(index_dup))), new_target_index, [2]*len(target_index))
+    gate = np.dot(P_matrix, np.dot(gate, P_matrix))
+    
     return gate
+
+def basis(dim):
+    basis = []
+    for i in range(dim):
+        vec = np.zeros(dim)
+        vec[i] = 1
+        basis.append(vec)
+    return basis
+
+def tensor(array_list):
+    return fc.reduce(lambda x,y : np.kron(x,y), array_list)
+
+def indices_list(dimension_tuple):
+    number_subsystems = len(dimension_tuple)
+    if number_subsystems != 0:
+        subindices = [range(dim) for dim in dimension_tuple]
+        return np.array(np.meshgrid(*subindices)).T.reshape(-1,number_subsystems)
+    else:
+        return np.array([])
+
+def permutation_matrix(initial_order,final_order,dimension_subsystems):
+    
+    subsystems_number = len(initial_order)
+    # print(initial_order, final_order)
+    # check that order and dimension tuples have the same length
+    if subsystems_number != len(final_order) or subsystems_number != len(dimension_subsystems):
+        raise RuntimeError("The length of the tuples passed to the function needs to be the same") 
+    
+    # Create the list of basis for each subsystem
+    initial_basis_list = list(map(lambda dim : basis(dim) , dimension_subsystems))
+
+    # Create all possible indices for the global basis
+    indices = indices_list(dimension_subsystems)
+    # Create permutation matrix P
+    total_dim = np.product(np.array(dimension_subsystems))            
+    P_matrix = np.zeros((total_dim,total_dim))
+
+    for index in indices:
+        initial_vector_list = [initial_basis_list[n][i] for n,i in enumerate(index)]
+        final_vector_list = [initial_vector_list[i] for i in final_order]
+        initial_vector = tensor(initial_vector_list)
+        final_vector = tensor(final_vector_list)
+
+        P_matrix += np.outer(final_vector,initial_vector)
+
+    return P_matrix
 
 def show_connectivity(circuit):
     ''' Prints a visual circuit representation.
