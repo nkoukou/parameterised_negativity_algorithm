@@ -188,7 +188,7 @@ def get_index_list(circuit_length, qudit_num, method='r'):
                 qudit_index = 1
     return gate_qudit_index_list
 
-def random_connected_circuit_2q3q(qudit_num, circuit_length, Tgate_prob=1/3, 
+def random_connected_circuit_2q3q(qudit_num, circuit_length, Tgate_prob=1/3,
                                   prob_2q=1/2, given_state=None, given_measurement=1):
     ''' Inputs:
         qudit_num         - int
@@ -313,8 +313,8 @@ def get_index_list_2q3q(circuit_length, qudit_num, prob_2q=1/2):
             gate_qudit_index_list.append(list(gate_qudit_index))
             qudit_masked.clear()
         elif len(qudit_masked)==0:
-            gate_qudit_index = rng.choice(qudit_num, size=gate_type, replace=False)     
-            gate_qudit_index_list.append(list(gate_qudit_index))  
+            gate_qudit_index = rng.choice(qudit_num, size=gate_type, replace=False)
+            gate_qudit_index_list.append(list(gate_qudit_index))
 
     return gate_qudit_index_list
 
@@ -469,13 +469,13 @@ def compress3q_circuit(circuit):
         grouped_idx = [idx]
         idx_set = [idx[i] for i in range(len(idx))]
         to_be_removed = [0]
-        
+
         # If it is the last gate, append an identity matrix to make a 3-qubit gate
         # And end the while loop
         if len(gates_mask)==1:
             if len(idx)==2: # If the last gate is a 2-qubit gate
                 # Find the nearest wire for the identity matrix
-                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1) 
+                if idx_set[1]==(qudit_num-1): idx_set.append(idx_set[0]-1)
                 else: idx_set.append(idx_set[1]+1)
 
                 u3q = makeGate('111')
@@ -489,18 +489,18 @@ def compress3q_circuit(circuit):
                 gates_compressed.append(gate)
                 indices_compressed.append(idx)
             break
-        
+
         # Finding the appropriate 3 indices when the gate is a 2-qubit gate
         if len(idx)==2: # Only when the gate is a 2-qubit gate
             for s in range(1,len(gates_mask)): # Check all the gates coming next except 3-qubit gates
                 check_idx = indices_mask[s]
                 if len(check_idx)==3: continue
-                if set(idx)==set(check_idx): 
+                if set(idx)==set(check_idx):
                     continue
                 elif check_idx[0] in idx:
                     # If we found another connected wire, check whether there is any preceding gate
-                    for d in range(1, s): 
-                        if check_idx[1] in indices_mask[d]: 
+                    for d in range(1, s):
+                        if check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1):
                             idx_set.append(check_idx[1])
@@ -511,9 +511,9 @@ def compress3q_circuit(circuit):
                         if check_idx[0] in indices_mask[d]: break
                         if d==(s-1): idx_set.append(check_idx[0])
                     if s==1: idx_set.append(check_idx[0]) # For the case when the code does not go into the above for-loop because s=1.
-                
+
                 if len(idx_set)==3: break # End the loop after finding an appropriate 3 indices
-        
+
         # If there is no appropriate connected wire, just append an identity matrix to make a 3-qubit gate
         # And continue to the next while step
         if len(idx_set)==2:
@@ -530,16 +530,16 @@ def compress3q_circuit(circuit):
                 gates_mask.pop(i)
                 indices_mask.pop(i)
             continue
-        
+
         # Group the gates: group the gates which can be combined together for the obtained idx_set
         for s in range(1, len(gates_mask)): # Check for all gates coming next
             check_idx = indices_mask[s]
             if len(check_idx)==2:
                 if check_idx[0] in idx_set and check_idx[1] in idx_set: # If a gate is applied to idx_set
                     for d in range(1, s): # Check whether there is any preceding gate
-                        if d in to_be_removed: 
+                        if d in to_be_removed:
                             continue
-                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]: 
+                        elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1): # If there is no preceding gate then put it into the group
                             grouped_gates.append(gates_mask[s])
@@ -565,7 +565,7 @@ def compress3q_circuit(circuit):
                         grouped_idx.append(check_idx)
                         to_be_removed.append(s)
             else: raise Exception("A gate must be a 2- or 3-qubit gates.")
-        
+
         # Add the grouped gates into the compressed sequence
         u3q_combined = makeGate('111')
         for k in range(len(grouped_gates)):
@@ -683,16 +683,12 @@ def solve_qubit_circuit(circuit):
 
     for i in range(len(circuit['index_list'])):
         idx, gate = circuit['index_list'][i], circuit['gate_list'][i]
-        # print('\n---------------\n','gate:\n', gate, '\n---------------')
+        print('\n---------------\n','gate:\n', gate, '\n---------------')
 
         order = np.array([sorted(idx).index(i) for i in idx])
         order_rhs = order+len(idx)
         perm = np.concatenate((order, order_rhs))
-        if len(order)==3:
-            if np.all(order==np.array([1,2,0])):
-                perm = np.array([0, 1, 3, 2, 5, 4])
-            if np.all(order==np.array([2,0,1])):
-                perm = np.array([0, 1, 3, 2, 5, 4])
+
         gate = gate.reshape(len(idx)*2*(dim,)).transpose(perm
                             ).reshape(2*(dim**len(idx),))
         id_count = np.cumsum(np.diff(np.sort(np.append(idx,
@@ -707,10 +703,10 @@ def solve_qubit_circuit(circuit):
         gate = gate.reshape(qudit_num*2*(dim,)).transpose(perm
                                   ).reshape(2*(dim**qudit_num,))
 
-        # print(idx, order)
+        print(idx, order)
         # print(id_count)
         # print(perm)
-        # print('\n---------------\n','gate:\n', gate, '\n---------------')
+        print('\n---------------\n','gate:\n', gate, '\n---------------')
 
         state = evolve(state, gate)
         # print('\n---------------\n','state:\n', state, '\n---------------')
@@ -818,87 +814,87 @@ def test_solver():
     #                ], '0100'] ))
     # truths.append(0.07322330470336305)
 
-    gate = makeGate('11H')
-    gate = np.dot(makeGate('11T'), gate)
-    gate = np.dot(makeGate('11H'), gate)
-    gate = np.dot(makeGate('1K1'), gate)
-    gate = np.dot(makeGate('H11'), gate)
-    gate = np.dot(makeGate('1C+'), gate)
-    gate = np.dot(makeGate('1+C'), gate)
-    tests.append( {'state_list': [makeState('0') for i in range(4)],
-                    'gate_list': [gate, makeGate('H')],
-                    'index_list': [[0,1,2], [2]],
-                    'meas_list': [makeState('+'), makeState('1'),
-                                  makeState('0'), makeState('0')]} )
-    truths.append(0.07322330470336305)
+    # gate = makeGate('11H')
+    # gate = np.dot(makeGate('11T'), gate)
+    # gate = np.dot(makeGate('11H'), gate)
+    # gate = np.dot(makeGate('1K1'), gate)
+    # gate = np.dot(makeGate('H11'), gate)
+    # gate = np.dot(makeGate('1C+'), gate)
+    # gate = np.dot(makeGate('1+C'), gate)
+    # tests.append( {'state_list': [makeState('0') for i in range(4)],
+    #                 'gate_list': [gate, makeGate('H')],
+    #                 'index_list': [[0,1,2], [2]],
+    #                 'meas_list': [makeState('+'), makeState('1'),
+    #                               makeState('0'), makeState('0')]} )
+    # truths.append(0.07322330470336305)
 
-    tests.append( string_to_circuit( ['011', [
+    tests.append( string_to_circuit( ['110', [
+                    [[0,1,2],'A'],
+                    # [[2], 'H']
+                    ], '111'] ))
+    truths.append(1)
+
+    tests.append( string_to_circuit( ['101', [
                     [[1,2,0],'A'],
                     # [[2], 'H']
                     ], '111'] ))
     truths.append(1)
 
     tests.append( string_to_circuit( ['011', [
-                    [[2,1,0],'A'],
-                    # [[2], 'H']
-                    ], '111'] ))
-    truths.append(1)
-
-    tests.append( string_to_circuit( ['101', [
                     [[2,0,1],'A'],
                     # [[2], 'H']
                     ], '111'] ))
     truths.append(1)
 
-    tests.append( string_to_circuit( ['000000', [
-                    [[0], 'H'],
-                    [[1], 'H'],
-                    [[0,2], 'C+'],
-                    [[2,0,1],'A'],
-                    # [[2], 'H'],
-                    # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-                    ], '000000'] ))
-    truths.append(1/4)
+    # tests.append( string_to_circuit( ['000000', [
+    #                 [[0], 'H'],
+    #                 [[1], 'H'],
+    #                 [[0,2], 'C+'],
+    #                 [[2,0,1],'A'],
+    #                 # [[2], 'H'],
+    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
+    #                 ], '000000'] ))
+    # truths.append(1/4)
 
-    tests.append( string_to_circuit( ['000000', [
-                    [[0], 'H'],
-                    [[1], 'H'],
-                    [[0,2], 'C+'],
-                    [[2,0,1],'A'],
-                    # [[2], 'H'],
-                    # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-                    ], '010000'] ))
-    truths.append(1/4)
+    # tests.append( string_to_circuit( ['000000', [
+    #                 [[0], 'H'],
+    #                 [[1], 'H'],
+    #                 [[0,2], 'C+'],
+    #                 [[2,0,1],'A'],
+    #                 # [[2], 'H'],
+    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
+    #                 ], '010000'] ))
+    # truths.append(1/4)
 
-    tests.append( string_to_circuit( ['000000', [
-                    [[0], 'H'],
-                    [[1], 'H'],
-                    [[0,2], 'C+'],
-                    [[2,0,1],'A'],
-                    # [[2], 'H'],
-                    # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-                    ], '111000'] ))
-    truths.append(1/4)
+    # tests.append( string_to_circuit( ['000000', [
+    #                 [[0], 'H'],
+    #                 [[1], 'H'],
+    #                 [[0,2], 'C+'],
+    #                 [[2,0,1],'A'],
+    #                 # [[2], 'H'],
+    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
+    #                 ], '111000'] ))
+    # truths.append(1/4)
 
-    tests.append( string_to_circuit( ['000000', [
-                    [[0], 'H'],
-                    [[1], 'H'],
-                    [[0,2], 'C+'],
-                    [[2,0,1],'A'],
-                    # [[2], 'H'],
-                    # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-                    ], '101000'] ))
-    truths.append(1/4)
+    # tests.append( string_to_circuit( ['000000', [
+    #                 [[0], 'H'],
+    #                 [[1], 'H'],
+    #                 [[0,2], 'C+'],
+    #                 [[2,0,1],'A'],
+    #                 # [[2], 'H'],
+    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
+    #                 ], '101000'] ))
+    # truths.append(1/4)
 
-    tests.append( string_to_circuit( ['000000', [
-                    [[0], 'H'],
-                    [[1], 'H'],
-                    [[0,2], 'C+'],
-                    [[2,0,1],'A'],
-                    [[2], 'H'],
-                    [[4,2,0],'A']
-                    ], '0++000'] ))
-    truths.append(1/2)
+    # tests.append( string_to_circuit( ['000000', [
+    #                 [[0], 'H'],
+    #                 [[1], 'H'],
+    #                 [[0,2], 'C+'],
+    #                 [[2,0,1],'A'],
+    #                 [[2], 'H'],
+    #                 [[4,2,0],'A']
+    #                 ], '0++000'] ))
+    # truths.append(1/2)
 
     # tests.append( string_to_circuit( ['000000', [
     #                 [[0], 'H'],
@@ -929,7 +925,7 @@ def test_solver():
     else:
         print(all_check, '\n', checks)
         return(all_check)
-# test_solver()
+test_solver()
 
 
 
