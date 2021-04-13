@@ -1,9 +1,10 @@
 from QUBIT_wig_neg import (wigner_neg_compressed, wigner_neg_compressed_3q)
 from QUBIT_opt_neg import (optimize_neg_compressed, optimize_neg_compressed_3q)
-from QUBIT_local_opt_neg import (local_opt_neg_compressed, local_opt_neg_compressed_3q)
+from QUBIT_local_opt_neg import (local_opt_neg_compressed,
+                                 local_opt_neg_compressed_3q)
 from QUBIT_circuit_generator import (random_connected_circuit, random_circuit,
        compress2q_circuit, compress3q_circuit, string_to_circuit,
-       show_connectivity, solve_qubit_circuit)
+       show_connectivity, solve_qubit_circuit, random_connected_circuit_2q3q)
 from QUBIT_get_prob import (get_prob_list)
 from QUBIT_sample import (sample_circuit)
 from QUBIT_BVcircuit import(BValg_circuit)
@@ -32,7 +33,8 @@ class QD_circuit(object):
             self.circuit_compressed = compress2q_circuit(self.circuit)
         elif m==3:
             self.circuit_compressed = compress2q_circuit(self.circuit)
-            self.circuit_compressed = compress3q_circuit(self.circuit_compressed)
+            self.circuit_compressed = compress3q_circuit(
+                                                    self.circuit_compressed)
         else:
             raise Exception('m must be 2 or 3')
 
@@ -123,120 +125,18 @@ import matplotlib.pylab as plt
 
 # t0 = time.time()
 
-Bernstein_Vazirani_circuit = BValg_circuit('1111', 1)
-Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
-Bernstein_Vazirani_circuit['index_list'].append([2,4])
-Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
-Bernstein_Vazirani_circuit['index_list'].append([1,7])
+# Bernstein_Vazirani_circuit = BValg_circuit('1111', 1)
+# Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
+# Bernstein_Vazirani_circuit['index_list'].append([2,4])
+# Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
+# Bernstein_Vazirani_circuit['index_list'].append([1,7])
 # print(Bernstein_Vazirani_circuit)
 
-# circuit = Bernstein_Vazirani_circuit
-# circuit, Tcount = random_connected_circuit(qudit_num=6, circuit_length=25,
-#             Tgate_prob=1/3, given_state=None, given_measurement=4, method='c')
-
-circuit = random_circuit(qudit_num=5, C1qGate_num=1, TGate_num=2,
-                          CSUMGate_num=3, Toff_num=4,
-                          given_state=0, given_measurement=1)
-
-# circuit = {'state_list': [makeState('0') for i in range(4)],
-#           'gate_list': [makeGate('C+') for i in range(2)],
-#           'index_list': [[2,0],[1,2]],
-#           'meas_list': [makeMeas('0')]+ [makeMeas('/') for i in range(3)]}
-
-circuit = {'state_list': [
-  np.array([[1, 0],
-         [0, 0]]),
-  np.array([[1, 0],
-         [0, 0]]),
-  np.array([[1, 0],
-         [0, 0]]),
-  np.array([[1, 0],
-         [0, 0]]),
-  np.array([[1, 0],
-         [0, 0]])
-  ], 'gate_list': [
-  # np.array([[1., 0., 0., 0.],
-  #        [0., 1., 0., 0.],
-  #        [0., 0., 0., 1.],
-  #        [0., 0., 1., 0.]]),
-  # np.array([[1., 0., 0., 0.],
-  #        [0., 1., 0., 0.],
-  #        [0., 0., 0., 1.],
-  #        [0., 0., 1., 0.]]),
-  np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
-       [0., 0., 0., 0., 0., 1., 0., 0.],
-       [0., 0., 0., 0., 0., 0., 0., 1.],
-       [0., 0., 1., 0., 0., 0., 0., 0.],
-       [0., 0., 0., 0., 1., 0., 0., 0.],
-       [0., 1., 0., 0., 0., 0., 0., 0.],
-       [0., 0., 0., 1., 0., 0., 0., 0.],
-       [0., 0., 0., 0., 0., 0., 1., 0.]]),
-  np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
-         [0., 1., 0., 0., 0., 0., 0., 0.],
-         [0., 0., 1., 0., 0., 0., 0., 0.],
-         [0., 0., 0., 1., 0., 0., 0., 0.],
-         [0., 0., 0., 0., 1., 0., 0., 0.],
-         [0., 0., 0., 0., 0., 1., 0., 0.],
-         [0., 0., 0., 0., 0., 0., 0., 1.],
-         [0., 0., 0., 0., 0., 0., 1., 0.]]),
-  np.array([[1.    +0.j    , 0.    +0.j    ],
-         [0.    +0.j    , 0.7071+0.7071j]]),
-  np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
-         [0., 1., 0., 0., 0., 0., 0., 0.],
-         [0., 0., 1., 0., 0., 0., 0., 0.],
-         [0., 0., 0., 1., 0., 0., 0., 0.],
-         [0., 0., 0., 0., 1., 0., 0., 0.],
-         [0., 0., 0., 0., 0., 1., 0., 0.],
-         [0., 0., 0., 0., 0., 0., 0., 1.],
-         [0., 0., 0., 0., 0., 0., 1., 0.]]),
-  np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
-         [0., 1., 0., 0., 0., 0., 0., 0.],
-         [0., 0., 1., 0., 0., 0., 0., 0.],
-         [0., 0., 0., 1., 0., 0., 0., 0.],
-         [0., 0., 0., 0., 1., 0., 0., 0.],
-         [0., 0., 0., 0., 0., 1., 0., 0.],
-         [0., 0., 0., 0., 0., 0., 0., 1.],
-         [0., 0., 0., 0., 0., 0., 1., 0.]]),
-  np.array([[ 0.7071,  0.7071],
-         [ 0.7071, -0.7071]]),
-  np.array([[1.    +0.j    , 0.    +0.j    ],
-         [0.    +0.j    , 0.7071+0.7071j]]),
-  np.array([[1., 0., 0., 0., 0., 0., 0., 0.],
-         [0., 1., 0., 0., 0., 0., 0., 0.],
-         [0., 0., 1., 0., 0., 0., 0., 0.],
-         [0., 0., 0., 1., 0., 0., 0., 0.],
-         [0., 0., 0., 0., 1., 0., 0., 0.],
-         [0., 0., 0., 0., 0., 1., 0., 0.],
-         [0., 0., 0., 0., 0., 0., 0., 1.],
-         [0., 0., 0., 0., 0., 0., 1., 0.]]),
-  np.array([[1., 0., 0., 0.],
-         [0., 1., 0., 0.],
-         [0., 0., 0., 1.],
-         [0., 0., 1., 0.]])
-  ], 'index_list': [
-  # [2, 0],
-  # [1, 2],
-  [2, 0, 1],
-  [2, 0, 4],
-  [4],
-  [3, 0, 4],
-  [4, 0, 1],
-  [4],
-  [4],
-  [0, 2, 1],
-  [4, 0]
-  ], 'meas_list': [
-  np.array([[1, 0],
-         [0, 0]]),
-  np.array([[1., 0.],
-         [0., 1.]]),
-  np.array([[1., 0.],
-         [0., 1.]]),
-  np.array([[1., 0.],
-         [0., 1.]]),
-  np.array([[1., 0.],
-         [0., 1.]])
-  ]}
+circuit, Tcount = random_connected_circuit(6, 25, Tgate_prob=1/3,
+                                   given_state=None, given_measurement=1)
+circuit, Tcount, toffoli_num = random_connected_circuit_2q3q(6, 25,
+                                 Tgate_prob=1/3, prob_2q=1,
+                                 given_state=None, given_measurement=1)
 
 circ = QD_circuit(circuit)
 circ.show_connectivity(compressed=False)
