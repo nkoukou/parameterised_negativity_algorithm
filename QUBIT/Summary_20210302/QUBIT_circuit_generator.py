@@ -730,43 +730,20 @@ def string_to_circuit(circuit_string):
     return circuit
 
 def solve_qubit_circuit(circuit):
-    ''' Solves small qubit circuits.
-    '''
-    dim = 2
     state = reduce(np.kron, circuit['state_list'])
-    qudit_num = int(np.log2(state.shape[0]))
-    # print('\n---------------\n','state:\n', state, '\n---------------')
+    D, N = 2, int(np.log2(state.shape[0]))
 
     for i in range(len(circuit['index_list'])):
         idx, gate = circuit['index_list'][i], circuit['gate_list'][i]
-        print('\n---------------\n','gate:\n', gate, '\n---------------')
 
-        order = np.array([sorted(idx).index(i) for i in idx])
-        order_rhs = order+len(idx)
-        perm = np.concatenate((order, order_rhs))
-
-        gate = gate.reshape(len(idx)*2*(dim,)).transpose(perm
-                            ).reshape(2*(dim**len(idx),))
-        id_count = np.cumsum(np.diff(np.sort(np.append(idx,
-                                               (-1,qudit_num))))-1)
-        perm = np.arange(len(idx),len(idx)+id_count[0])
-        for i in range(len(idx)):
-            next_idc = np.arange(len(idx)+id_count[i],
-                                 len(idx)+id_count[i+1])
-            perm = np.concatenate((perm,np.insert(next_idc, 0, i)))
-        perm = np.concatenate((perm,perm+qudit_num))
-        gate = np.kron(gate, np.eye(2**(qudit_num-len(idx))))
-        gate = gate.reshape(qudit_num*2*(dim,)).transpose(perm
-                                  ).reshape(2*(dim**qudit_num,))
-
-        print(idx, order)
-        # print(id_count)
-        # print(perm)
-        print('\n---------------\n','gate:\n', gate, '\n---------------')
+        order = np.concatenate((idx, np.delete(np.arange(N),idx)))
+        perm  = np.argsort(np.concatenate((order, order+N)))
+        gate  = np.kron(gate, np.eye(2**(N-len(idx))))
+        gate  = gate.reshape(N*2*(D,)).transpose(perm).reshape(2*(D**N,))
 
         state = evolve(state, gate)
+        # print('\n---------------\n', 'gate:\n', gate,  '\n---------------')
         # print('\n---------------\n','state:\n', state, '\n---------------')
-
     meas = reduce(np.kron, circuit['meas_list'])
     prob = np.trace(np.dot(meas, state))
     if not np.isclose(prob.imag, 0):
@@ -774,115 +751,36 @@ def solve_qubit_circuit(circuit):
         raise Exception('Probability is not real')
     return prob.real
 
-def find_perms():
-    D, N = 2, 3
-    gate = np.arange(1,(D*D)**N+1).reshape((D**N,D**N))
-    sub_states = [np.array([1,2]), np.array([3,5]), np.array([7,11])]
-    indices = [np.array(idx) for idx in list(permutations(range(N)))]
-
-    state0 = reduce(np.kron, sub_states)
-
-    all_perms = []
-    for idx in indices:
-        state = reduce(np.kron, [sub_states[idx[i]] for i in range(N)])
-
-        valid_perms = []
-        for perm in permutations(range(2*N)):
-            temp = gate.reshape((D,D,)*N).transpose(perm).reshape((D**N,D**N))
-            target = np.sort(evolve(state0, gate))
-            if np.allclose(np.sort(evolve(state, temp)), target):
-                valid_perms.append(list(perm))
-        all_perms.append(valid_perms)
-    return indices, all_perms
-
-def find_perms_A(last):
-    D, N = 2, 3
-    gate = makeGate('A')
-    if last==0:
-        index = [1,2,0]
-        state0 = makeState('011')
-    elif last==1:
-        index = [2,0,1]
-        state0 = makeState('101')
-    elif last==2:
-        index = [0,1,2]
-        state0 = makeState('110')
-    else: raise Exception('ERROR ON last')
-    target = makeState('111')
-
-    all_perms = []
-    for perm in permutations(range(2*N)):
-        if set(perm[:3]) != set(np.array(index)): continue
-        temp = gate.reshape((D,D,)*N).transpose(perm).reshape((D**N,D**N))
-        if np.allclose(evolve(state0, temp), target):
-            all_perms.append(list(perm))
-    return index, all_perms
-
-def find_perms_test():
-    all_perms = []
-    N = 3
-    count = 0
-    pool = [[0, 1, 3, 2, 5, 4],  [0, 1, 3, 5, 2, 4],  [0, 4, 3, 2, 5, 1],
-            [0, 4, 3, 5, 2, 1],  [1, 0, 4, 2, 5, 3],  [1, 0, 4, 5, 2, 3],
-            [1, 3, 4, 2, 5, 0],  [1, 3, 4, 5, 2, 0],  [3, 1, 0, 2, 5, 4],
-            [3, 1, 0, 5, 2, 4],  [3, 4, 0, 2, 5, 1],  [3, 4, 0, 5, 2, 1],
-            [4, 0, 1, 2, 5, 3],  [4, 0, 1, 5, 2, 3],  [4, 3, 1, 2, 5, 0],
-            [4, 3, 1, 5, 2, 0]]
-    all_perms = []
-    for perm1 in pool:
-        for perm2 in pool:
-            # print(perm1, perm2)
-            all_checks = test_solver(perm1, perm2)
-            if np.all(all_checks):
-                all_perms.append(perm1+perm2)
-            if count%25==0: print(count)
-            count +=1
-    return count, all_perms
-
 def test_solver():
     truths = []
     tests = []
 
-    # tests.append( string_to_circuit( ['00', [
-    #                 [[0],'H'],
-    #                 [[0],'K'],
-    #                 [[1],'K']
-    #                ], '10'] ))
-    # truths.append(1/2)
+    tests.append( string_to_circuit( ['00', [
+                    [[0],'H'],
+                    [[0],'K'],
+                    [[1],'K']
+                    ], '10'] ))
+    truths.append(1/2)
 
 
-    # tests.append( string_to_circuit( ['00', [
-    #                 [[0], 'H'],
-    #                 [[1,0], 'C+'],
-    #                 [[0,1], 'C+']
-    #                ], '0/'] ))
-    # truths.append(1/2)
+    tests.append( string_to_circuit( ['00', [
+                    [[0], 'H'],
+                    [[1,0], 'C+'],
+                    [[0,1], 'C+']
+                    ], '0/'] ))
+    truths.append(1/2)
 
-    # q = 2
-    # tests.append( string_to_circuit( ['0000', [
-    #                 [[q], 'H'],
-    #                 [[q], 'T'],
-    #                 [[q], 'H'],
-    #                 [[1], 'K'],
-    #                 [[1,q], 'C+'],
-    #                 [[q,1], 'C+'],
-    #                 [[q], 'H']
-    #                ], '0100'] ))
-    # truths.append(0.07322330470336305)
-
-    # gate = makeGate('11H')
-    # gate = np.dot(makeGate('11T'), gate)
-    # gate = np.dot(makeGate('11H'), gate)
-    # gate = np.dot(makeGate('1K1'), gate)
-    # gate = np.dot(makeGate('H11'), gate)
-    # gate = np.dot(makeGate('1C+'), gate)
-    # gate = np.dot(makeGate('1+C'), gate)
-    # tests.append( {'state_list': [makeState('0') for i in range(4)],
-    #                 'gate_list': [gate, makeGate('H')],
-    #                 'index_list': [[0,1,2], [2]],
-    #                 'meas_list': [makeState('+'), makeState('1'),
-    #                               makeState('0'), makeState('0')]} )
-    # truths.append(0.07322330470336305)
+    q = 2
+    tests.append( string_to_circuit( ['0000', [
+                    [[q], 'H'],
+                    [[q], 'T'],
+                    [[q], 'H'],
+                    [[1], 'K'],
+                    [[1,q], 'C+'],
+                    [[q,1], 'C+'],
+                    [[q], 'H']
+                    ], '0100'] ))
+    truths.append(0.07322330470336305)
 
     tests.append( string_to_circuit( ['110', [
                     [[0,1,2],'A'],
@@ -890,87 +788,17 @@ def test_solver():
                     ], '111'] ))
     truths.append(1)
 
-    tests.append( string_to_circuit( ['101', [
+    tests.append( string_to_circuit( ['011', [
                     [[1,2,0],'A'],
                     # [[2], 'H']
                     ], '111'] ))
     truths.append(1)
 
     tests.append( string_to_circuit( ['011', [
-                    [[2,0,1],'A'],
+                    [[2,1,0],'A'],
                     # [[2], 'H']
                     ], '111'] ))
     truths.append(1)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 # [[2], 'H'],
-    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-    #                 ], '000000'] ))
-    # truths.append(1/4)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 # [[2], 'H'],
-    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-    #                 ], '010000'] ))
-    # truths.append(1/4)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 # [[2], 'H'],
-    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-    #                 ], '111000'] ))
-    # truths.append(1/4)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 # [[2], 'H'],
-    #                 # [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-    #                 ], '101000'] ))
-    # truths.append(1/4)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 [[2], 'H'],
-    #                 [[4,2,0],'A']
-    #                 ], '0++000'] ))
-    # truths.append(1/2)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 [[2], 'H'],
-    #                 [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-    #                 ], '1+0010'] ))
-    # truths.append(1/4)
-
-    # tests.append( string_to_circuit( ['000000', [
-    #                 [[0], 'H'],
-    #                 [[1], 'H'],
-    #                 [[0,2], 'C+'],
-    #                 [[2,0,1],'A'],
-    #                 [[2], 'H'],
-    #                 [[2,4,0],'A'] # Comment-out = 1/8 ('001010')
-    #                 ], '0+1010'] ))
-    # truths.append(1/4)
 
     checks = [solve_qubit_circuit(tests[i])
               for i in range(len(tests))]
@@ -981,7 +809,7 @@ def test_solver():
     else:
         print(all_check, '\n', checks)
         return(all_check)
-test_solver()
+# test_solver()
 
 
 

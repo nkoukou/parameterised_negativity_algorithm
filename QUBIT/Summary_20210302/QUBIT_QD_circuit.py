@@ -136,12 +136,12 @@ circuit, Tcount = random_connected_circuit(6, 25, Tgate_prob=1/3,
                                    given_state=None, given_measurement=1)
 circuit, Tcount, toffoli_num = random_connected_circuit_2q3q(6, 25,
                                  Tgate_prob=1/3, prob_2q=1,
-                                 given_state=None, given_measurement=1)
+                                 given_state=None, given_measurement=4)
 
 circ = QD_circuit(circuit)
 circ.show_connectivity(compressed=False)
 print("\n-------------------------------------\n")
-circ.compress_circuit(m=3)
+circ.compress_circuit(m=2)
 circ.show_connectivity()
 
 print("\n-------------------------------------\n")
@@ -149,22 +149,15 @@ pborn1 = solve_qubit_circuit(circ.circuit)
 pborn2 = solve_qubit_circuit(circ.circuit_compressed)
 print("Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
 
+circ = QD_circuit(circuit)
+print("\n-------------------------------------\n")
+circ.compress_circuit(m=3)
 
-# circ = QD_circuit(circuit)
-# # circ.show_connectivity(compressed=False)
-# pborn1 = solve_qubit_circuit(circ.circuit, 0)
+print("\n-------------------------------------\n")
+pborn1 = solve_qubit_circuit(circ.circuit)
+pborn2 = solve_qubit_circuit(circ.circuit_compressed)
+print("Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
 
-# circ.compress_circuit(m=2)
-# # circ.show_connectivity()
-# pborn2 = solve_qubit_circuit(circ.circuit_compressed, 0)
-# # pborn2 = -1
-
-# circ.compress_circuit(m=3)
-# # circ.show_connectivity()
-# pborn3 = solve_qubit_circuit(circ.circuit_compressed, 0)
-# # pborn3 = -1
-
-# print(np.allclose(pborn1, pborn2), pborn1, pborn2, pborn3)
 
 # sample_size = int(1e6)
 # x_list = np.linspace(1, sample_size, sample_size)
