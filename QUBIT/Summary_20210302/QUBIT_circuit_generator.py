@@ -617,7 +617,7 @@ def aligned_gate(gate, index, target_index):
 
     new_target_index = [index_dup.index(target_index[i]) for i in range(len(target_index))]
     P_matrix = permutation_matrix(list(range(len(index_dup))), new_target_index, [2]*len(target_index))
-    gate = np.dot(P_matrix, np.dot(gate, P_matrix))
+    gate = np.dot(P_matrix, np.dot(gate, P_matrix.T))
 
     return gate
 
