@@ -134,48 +134,65 @@ import matplotlib.pylab as plt
 
 circuit, Tcount = random_connected_circuit(6, 25, Tgate_prob=1/3,
                                    given_state=None, given_measurement=1)
-circuit, Tcount, toffoli_num = random_connected_circuit_2q3q(6, 25,
-                                 Tgate_prob=1/3, prob_2q=1,
-                                 given_state=None, given_measurement=4)
+# circuit, Tcount, toffoli_num = random_connected_circuit_2q3q(6, 25,
+#                                  Tgate_prob=1/3, prob_2q=1,
+#                                  given_state=None, given_measurement=4)
 
+#################3q-compression#################
 circ = QD_circuit(circuit)
 circ.show_connectivity(compressed=False)
-print("\n-------------------------------------\n")
+print("\n------------------2q compression-------------------\n")
 circ.compress_circuit(m=2)
 circ.show_connectivity()
 
 print("\n-------------------------------------\n")
 pborn1 = solve_qubit_circuit(circ.circuit)
 pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-print("Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
-
-circ = QD_circuit(circuit)
-print("\n-------------------------------------\n")
-circ.compress_circuit(m=3)
-
-print("\n-------------------------------------\n")
-pborn1 = solve_qubit_circuit(circ.circuit)
-pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-print("Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
+print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
 
 
 # sample_size = int(1e6)
 # x_list = np.linspace(1, sample_size, sample_size)
 
-# circ.opt_x(method='Wigner')
+circ.opt_x(method='Wigner')
 # circ.get_QD_list(method='Wigner')
 # wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
 # prob_wigner = np.cumsum(wigner_out_list)/x_list
 
-# circ.opt_x(method='Opt', **{'niter':10})
+circ.opt_x(method='Opt', **{'niter':10})
 # circ.get_QD_list(method = 'Opt')
 # opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
 # prob_opt = np.cumsum(opt_out_list)/x_list
 
-# circ.opt_x(method='Local_opt', **{'niter':10})
+circ.opt_x(method='Local_opt', **{'niter':10})
 # circ.get_QD_list(method='Local_opt')
-# local_opt_out_list = circ.sample(method='Local_opt',
-#                                   sample_size=sample_size)
+# local_opt_out_list = circ.sample(method='Local_opt', sample_size=sample_size)
+# prob_local_opt = np.cumsum(local_opt_out_list)/x_list
+
+#################3q-compression#################
+circ = QD_circuit(circuit)
+print("\n-----------------3q compression--------------------\n")
+circ.compress_circuit(m=3)
+circ.show_connectivity()
+
+print("\n-------------------------------------\n")
+pborn1 = solve_qubit_circuit(circ.circuit)
+pborn2 = solve_qubit_circuit(circ.circuit_compressed)
+print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
+
+wigner_neg_compressed_3q(circ.circuit_compressed, method='Wigner')
+# circ.get_QD_list(method='Wigner')
+# wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
+# prob_wigner = np.cumsum(wigner_out_list)/x_list
+
+optimize_neg_compressed_3q(circ.circuit_compressed, **{'niter':10})
+# circ.get_QD_list(method = 'Opt')
+# opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
+# prob_opt = np.cumsum(opt_out_list)/x_list
+
+local_opt_neg_compressed_3q(circ.circuit_compressed, **{'niter':10})
+# circ.get_QD_list(method='Local_opt')
+# local_opt_out_list = circ.sample(method='Local_opt', sample_size=sample_size)
 # prob_local_opt = np.cumsum(local_opt_out_list)/x_list
 
 

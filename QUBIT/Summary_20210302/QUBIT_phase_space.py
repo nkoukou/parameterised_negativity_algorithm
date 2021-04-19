@@ -134,7 +134,7 @@ def W_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamm
                        get_F1q_list(Gamma_out1), get_F1q_list(Gamma_out2), get_F1q_list(Gamma_out3)
                       ).reshape((DIM,DIM,DIM,DIM,DIM,DIM,DIM*DIM*DIM,DIM*DIM*DIM))
     U_ev = np.einsum('lk,ijsrxykn,mn->ijsrxylm', U3q, G_in, U3q.conj())
-    return 1/DIM/DIM * np.real(np.einsum('ijsrxykl,mnabzwlk->ijsrxymnabzw',
+    return 1/DIM/DIM/DIM * np.real(np.einsum('ijsrxykl,mnabzwlk->ijsrxymnabzw',
                                          U_ev, F_out))
 
 def neg_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3):
