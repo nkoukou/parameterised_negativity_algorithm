@@ -58,7 +58,7 @@ def optimize_neg_compressed(compressed_circuit, **kwargs):
     return optimized_x, optimized_value
 
 def optimize_neg_compressed_3q(compressed_circuit, **kwargs):
-    options = {'opt_method': 'B', 'niter': 100}
+    options = {'opt_method': 'B', 'niter': 10}
     options.update(kwargs)
 
     x_len = int(len(compressed_circuit['state_list']) + 3*len(compressed_circuit['gate_list']))
