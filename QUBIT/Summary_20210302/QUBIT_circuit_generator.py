@@ -550,7 +550,11 @@ def compress3q_circuit(circuit):
                 if check_idx[0] in idx_set and check_idx[1] in idx_set: # If a gate is applied to idx_set
                     for d in range(1, s): # Check whether there is any preceding gate
                         if d in to_be_removed:
-                            continue
+                            if d!=(s-1): continue
+                            else:
+                                grouped_gates.append(gates_mask[s])
+                                grouped_idx.append(check_idx)
+                                to_be_removed.append(s)
                         elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1): # If there is no preceding gate then put it into the group
