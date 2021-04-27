@@ -190,12 +190,14 @@ def get_index_list(circuit_length, qudit_num, method='r'):
     return gate_qudit_index_list
 
 def random_connected_circuit_2q3q(qudit_num, circuit_length, Tgate_prob=1/3,
-                                  prob_2q=1/2, given_state=None, given_measurement=1):
+                                  prob_2q=1/2, given_state=None,
+                                  given_measurement=1):
     ''' Inputs:
         qudit_num         - int
         circuit_length    - int
         Tgate_prob        - float
-        prob_2q           - float (the probability of 2-qubit gates; others are 3-qubit gates.)
+        prob_2q           - float (the probability of 2-qubit gates;
+                                   others are 3-qubit gates.)
         given_state       - None or 0 (all zeros) or string
         given_measurement - string or int (number of measurement modes)
 
@@ -289,19 +291,23 @@ def random_connected_circuit_2q3q(qudit_num, circuit_length, Tgate_prob=1/3,
     return circuit, Tcount, toffoli_count
 
 def get_index_list_2q3q(circuit_length, qudit_num, prob_2q=1/2):
-    ''' Creates fully connected index_list for circuit of given circuit_length, qudit_num.
+    ''' Creates fully connected index_list for circuit of given
+        circuit_length, qudit_num.
     '''
     if circuit_length<(qudit_num-1):
-        raise Exception("The length of the circuit is not enought to entangle all qubits in the circuit.")
+        raise Exception("The length of the circuit is not enought to \
+                        entangle all qubits in the circuit.")
 
     gate_qudit_index_list = []
     qudit_masked = list(range(qudit_num))
     for i in range(circuit_length):
-        gate_type = nr.choice([2,3],p=[prob_2q,1-prob_2q]) # Randomly choose between 2- or 3-qubit gates
+        # Randomly choose between 2- or 3-qubit gates
+        gate_type = nr.choice([2,3],p=[prob_2q,1-prob_2q])
 
         rng = nr.default_rng()
         if len(qudit_masked)>2:
-            gate_qudit_index = rng.choice(qudit_masked, size=gate_type, replace=False)
+            gate_qudit_index = rng.choice(qudit_masked, size=gate_type,
+                                          replace=False)
             gate_qudit_index_list.append(list(gate_qudit_index))
             for i in gate_qudit_index:
                 qudit_masked.remove(i)
@@ -309,13 +315,15 @@ def get_index_list_2q3q(circuit_length, qudit_num, prob_2q=1/2):
             choice_pool = list(range(qudit_num))
             for i in qudit_masked:
                 choice_pool.remove(i)
-            gate_qudit_index = list(rng.choice(choice_pool, size=(gate_type-len(qudit_masked)), replace=False))
+            gate_qudit_index = list(rng.choice(choice_pool,
+                          size=(gate_type-len(qudit_masked)), replace=False))
             for i in qudit_masked:
                 gate_qudit_index.append(i)
             gate_qudit_index_list.append(list(gate_qudit_index))
             qudit_masked.clear()
         elif len(qudit_masked)==0:
-            gate_qudit_index = rng.choice(qudit_num, size=gate_type, replace=False)
+            gate_qudit_index = rng.choice(qudit_num, size=gate_type,
+                                          replace=False)
             gate_qudit_index_list.append(list(gate_qudit_index))
 
     return gate_qudit_index_list
@@ -376,7 +384,8 @@ def compress2q_circuit(circuit):
                 if idx[0]==u_index[2]:
                     u1q[2] = np.dot(gate, u1q[2])
                 gate_masked[i] +=1
-            gates_compressed[k] = np.dot(u_gate, np.kron(np.kron(u1q[0], u1q[1]), u1q[2]))
+            gates_compressed[k] = np.dot(u_gate, np.kron(np.kron(u1q[0],
+                                                            u1q[1]), u1q[2]))
 
     for k in range(len(indices_compressed)-1, -1, -1):
         u_gate, u_index = gates_compressed[k], indices_compressed[k]
@@ -407,7 +416,8 @@ def compress2q_circuit(circuit):
                 if idx[0]==u_index[2]:
                     u1q[2] = np.dot(u1q[2], gate)
                 gate_masked[i] +=1
-            gates_compressed[k] = np.dot(np.kron(np.kron(u1q[0], u1q[1]), u1q[2]), u_gate)
+            gates_compressed[k] = np.dot(np.kron(np.kron(u1q[0], u1q[1]),
+                                                 u1q[2]), u_gate)
 
     u1qs = [IDC for i in range(len(disentangled_wires))]
     for i in range(len(gates)):
@@ -809,7 +819,6 @@ def test_solver():
     else:
         print(all_check, '\n', checks)
         return(all_check)
-# test_solver()
 
 
 

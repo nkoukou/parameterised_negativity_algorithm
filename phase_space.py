@@ -157,13 +157,13 @@ def allD1qs():
 D1q_list = allD1qs()
 
 '''Test Code'''
-Gamma_w    = x2Gamma([1,0,0,0,0,0,1,0])
-Gamma_t    = x2Gamma([0.9,0.1,0,0,0,0,1,0])
-Gamma      = x2Gamma(2*np.random.rand(8)-1)
-Gamma_in1  = x2Gamma(2*np.random.rand(8)-1)
-Gamma_in2  = x2Gamma(2*np.random.rand(8)-1)
-Gamma_out1 = x2Gamma(2*np.random.rand(8)-1)
-Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
+#Gamma_w    = x2Gamma([1,0,0,0,0,0,1,0])
+#Gamma_t    = x2Gamma([0.9,0.1,0,0,0,0,1,0])
+#Gamma      = x2Gamma(2*np.random.rand(8)-1)
+#Gamma_in1  = x2Gamma(2*np.random.rand(8)-1)
+#Gamma_in2  = x2Gamma(2*np.random.rand(8)-1)
+#Gamma_out1 = x2Gamma(2*np.random.rand(8)-1)
+#Gamma_out2 = x2Gamma(2*np.random.rand(8)-1)
 
 ####################### DISTRIBUTION CALC FOR CIRCUIT #########################
 

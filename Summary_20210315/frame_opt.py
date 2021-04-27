@@ -3,12 +3,11 @@ import time
 import itertools as it
 import autograd.numpy as np
 from autograd import(grad)
-
-from state_functions import DIM
-from numpy.random import default_rng
+from numpy.random import(default_rng)
 from scipy.optimize import(Bounds, minimize)
 from scipy.optimize import(basinhopping)
 
+from state_functions import(DIM)
 from phase_space import(x2Gamma, neg_state_1q, neg_gate_1q_max,
                    neg_gate_2q_max, neg_meas_1q)
 

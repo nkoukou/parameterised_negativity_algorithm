@@ -34,8 +34,10 @@ def sample_circuit(compressed_circuit, QD_output, sample_size = 10000, **kwargs)
             q_in2 = current_PS_point[idx[1]]%2
 
             prob = PD_gate[p_in1,q_in1,p_in2,q_in2].flatten()
-            neg = QD_output['neg_list_gates'][gate_index][p_in1,q_in1,p_in2,q_in2]
-            sign_array = QD_output['sign_list_gates'][gate_index][p_in1,q_in1,p_in2,q_in2].flatten()
+            neg = QD_output['neg_list_gates'][gate_index][p_in1,q_in1,
+                                                          p_in2,q_in2]
+            sign_array = QD_output['sign_list_gates'][gate_index][p_in1,
+                                                q_in1,p_in2,q_in2].flatten()
 
             PS_point = nr.choice(np.arange(len(prob)), p=prob)
             current_PS_point[idx[0]] = PS_point//4
@@ -51,17 +53,18 @@ def sample_circuit(compressed_circuit, QD_output, sample_size = 10000, **kwargs)
             if str(meas) =='/':
                 qudit_index += 1
             else:
-                WF = QD_output['QD_list_meas'][meas_index].flatten()  #THIS SHOULD BE QD NOT PD
+                WF = QD_output['QD_list_meas'][meas_index].flatten() #THIS SHOULD BE QD NOT PD
                 meas_index += 1
                 p_estimate *= WF[current_PS_point[qudit_index]]
                 qudit_index += 1
         return p_estimate
 
     '''
-    The function actually performing the Monte Carlo sampling as outlined in Pashayan et al. (2015)
-    for the compressed version of the given circuit and the parameter list.
-    It prints the method we used, the sampling result (p_estimate), and the computation time.
-    It also returns the sampling result and the full list of p_estimate of each iteration ('plot').
+    The function actually performing the Monte Carlo sampling as outlined in
+    Pashayan et al. (2015) for the compressed version of the given circuit
+    and the parameter list. It prints the method we used, the sampling result
+    (p_estimate), and the computation time. It also returns the sampling
+    result and the full list of p_estimate of each iteration ('plot').
     '''
 
     start_time = time.time()

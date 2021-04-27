@@ -118,22 +118,22 @@ class QD_circuit(object):
             Output: the all sampled outcome list
         '''
         QD_output = self.get_QD_list(method, m, **kwargs)
-        
+
         if m==2:
-            sample_list = sample_circuit(self.circuit_compressed, QD_output, sample_size, **kwargs)
+            sample_list = sample_circuit(self.circuit_compressed, QD_output,
+                                         sample_size, **kwargs)
         if m==3:
-            sample_list = sample_circuit_3q(self.circuit_compressed, QD_output, sample_size, **kwargs)
-            
+            sample_list = sample_circuit_3q(self.circuit_compressed,
+                                            QD_output, sample_size, **kwargs)
+
         return sample_list
 
-    
+
 ################################ SAMPLE CODE ##################################
 if __name__== "__main__":
     import time
     import autograd.numpy as np
     import matplotlib.pylab as plt
-
-    # t0 = time.time()
 
     # Bernstein_Vazirani_circuit = BValg_circuit('1111', 1)
     # Bernstein_Vazirani_circuit['gate_list'].append(makeGate('C+'))
@@ -142,7 +142,7 @@ if __name__== "__main__":
     # Bernstein_Vazirani_circuit['index_list'].append([1,7])
     # print(Bernstein_Vazirani_circuit)
 
-    circuit, Tcount = random_connected_circuit(6, 25, Tgate_prob=1/3,
+    circuit, Tcount = random_connected_circuit(3, 5, Tgate_prob=1/3,
                                        given_state=None, given_measurement=1)
     # circuit, Tcount, toffoli_num = random_connected_circuit_2q3q(6, 25,
     #                                  Tgate_prob=1/3, prob_2q=1,
@@ -158,25 +158,35 @@ if __name__== "__main__":
     print("\n-------------------------------------\n")
     pborn1 = solve_qubit_circuit(circ.circuit)
     pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-    print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
+    print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),
+          "(%.4f, %.4f)"%(pborn1, pborn2))
 
 
-    # sample_size = int(1e6)
-    # x_list = np.linspace(1, sample_size, sample_size)
+    sample_size = int(1e3)
+    x_list = np.linspace(1, sample_size, sample_size)
 
-    circ.opt_x(method='Wigner')
+    # # t0 = time.time()
+
+    # circ.opt_x(method='Wigner')
+    # # t1 = time.time()
     # circ.get_QD_list(method='Wigner')
+    # # t2 = time.time()
     # wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
+    # # t3 = time.time()
     # prob_wigner = np.cumsum(wigner_out_list)/x_list
+    # # print("opt_x: %.2f"%(t1-t0))
+    # # print("get_QD_list: %.2f"%(t2-t1))
+    # # print("sample: %.2f"%(t3-t2))
 
-    circ.opt_x(method='Opt', **{'niter':10})
+    # circ.opt_x(method='Opt', **{'niter':10})
     # circ.get_QD_list(method = 'Opt')
     # opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
     # prob_opt = np.cumsum(opt_out_list)/x_list
 
-    circ.opt_x(method='Local_opt', **{'niter':10})
+    # circ.opt_x(method='Local_opt', **{'niter':10})
     # circ.get_QD_list(method='Local_opt')
-    # local_opt_out_list = circ.sample(method='Local_opt', sample_size=sample_size)
+    # local_opt_out_list = circ.sample(method='Local_opt',
+    #                                   sample_size=sample_size)
     # prob_local_opt = np.cumsum(local_opt_out_list)/x_list
 
     #################3q-compression#################
@@ -188,33 +198,35 @@ if __name__== "__main__":
     print("\n-------------------------------------\n")
     pborn1 = solve_qubit_circuit(circ.circuit)
     pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-    print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
+    print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),
+          "(%.4f, %.4f)"%(pborn1, pborn2))
 
     wigner_neg_compressed_3q(circ.circuit_compressed, method='Wigner')
-    # circ.get_QD_list(method='Wigner')
-    # wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
-    # prob_wigner = np.cumsum(wigner_out_list)/x_list
+    circ.get_QD_list(method='Wigner')
+    wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
+    prob_wigner = np.cumsum(wigner_out_list)/x_list
 
     optimize_neg_compressed_3q(circ.circuit_compressed, **{'niter':10})
-    # circ.get_QD_list(method = 'Opt')
-    # opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
-    # prob_opt = np.cumsum(opt_out_list)/x_list
+    circ.get_QD_list(method = 'Opt')
+    opt_out_list = circ.sample(method='Opt', sample_size=sample_size)
+    prob_opt = np.cumsum(opt_out_list)/x_list
 
     local_opt_neg_compressed_3q(circ.circuit_compressed, **{'niter':10})
-    # circ.get_QD_list(method='Local_opt')
-    # local_opt_out_list = circ.sample(method='Local_opt', sample_size=sample_size)
-    # prob_local_opt = np.cumsum(local_opt_out_list)/x_list
+    circ.get_QD_list(method='Local_opt')
+    local_opt_out_list = circ.sample(method='Local_opt',
+                                      sample_size=sample_size)
+    prob_local_opt = np.cumsum(local_opt_out_list)/x_list
 
 
-    # plt.close('all')
-    # plt.plot(x_list, prob_wigner, linestyle='solid',
-    #           color='tab:blue', label='Wigner')
-    # plt.plot(x_list, prob_opt, linestyle='solid',
-    #           color='tab:orange', label='Optimised')
-    # plt.plot(x_list, prob_local_opt, linestyle='solid',
-    #           color='tab:red', label='Local_Optimised')
-    # plt.hlines(y=pborn, xmin=0, xmax= sample_size, c='k', ls='-')
-    # plt.xlabel('sample #')
-    # plt.ylabel('p_estimate')
-    # plt.legend(loc='upper right')
-    # plt.show()
+    plt.close('all')
+    plt.plot(x_list, prob_wigner, linestyle='solid',
+              color='tab:blue', label='Wigner')
+    plt.plot(x_list, prob_opt, linestyle='solid',
+              color='tab:orange', label='Optimised')
+    plt.plot(x_list, prob_local_opt, linestyle='solid',
+              color='tab:red', label='Local_Optimised')
+    plt.hlines(y=pborn1, xmin=0, xmax= sample_size, c='k', ls='-')
+    plt.xlabel('sample #')
+    plt.ylabel('p_estimate')
+    plt.legend(loc='upper right')
+    plt.show()
