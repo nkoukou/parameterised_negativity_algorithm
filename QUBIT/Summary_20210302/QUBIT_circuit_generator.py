@@ -601,6 +601,8 @@ def compress3q_circuit(circuit):
 
         # Remove the compressed gates from the gate sequence
         for k in to_be_removed[::-1]:
+            # print(k, to_be_removed[::-1])
+            # print(len(gates_mask), len(indices_mask))
             gates_mask.pop(k)
             indices_mask.pop(k)
 
