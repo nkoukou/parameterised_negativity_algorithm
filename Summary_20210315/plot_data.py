@@ -49,6 +49,7 @@ ax.set_ylabel('The number of CNOT-gates')
 ax.set_zlabel('Negativity')
 ax.legend(['Wigner_2q', 'Global_opt_2q', 'Local_opt_2q', 'Wigner_3q'])
 ax.set_title('6 Qutrits')
+plt.show()
 
 # fig1=plt.figure()
 # ax1 = fig1.add_subplot(111, projection='3d')
