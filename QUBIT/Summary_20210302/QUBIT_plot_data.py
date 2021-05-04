@@ -92,8 +92,8 @@ def scatter_logneg(n_qubit, m=2, diff=True, max_n_CNOT=None):
     return data
 
 # plt.close('all')
-hist_vs_T(n_qubit, 15)
-# data = scatter_logneg(n_qubit=n_qubit, m=2, diff=False, max_n_CNOT=17)
+# hist_vs_T(n_qubit, 15)
+data = scatter_logneg(n_qubit=n_qubit, m=3, diff=False, max_n_CNOT=None)
 
 
 
