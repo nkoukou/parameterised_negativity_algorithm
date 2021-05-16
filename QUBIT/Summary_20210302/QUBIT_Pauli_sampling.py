@@ -19,14 +19,14 @@ def Rot_matrix(a,b,c):
     sb = np.sin(b)
     cc = np.cos(c)
     sc = np.sin(c)
-    
+
     R_out = np.array(
     [[1,     0,              0,              0],
      [0, ca*cb, ca*sb*sc-sa*cc, ca*sb*cc+sa*sc],
      [0, sa*cb, sa*sb*sc+ca*cc, sa*sb*cc-ca*sc],
      [0,   -sb, cb*sc,          cb*cc         ]
     ]
-    )    
+    )
     return R_out
 
 def evol_U(U,A):
@@ -69,7 +69,7 @@ def RTR_matrix_2q(T2q,x_in,x_out):
     R1_in = Rot_matrix(x_in[0],x_in[1],x_in[2])
     R2_in = Rot_matrix(x_in[3],x_in[4],x_in[5])
     R_in = np.kron(R1_in,R2_in)
-    
+
     R1_out = Rot_matrix(x_out[0],x_out[1],x_out[2])
     R2_out = Rot_matrix(x_out[3],x_out[4],x_out[5])
     R_out = np.kron(R1_out,R2_out)
@@ -81,7 +81,7 @@ def RTR_matrix_3q(T3q,x_in,x_out):
     R2_in = Rot_matrix(x_in[3],x_in[4],x_in[5])
     R3_in = Rot_matrix(x_in[6],x_in[7],x_in[8])
     R_in = np.kron(np.kron(R1_in,R2_in),R3_in)
-    
+
     R1_out = Rot_matrix(x_out[0],x_out[1],x_out[2])
     R2_out = Rot_matrix(x_out[3],x_out[4],x_out[5])
     R3_out = Rot_matrix(x_out[6],x_out[7],x_out[8])
@@ -143,7 +143,7 @@ def get_prob_Pauli_2q(circuit):
     index_list = circuit['index_list']
     meas_T_list, neg_meas = get_meas_T_list(circuit['meas_list'])
     gate_N_2q_list, gate_S_2q_list, gate_P_2q_list = get_NSP_sequence(gate_T_2q_list)
-    
+
     neg_gate = 1
     for gate_T_2q in gate_T_2q_list:
         neg_gate *= max_negativity(gate_T_2q)
@@ -151,7 +151,7 @@ def get_prob_Pauli_2q(circuit):
     print('Log negativity (meas):',np.log(neg_meas))
     print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
 
-    
+
     prob_Pauli_output = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_2q_list, 'gate_P_list': gate_P_2q_list,
         'gate_S_list': gate_S_2q_list, 'gate_N_list': gate_N_2q_list, 'index_list': index_list, 'meas_T_list': meas_T_list,
@@ -165,7 +165,7 @@ def get_prob_Pauli_3q(circuit):
     index_list = circuit['index_list']
     meas_T_list, neg_meas = get_meas_T_list(circuit['meas_list'])
     gate_N_3q_list, gate_S_3q_list, gate_P_3q_list = get_NSP_sequence(gate_T_3q_list)
-    
+
     neg_gate = 1
     for gate_T_3q in gate_T_3q_list:
         neg_gate *= max_negativity(gate_T_3q)
@@ -227,13 +227,13 @@ def get_meas_RT_list(meas_T_list,x_list):
 ### Sample circuit ###
 def sample_circuit_2q(prob_Pauli,sample_size = int(1e5)):
     state_T_list = prob_Pauli['state_T_list']
-    gate_T_2q_list = prob_Pauli['gate_T_list'] ### Not used 
+    gate_T_2q_list = prob_Pauli['gate_T_list'] ### Not used
     gate_P_2q_list = prob_Pauli['gate_P_list']
-    gate_S_2q_list = prob_Pauli['gate_S_list'] 
-    gate_N_2q_list = prob_Pauli['gate_N_list'] ### Not used 
+    gate_S_2q_list = prob_Pauli['gate_S_list']
+    gate_N_2q_list = prob_Pauli['gate_N_list'] ### Not used
     index_list = prob_Pauli['index_list']
     meas_T_list = prob_Pauli['meas_T_list']
-    
+
     def sample_itr_2q():
         w_list, s = sample_state(state_T_list)
 
@@ -261,10 +261,10 @@ def sample_circuit_2q(prob_Pauli,sample_size = int(1e5)):
 
 def sample_circuit_3q(prob_Pauli_output,sample_size = int(1e5)):
     state_T_list = prob_Pauli_output['state_T_list']
-#     gate_T_3q_list = prob_Pauli_output['gate_T_list'] ### Not used 
+#     gate_T_3q_list = prob_Pauli_output['gate_T_list'] ### Not used
     gate_P_3q_list = prob_Pauli_output['gate_P_list']
-    gate_S_3q_list = prob_Pauli_output['gate_S_list'] 
-#     gate_N_3q_list = prob_Pauli_output['gate_N_list'] ### Not used 
+    gate_S_3q_list = prob_Pauli_output['gate_S_list']
+#     gate_N_3q_list = prob_Pauli_output['gate_N_list'] ### Not used
     index_list = prob_Pauli_output['index_list']
     meas_T_list = prob_Pauli_output['meas_T_list']
 
@@ -288,7 +288,7 @@ def sample_circuit_3q(prob_Pauli_output,sample_size = int(1e5)):
             s *= meas_T_list[index][w]
 
         return s
-    
+
     t = time.time()
     out_list = []
     for sample in range(sample_size):
@@ -313,20 +313,20 @@ def opt_Pauli_2q(prob_Pauli_output,**kwargs):
     t = time.time()
     options = {'opt_method': 'B', 'niter': 3}
     options.update(kwargs)
-    
+
     state_T_list = prob_Pauli_output['state_T_list']
     gate_T_2q_list = prob_Pauli_output['gate_T_list']
     gate_P_2q_list = prob_Pauli_output['gate_P_list']
-    gate_S_2q_list = prob_Pauli_output['gate_S_list'] 
+    gate_S_2q_list = prob_Pauli_output['gate_S_list']
     gate_N_2q_list = prob_Pauli_output['gate_N_list']
     index_list = prob_Pauli_output['index_list']
     meas_T_list = prob_Pauli_output['meas_T_list']
-    
+
     state_num = len(state_T_list)
     x_list = []
     for index in range(state_num):
         x_list.append(np.array([0,0,0]))
-    
+
     gate_T_2q_opt_list = []
     for index in range(len(gate_T_2q_list)):
         gate_T_2q = gate_T_2q_list[index]
@@ -340,20 +340,20 @@ def opt_Pauli_2q(prob_Pauli_output,**kwargs):
         x2_temp_out = optimized_x[3:6]
         x_out = np.append(x1_temp_out,x2_temp_out)
         gate_T_2q_opt_list.append(RTR_matrix_2q(gate_T_2q,x_in,x_out))
-        
+
         x_list[x1_index] = x1_temp_out
         x_list[x2_index] = x2_temp_out
-        
+
     meas_RT_list, neg_meas = get_meas_RT_list(meas_T_list,x_list)
     gate_N_2q_opt_list, gate_S_2q_opt_list, gate_P_2q_opt_list = get_NSP_sequence(gate_T_2q_opt_list)
-    
+
     neg_gate = 1
     for gate_T_2q in gate_T_2q_opt_list:
         neg_gate *= max_negativity(gate_T_2q)
     print('Log negativity (gate):',np.log(neg_gate))
     print('Log negativity (meas):',np.log(neg_meas))
     print('Log negativity:',np.log(neg_gate) + np.log(neg_meas),'\t(optimization time:)', time.time() -t,')')
-    
+
     prob_Pauli_output_opt = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_2q_opt_list, 'gate_P_list': gate_P_2q_opt_list,
         'gate_S_list': gate_S_2q_opt_list, 'gate_N_list': gate_N_2q_opt_list, 'index_list': index_list, 'meas_T_list': meas_RT_list,
@@ -365,20 +365,20 @@ def opt_Pauli_3q(prob_Pauli_output,**kwargs):
     t = time.time()
     options = {'opt_method': 'B', 'niter': 3}
     options.update(kwargs)
-    
+
     state_T_list = prob_Pauli_output['state_T_list']
     gate_T_3q_list = prob_Pauli_output['gate_T_list']
     gate_P_3q_list = prob_Pauli_output['gate_P_list']
-    gate_S_3q_list = prob_Pauli_output['gate_S_list'] 
+    gate_S_3q_list = prob_Pauli_output['gate_S_list']
     gate_N_3q_list = prob_Pauli_output['gate_N_list']
     index_list = prob_Pauli_output['index_list']
     meas_T_list = prob_Pauli_output['meas_T_list']
-    
+
     state_num = len(state_T_list)
     x_list = []
     for index in range(state_num):
         x_list.append(np.array([0,0,0]))
-    
+
     gate_T_3q_opt_list = []
     for index in range(len(gate_T_3q_list)):
         gate_T_3q = gate_T_3q_list[index]
@@ -395,21 +395,21 @@ def opt_Pauli_3q(prob_Pauli_output,**kwargs):
         x3_temp_out = optimized_x[6:9]
         x_out = np.append(np.append(x1_temp_out,x2_temp_out),x3_temp_out)
         gate_T_3q_opt_list.append(RTR_matrix_3q(gate_T_3q,x_in,x_out))
-        
+
         x_list[x1_index] = x1_temp_out
         x_list[x2_index] = x2_temp_out
         x_list[x3_index] = x3_temp_out
-        
+
     meas_RT_list, neg_meas = get_meas_RT_list(meas_T_list,x_list)
     gate_N_3q_opt_list, gate_S_3q_opt_list, gate_P_3q_opt_list = get_NSP_sequence(gate_T_3q_opt_list)
-    
+
     neg_gate = 1
     for gate_T_3q in gate_T_3q_opt_list:
         neg_gate *= max_negativity(gate_T_3q)
     print('Log negativity (gate):',np.log(neg_gate))
     print('Log negativity (meas):',np.log(neg_meas))
     print('Log negativity:',np.log(neg_gate) + np.log(neg_meas),'\t(optimization time:)', time.time() -t,')')
-    
+
     prob_Pauli_output_opt = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_3q_opt_list, 'gate_P_list': gate_P_3q_opt_list,
         'gate_S_list': gate_S_3q_opt_list, 'gate_N_list': gate_N_3q_opt_list, 'index_list': index_list, 'meas_T_list': meas_RT_list,
@@ -421,11 +421,11 @@ def opt_Pauli_3q(prob_Pauli_output,**kwargs):
 def opt_neg_1q(T1q,x_in,**kwargs):
     options = {'opt_method': 'B', 'niter': 3}
     options.update(kwargs)
-    
+
     def cost_function(x):
         RTR = RTR_matrix_1q(T1q,x_in,x)
         return np.log(max_negativity(RTR))
-    
+
     x0 = 2*np.random.rand(3)-1
     optimize_result, dt = optimizer(cost_function, x0, options['opt_method'], niter = options['niter'])
     optimized_x = optimize_result.x
@@ -439,11 +439,11 @@ def opt_neg_1q(T1q,x_in,**kwargs):
 def opt_neg_2q(T2q,x_in,**kwargs):
     options = {'opt_method': 'B', 'niter': 3}
     options.update(kwargs)
-    
+
     def cost_function(x):
         RTR = RTR_matrix_2q(T2q,x_in,x)
         return np.log(max_negativity(RTR))
-    
+
     x0 = 2*np.random.rand(6)-1
     optimize_result, dt = optimizer(cost_function, x0, options['opt_method'], niter = options['niter'])
     optimized_x = optimize_result.x
@@ -457,11 +457,11 @@ def opt_neg_2q(T2q,x_in,**kwargs):
 def opt_neg_3q(T3q,x_in,**kwargs):
     options = {'opt_method': 'B', 'niter': 3}
     options.update(kwargs)
-    
+
     def cost_function(x):
         RTR = RTR_matrix_3q(T3q,x_in,x)
         return np.log(max_negativity(RTR))
-    
+
     x0 = 2*np.random.rand(9)-1
     optimize_result, dt = optimizer(cost_function, x0, options['opt_method'], niter = options['niter'])
     optimized_x = optimize_result.x
@@ -477,21 +477,21 @@ def opt_neg_3q(T3q,x_in,**kwargs):
 def opt_Pauli_2q_global(prob_Pauli_output,**kwargs): #### Not working ###
     options = {'opt_method': 'G', 'niter': 3}
     options.update(kwargs)
-    
+
     state_T_list = prob_Pauli_output['state_T_list']
     gate_T_2q_list = prob_Pauli_output['gate_T_list']
     gate_P_2q_list = prob_Pauli_output['gate_P_list']
-    gate_S_2q_list = prob_Pauli_output['gate_S_list'] 
+    gate_S_2q_list = prob_Pauli_output['gate_S_list']
     gate_N_2q_list = prob_Pauli_output['gate_N_list']
     index_list = prob_Pauli_output['index_list']
     meas_T_list = prob_Pauli_output['meas_T_list']
-    
+
     state_num = len(state_T_list)
     x_list = []
     for index in range(state_num):
         x_list.append(np.array([0,0,0]))
     x_len = 2*len(gate_T_2q_list)
-    
+
     def cost_function(x):
         neg = 1.
         for index in range(len(gate_T_2q_list)):
@@ -503,13 +503,13 @@ def opt_Pauli_2q_global(prob_Pauli_output,**kwargs): #### Not working ###
             x1_temp_out = x[6*index:6*index+3]
             x2_temp_out = x[6*index+3:6*index+6]
             x_in = np.append(x1_temp_in,x2_temp_in)
-            x_out = np.append(x1_temp_out,x2_temp_out)            
+            x_out = np.append(x1_temp_out,x2_temp_out)
             neg *= max_negativity(RTR_matrix_2q(gate_T_2q,x_in,x_out))
             x_list[x1_index] = x1_temp_out
             x_list[x2_index] = x2_temp_out
         meas_RT_list, neg_meas = get_meas_RT_list(meas_T_list,x_list)
         return np.log(neg*neg_meas)
-    
+
     x0 = np.zeros(3*x_len)
     optimize_result, dt = optimizer(cost_function, x0, options['opt_method'], niter = options['niter'])
     optimized_x = optimize_result.x
@@ -518,8 +518,8 @@ def opt_Pauli_2q_global(prob_Pauli_output,**kwargs): #### Not working ###
     print('Optimized Log Neg:', optimized_value)
     print('Computation time: ', dt)
     print('--------------------------------------------------------------')
-    
-    
+
+
     x_list = []
     for index in range(state_num):
         x_list.append(np.array([0,0,0]))
@@ -537,17 +537,17 @@ def opt_Pauli_2q_global(prob_Pauli_output,**kwargs): #### Not working ###
         gate_T_2q_opt_list.append(RTR_matrix_2q(gate_T_2q,x_in,x_out))
         x_list[x1_index] = x1_temp_out
         x_list[x2_index] = x2_temp_out
-    
+
     meas_RT_list, neg_meas = get_meas_RT_list(meas_T_list,x_list)
     gate_N_2q_opt_list, gate_S_2q_opt_list, gate_P_2q_opt_list = get_NSP_sequence(gate_T_2q_opt_list)
-    
+
     neg_gate = 1
     for gate_T_2q in gate_T_2q_opt_list:
         neg_gate *= max_negativity(gate_T_2q)
     print('Log negativity (gate):',np.log(neg_gate))
     print('Log negativity (meas):',np.log(neg_meas))
     print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
-    
+
     prob_Pauli_output = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_2q_opt_list, 'gate_P_list': gate_P_2q_opt_list,
         'gate_S_list': gate_S_2q_opt_list, 'gate_N_list': gate_N_2q_opt_list, 'index_list': index_list, 'meas_T_list': meas_RT_list,
@@ -580,8 +580,9 @@ def optimizer(cost_function, x0, opt_method='B', niter = 10):
 
 ################ Test Code ##############################################
 if __name__== "__main__":
+    import time
     import matplotlib.pylab as plt
-    
+
     from QUBIT_circuit_components import makeGate, makeCsum
     from QUBIT_circuit_generator import (random_connected_circuit, random_circuit,
            compress2q_circuit, compress3q_circuit, string_to_circuit,
@@ -592,8 +593,8 @@ if __name__== "__main__":
 
     from QUBIT_Pauli_sampling import (get_prob_Pauli_2q,get_prob_Pauli_3q, sample_circuit_2q, sample_circuit_3q, opt_Pauli_2q, opt_Pauli_3q, opt_Pauli_2q_global)
 
-
-    circuit, Tcount = random_connected_circuit(6, 71, Tgate_prob=0.19, given_state=None, given_measurement=1)
+    circuit, Tcount = random_connected_circuit(6, 71, Tgate_prob=0.19,
+                                       given_state=None, given_measurement=1)
     print('T count=',Tcount)
     # circuit = BValg_circuit('1111', 0)
     circuit_compress_2q = compress2q_circuit(circuit)
@@ -620,7 +621,7 @@ if __name__== "__main__":
     print("===============================================================")
 
 #     prob_Pauli_output_2q = get_prob_Pauli_2q(circuit_compress_2q)
-    
+
     print("===================Pauli sampling method======================")
     print("------------------2q compression without optimization-------------------")
     prob_Pauli_output_2q = get_prob_Pauli_2q(circuit_compress_2q)
@@ -630,7 +631,7 @@ if __name__== "__main__":
     prob_Pauli_output_3q = get_prob_Pauli_3q(circuit_compress_3q)
     print("------------------3q compression with optimization-------------------")
     prob_Pauli_output_opt_3q = opt_Pauli_3q(prob_Pauli_output_3q)
-    
+
     print("=====================Prob. Estimation=========================")
     sample_size = int(1e5)
     print('Sample Size:\t',sample_size)
@@ -643,7 +644,7 @@ if __name__== "__main__":
     print("------------------3q compression with optimization-------------------")
     sample_out_opt_3q = sample_circuit_3q(prob_Pauli_output_opt_3q, sample_size = sample_size)
     print("===============================================================")
-    
+
     x_list = np.linspace(1,sample_size,sample_size)
     y_list_2q = np.cumsum(sample_out_2q)/x_list
     y_list_opt_2q = np.cumsum(sample_out_opt_2q)/x_list
