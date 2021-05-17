@@ -582,12 +582,14 @@ def compress3q_circuit(circuit):
                                 grouped_gates.append(gates_mask[s])
                                 grouped_idx.append(check_idx)
                                 to_be_removed.append(s)
+                                break
                         elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1): # If there is no preceding gate then put it into the group
                             grouped_gates.append(gates_mask[s])
                             grouped_idx.append(check_idx)
                             to_be_removed.append(s)
+                            break
                     if s==1: # If it is the next gate, put it into the group
                         grouped_gates.append(gates_mask[s])
                         grouped_idx.append(check_idx)
@@ -596,13 +598,20 @@ def compress3q_circuit(circuit):
             elif len(check_idx)==3: # Do the same for the case of 3-qubit gates
                 if set(check_idx)==set(idx_set):
                     for d in range(1, s):
-                        if d in to_be_removed: continue
+                        if d in to_be_removed:
+                            if d!=(s-1): continue
+                            else:
+                                grouped_gates.append(gates_mask[s])
+                                grouped_idx.append(check_idx)
+                                to_be_removed.append(s)
+                                break
                         elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d] or check_idx[2] in indices_mask[d]:
                             break
                         if d==(s-1):
                             grouped_gates.append(gates_mask[s])
                             grouped_idx.append(check_idx)
                             to_be_removed.append(s)
+                            break
                     if s==1:
                         grouped_gates.append(gates_mask[s])
                         grouped_idx.append(check_idx)
