@@ -1,5 +1,6 @@
-from functools import reduce
-from itertools import permutations
+from functools import(reduce)
+from itertools import(permutations)
+from random import(shuffle)
 import numpy as np
 import numpy.random as nr
 import functools as fc
@@ -123,21 +124,37 @@ def random_connected_circuit(qudit_num, circuit_length, Tgate_prob=1/3,
     indices = get_index_list(circuit_length, qudit_num, method='c')
 
     # Gates
-    char = ['1', 'H', 'K', 'T']
-    prob_list = [(1-Tgate_prob)/3]*(len(char)-1) + [Tgate_prob]
     gates = []
-    Tcount = 0
-    for g in range(circuit_length):
-        U1qA = nr.choice(char, p=prob_list)
-        U1qB = nr.choice(char, p=prob_list)
-        Tcount +=(U1qA=='T')+(U1qB=='T')
-        U1qA = makeGate(U1qA)
-        U1qB = makeGate(U1qB)
-        U_AB_loc = np.kron(U1qA, U1qB)
-        csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
-        csum = makeGate(csum)
-        U_AB_tot = np.dot(U_AB_loc, csum)
-        gates.append(U_AB_tot)
+    if type(Tgate_prob)==int:
+        char = ['1', 'H', 'K']
+        prob = [1/len(char)]*len(char)
+        chars = ['T']*Tgate_prob + [nr.choice(char, p=prob)
+                      for g in range(2*circuit_length - Tgate_prob)]
+        shuffle(chars)
+        for g in range(circuit_length):
+            U1qA = makeGate(chars[2*g])
+            U1qB = makeGate(chars[2*g+1])
+            U_AB_loc = np.kron(U1qA, U1qB)
+            csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
+            csum = makeGate(csum)
+            U_AB_tot = np.dot(U_AB_loc, csum)
+            gates.append(U_AB_tot)
+        Tcount = Tgate_prob
+    else:
+        char = ['1', 'H', 'K', 'T']
+        prob_list = [(1-Tgate_prob)/3]*(len(char)-1) + [Tgate_prob]
+        Tcount = 0
+        for g in range(circuit_length):
+            U1qA = nr.choice(char, p=prob_list)
+            U1qB = nr.choice(char, p=prob_list)
+            Tcount +=(U1qA=='T')+(U1qB=='T')
+            U1qA = makeGate(U1qA)
+            U1qB = makeGate(U1qB)
+            U_AB_loc = np.kron(U1qA, U1qB)
+            csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
+            csum = makeGate(csum)
+            U_AB_tot = np.dot(U_AB_loc, csum)
+            gates.append(U_AB_tot)
 
     # Measurements
     if type(given_measurement)==int:
@@ -565,12 +582,14 @@ def compress3q_circuit(circuit):
                                 grouped_gates.append(gates_mask[s])
                                 grouped_idx.append(check_idx)
                                 to_be_removed.append(s)
+                                break
                         elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d]:
                             break
                         if d==(s-1): # If there is no preceding gate then put it into the group
                             grouped_gates.append(gates_mask[s])
                             grouped_idx.append(check_idx)
                             to_be_removed.append(s)
+                            break
                     if s==1: # If it is the next gate, put it into the group
                         grouped_gates.append(gates_mask[s])
                         grouped_idx.append(check_idx)
@@ -579,13 +598,20 @@ def compress3q_circuit(circuit):
             elif len(check_idx)==3: # Do the same for the case of 3-qubit gates
                 if set(check_idx)==set(idx_set):
                     for d in range(1, s):
-                        if d in to_be_removed: continue
+                        if d in to_be_removed:
+                            if d!=(s-1): continue
+                            else:
+                                grouped_gates.append(gates_mask[s])
+                                grouped_idx.append(check_idx)
+                                to_be_removed.append(s)
+                                break
                         elif check_idx[0] in indices_mask[d] or check_idx[1] in indices_mask[d] or check_idx[2] in indices_mask[d]:
                             break
                         if d==(s-1):
                             grouped_gates.append(gates_mask[s])
                             grouped_idx.append(check_idx)
                             to_be_removed.append(s)
+                            break
                     if s==1:
                         grouped_gates.append(gates_mask[s])
                         grouped_idx.append(check_idx)
