@@ -249,6 +249,7 @@ def sample_circuit_2q(prob_Pauli,sample_size = int(1e5)):
         for index in range(len(w_list)):
             w = w_list[index]
             s *= meas_T_list[index][w]
+#         print(s)
         return s
 
     t = time.time()
@@ -296,9 +297,100 @@ def sample_circuit_3q(prob_Pauli_output,sample_size = int(1e5)):
     print('p_estimate:',np.mean(out_list),'\t(sampling time:',time.time()-t,')')
     return out_list
 
+def sample_circuit_2q_all(prob_Pauli,sample_size = int(1e5)):
+    state_T_list = prob_Pauli['state_T_list']
+    gate_T_2q_list = prob_Pauli['gate_T_list'] ### Not used 
+    gate_P_2q_list = prob_Pauli['gate_P_list']
+    gate_S_2q_list = prob_Pauli['gate_S_list'] 
+    gate_N_2q_list = prob_Pauli['gate_N_list'] ### Not used 
+    index_list = prob_Pauli['index_list']
+    meas_T_list = prob_Pauli['meas_T_list']
+    
+    def sample_itr_2q_all():
+        w_list, s = sample_state(state_T_list)
+
+        for index in range(len(gate_P_2q_list)):
+            w_index_1 = index_list[index][0]
+            w_index_2 = index_list[index][1]
+            w1_temp_in = w_list[w_index_1]
+            w2_temp_in = w_list[w_index_2]
+            w1_temp_out, w2_temp_out, s = update_2q(w1_temp_in,w2_temp_in,s,gate_P_2q_list[index],gate_S_2q_list[index])
+            w_list[w_index_1] = w1_temp_out
+            w_list[w_index_2] = w2_temp_out
+        
+        meas_T_eye = np.array([2,0,0,0])
+#         meas_T_target = np.array([1.0, 0.0, 0.0, -1.0])
+        val_list = []
+        for index in range(len(w_list)):
+            s_out = s
+            meas_T_target = meas_T_list[index]
+            for jj in range(len(w_list)):
+                w = w_list[jj]
+                if jj==index:
+                    s_out *= meas_T_target[w]
+                else:
+                    s_out *= meas_T_eye[w]
+            val_list.append(s_out)
+        return val_list
+
+    t = time.time()
+    out_list = []
+    for sample in range(sample_size):
+        out_list.append(sample_itr_2q_all())
+    
+    print('p_estimate:',np.mean(out_list,axis=0),'\t(sampling time:',time.time()-t,')')
+
+    return out_list
+
+def sample_circuit_3q_all(prob_Pauli_output,sample_size = int(1e5)):
+    state_T_list = prob_Pauli_output['state_T_list']
+#     gate_T_3q_list = prob_Pauli_output['gate_T_list'] ### Not used 
+    gate_P_3q_list = prob_Pauli_output['gate_P_list']
+    gate_S_3q_list = prob_Pauli_output['gate_S_list'] 
+#     gate_N_3q_list = prob_Pauli_output['gate_N_list'] ### Not used 
+    index_list = prob_Pauli_output['index_list']
+    meas_T_list = prob_Pauli_output['meas_T_list']
+
+    def sample_itr_3q_all():
+        w_list, s = sample_state(state_T_list)
+
+        for index in range(len(gate_P_3q_list)):
+            w_index_1 = index_list[index][0]
+            w_index_2 = index_list[index][1]
+            w_index_3 = index_list[index][2]
+            w1_temp_in = w_list[w_index_1]
+            w2_temp_in = w_list[w_index_2]
+            w3_temp_in = w_list[w_index_3]
+            w1_temp_out, w2_temp_out, w3_temp_out, s = update_3q(w1_temp_in,w2_temp_in,w3_temp_in,s,gate_P_3q_list[index],gate_S_3q_list[index])
+            w_list[w_index_1] = w1_temp_out
+            w_list[w_index_2] = w2_temp_out
+            w_list[w_index_3] = w3_temp_out
+
+        meas_T_eye = np.array([2,0,0,0])
+#         meas_T_target = np.array([1.0, 0.0, 0.0, -1.0])
+        val_list = []
+        for index in range(len(w_list)):
+            s_out = s
+            meas_T_target = meas_T_list[index]
+            for jj in range(len(w_list)):
+                w = w_list[jj]
+                if jj==index:
+                    s_out *= meas_T_target[w]
+                else:
+                    s_out *= meas_T_eye[w]
+            val_list.append(s_out)
+        return val_list
+    
+    t = time.time()
+    out_list = []
+    for sample in range(sample_size):
+        out_list.append(sample_itr_3q_all())
+    print('p_estimate:',np.mean(out_list,axis=0),'\t(sampling time:',time.time()-t,')')
+    return out_list
+
 def sample_state(T_list):
     w_list = []
-    s = 1
+    s = 1.
     for T in T_list:
         prob = np.abs(T)
         sign = np.sign(T)
@@ -306,7 +398,6 @@ def sample_state(T_list):
         w_list.append(w)
         s *= sign[w]
     return w_list,s
-
 
 ### Gate Optimization ###
 def opt_Pauli_2q(prob_Pauli_output,**kwargs):
@@ -593,7 +684,7 @@ if __name__== "__main__":
     from QUBIT_Pauli_sampling import (get_prob_Pauli_2q,get_prob_Pauli_3q, sample_circuit_2q, sample_circuit_3q, opt_Pauli_2q, opt_Pauli_3q, opt_Pauli_2q_global)
 
 
-    circuit, Tcount = random_connected_circuit(6, 71, Tgate_prob=0.19, given_state=None, given_measurement=1)
+    circuit, Tcount = random_connected_circuit(4, 51, Tgate_prob=0.09, given_state=None, given_measurement=1)
     print('T count=',Tcount)
     # circuit = BValg_circuit('1111', 0)
     circuit_compress_2q = compress2q_circuit(circuit)
@@ -617,7 +708,7 @@ if __name__== "__main__":
     print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
 
     wigner_neg_compressed_3q(circ.circuit_compressed, method='Wigner')
-    print("===============================================================")
+    print("\n")
 
 #     prob_Pauli_output_2q = get_prob_Pauli_2q(circuit_compress_2q)
     
@@ -630,9 +721,10 @@ if __name__== "__main__":
     prob_Pauli_output_3q = get_prob_Pauli_3q(circuit_compress_3q)
     print("------------------3q compression with optimization-------------------")
     prob_Pauli_output_opt_3q = opt_Pauli_3q(prob_Pauli_output_3q)
+    print("\n")
     
     print("=====================Prob. Estimation=========================")
-    sample_size = int(1e5)
+    sample_size = int(1e6)
     print('Sample Size:\t',sample_size)
     print("------------------2q compression without optimization-------------------")
     sample_out_2q = sample_circuit_2q(prob_Pauli_output_2q, sample_size = sample_size)
