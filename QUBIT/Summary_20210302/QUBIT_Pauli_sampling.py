@@ -684,13 +684,10 @@ if __name__== "__main__":
 
     from QUBIT_Pauli_sampling import (get_prob_Pauli_2q,get_prob_Pauli_3q, sample_circuit_2q, sample_circuit_3q, opt_Pauli_2q, opt_Pauli_3q, opt_Pauli_2q_global)
 
-<<<<<<< HEAD
 
-    circuit, Tcount = random_connected_circuit(4, 51, Tgate_prob=0.09, given_state=None, given_measurement=1)
-=======
     circuit, Tcount = random_connected_circuit(6, 71, Tgate_prob=0.19,
                                        given_state=None, given_measurement=1)
->>>>>>> d0d61b26930cee2b195a021d13ea693df061f729
+
     print('T count=',Tcount)
     # circuit = BValg_circuit('1111', 0)
     circuit_compress_2q = compress2q_circuit(circuit)
@@ -727,12 +724,7 @@ if __name__== "__main__":
     prob_Pauli_output_3q = get_prob_Pauli_3q(circuit_compress_3q)
     print("------------------3q compression with optimization-------------------")
     prob_Pauli_output_opt_3q = opt_Pauli_3q(prob_Pauli_output_3q)
-<<<<<<< HEAD
-    print("\n")
-    
-=======
 
->>>>>>> d0d61b26930cee2b195a021d13ea693df061f729
     print("=====================Prob. Estimation=========================")
     sample_size = int(1e6)
     print('Sample Size:\t',sample_size)
