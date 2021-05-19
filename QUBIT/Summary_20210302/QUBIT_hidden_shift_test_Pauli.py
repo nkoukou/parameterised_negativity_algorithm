@@ -3,14 +3,18 @@ import time
 import autograd.numpy as np
 import matplotlib.pylab as plt
 
-from QUBIT_circuit_generator import (random_connected_circuit, random_circuit,
+from QUBIT_circuit_generator import(random_connected_circuit, random_circuit,
        compress2q_circuit, compress3q_circuit, string_to_circuit,
        show_connectivity, solve_qubit_circuit, random_connected_circuit_2q3q)
-from QUBIT_QD_circuit import QD_circuit
-from QUBIT_wig_neg import (wigner_neg_compressed, wigner_neg_compressed_3q)
+from QUBIT_QD_circuit import(QD_circuit)
+from QUBIT_wig_neg import(wigner_neg_compressed, wigner_neg_compressed_3q)
 
-from QUBIT_Pauli_sampling import (get_prob_Pauli_2q,get_prob_Pauli_3q, sample_circuit_2q, sample_circuit_3q, opt_Pauli_2q, opt_Pauli_3q, opt_Pauli_2q_global)
-from QUBIT_hidden_shift import (hidden_shift_circuit,circuit_class_to_label,bool_oracle)
+from QUBIT_Pauli_sampling import(get_prob_Pauli_2q, get_prob_Pauli_3q,
+                                 sample_circuit_2q, sample_circuit_3q,
+                                 opt_Pauli_2q, opt_Pauli_3q,
+                                 opt_Pauli_2q_global)
+from QUBIT_hidden_shift import(hidden_shift_circuit, circuit_class_to_label,
+                               bool_oracle)
 
 
 def reverse_circuit(circuit):
@@ -21,9 +25,11 @@ def reverse_circuit(circuit):
     for gate in circuit['gate_list']:
         conj_gate_list.append(np.conjugate(gate.T))
     rev_gate_list = conj_gate_list[::-1]
-    
-    circuit_reversed = {'state_list':rev_state_list, 'gate_list': rev_gate_list, 'index_list': rev_index_list, 'meas_list':rev_meas_list}
-    
+
+    circuit_reversed = {'state_list':rev_state_list,
+                        'gate_list': rev_gate_list,
+                        'index_list': rev_index_list,
+                        'meas_list':rev_meas_list}
     return circuit_reversed
 
 def random_string(string_len):
@@ -45,8 +51,8 @@ hidden_string = random_string(string_len)
 
 
 ### Set oracle parameters: number of Z, CZ, and CCZ gates ###
-Z_count = 10
-CZ_count = 20
+Z_count = 3
+CZ_count = 5
 CCZ_count = 1
 
 oc = bool_oracle(string_len)
@@ -81,7 +87,8 @@ circ.compress_circuit(m=2)
 
 # pborn1 = solve_qubit_circuit(circ.circuit)
 # pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-# print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
+# print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),
+#        "(%.4f, %.4f)"%(pborn1, pborn2))
 circ.opt_x(method='Wigner')
 
 circ = QD_circuit(circuit)
@@ -89,7 +96,8 @@ print("-----------------3q compression--------------------")
 circ.compress_circuit(m=3)
 # pborn1 = solve_qubit_circuit(circ.circuit)
 # pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-# print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),"(%.4f, %.4f)"%(pborn1, pborn2))
+# print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),
+#       "(%.4f, %.4f)"%(pborn1, pborn2))
 
 wigner_neg_compressed_3q(circ.circuit_compressed, method='Wigner')
 print("\n")
@@ -100,13 +108,13 @@ circuit_compress_2q = compress2q_circuit(rev_circuit)
 circuit_compress_3q = compress3q_circuit(rev_circuit)
 
 print("===================Pauli sampling method======================")
-print("------------------2q compression without optimization-------------------")
+print("----------------2q compression without optimization-----------------")
 prob_Pauli_output_2q = get_prob_Pauli_2q(circuit_compress_2q)
-print("------------------2q compression with optimization-------------------")
+print("------------------2q compression with optimization------------------")
 prob_Pauli_output_opt_2q = opt_Pauli_2q(prob_Pauli_output_2q)
-print("------------------3q compression without optimization-------------------")
+print("----------------3q compression without optimization-----------------")
 prob_Pauli_output_3q = get_prob_Pauli_3q(circuit_compress_3q)
-print("------------------3q compression with optimization-------------------")
+print("------------------3q compression with optimization------------------")
 prob_Pauli_output_opt_3q = opt_Pauli_3q(prob_Pauli_output_3q)
 print("\n")
 
@@ -122,35 +130,45 @@ def get_rev_state_T_string(meas_qubit_index, string_len):
 def rev_sample_circuit_2q_all(prob_Pauli_output_2q,sample_size):
     out_list = []
     for meas_target in range(string_len):
-        prob_Pauli_output_2q['state_T_list'] = get_rev_state_T_string(meas_target,string_len)
-        sample_out_2q = sample_circuit_2q(prob_Pauli_output_2q, sample_size = sample_size)
+        prob_Pauli_output_2q['state_T_list'] = get_rev_state_T_string(
+            meas_target,string_len)
+        sample_out_2q = sample_circuit_2q(prob_Pauli_output_2q,
+                                          sample_size=sample_size)
         out_list.append(np.mean(sample_out_2q))
     return out_list
 
 def rev_sample_circuit_3q_all(prob_Pauli_output_3q,sample_size):
     out_list = []
     for meas_target in range(string_len):
-        prob_Pauli_output_3q['state_T_list'] = get_rev_state_T_string(meas_target,string_len)
-        sample_out_3q = sample_circuit_3q(prob_Pauli_output_3q, sample_size = sample_size)
+        prob_Pauli_output_3q['state_T_list'] = get_rev_state_T_string(
+            meas_target,string_len)
+        sample_out_3q = sample_circuit_3q(prob_Pauli_output_3q,
+                                          sample_size=sample_size)
         out_list.append(np.mean(sample_out_3q))
     return out_list
 
 
 out_list_2q = rev_sample_circuit_2q_all(prob_Pauli_output_2q,sample_size)
 print('\n')
-out_list_2q_opt = rev_sample_circuit_2q_all(prob_Pauli_output_opt_2q,sample_size)
+out_list_2q_opt = rev_sample_circuit_2q_all(prob_Pauli_output_opt_2q,
+                                            sample_size)
 print('\n')
 out_list_3q = rev_sample_circuit_3q_all(prob_Pauli_output_3q,sample_size)
 print('\n')
-out_list_3q_opt = rev_sample_circuit_3q_all(prob_Pauli_output_opt_3q,sample_size)
+out_list_3q_opt = rev_sample_circuit_3q_all(prob_Pauli_output_opt_3q,
+                                            sample_size)
 print('\n')
 
 print('Shifted String:',hidden_string)
 X = np.arange(string_len)+1
-plt.bar(X-0.3,(np.array(out_list_2q)+1)/2, color = 'b', width = 0.2, label='2q_comp.')
-plt.bar(X-0.1,(np.array(out_list_2q_opt)+1)/2, color = 'r', width = 0.2, label='2q_comp. + local opt.')
-plt.bar(X+0.1,(np.array(out_list_3q)+1)/2, color = 'g', width = 0.2, label='3q_comp.')
-plt.bar(X+0.3,(np.array(out_list_3q_opt)+1)/2, color = 'y', width = 0.2, label='3q_comp. + local opt.')
+plt.bar(X-0.3,(np.array(out_list_2q)+1)/2,
+        color = 'b', width = 0.2, label='2q_comp.')
+plt.bar(X-0.1,(np.array(out_list_2q_opt)+1)/2,
+        color = 'r', width = 0.2, label='2q_comp. + local opt.')
+plt.bar(X+0.1,(np.array(out_list_3q)+1)/2,
+        color = 'g', width = 0.2, label='3q_comp.')
+plt.bar(X+0.3,(np.array(out_list_3q_opt)+1)/2,
+        color = 'y', width = 0.2, label='3q_comp. + local opt.')
 
 plt.xticks(X,hidden_string)
 plt.tick_params(axis='x',color='w',length=0)
@@ -170,7 +188,8 @@ plt.show()
 
 print('Shifted String:',hidden_string)
 X = np.arange(string_len)+1
-plt.bar(X,(np.array(out_list_2q)+1)/2, color = 'b', width = 0.5, label='2q_comp.')
+plt.bar(X,(np.array(out_list_2q)+1)/2,
+        color = 'b', width = 0.5, label='2q_comp.')
 
 plt.xticks(X,hidden_string)
 plt.tick_params(axis='x',color='w',length=0)
@@ -190,7 +209,8 @@ plt.show()
 
 print('Shifted String:',hidden_string)
 X = np.arange(string_len)+1
-plt.bar(X,(np.array(out_list_2q_opt)+1)/2, color = 'r', width = 0.5, label='2q_comp. + local opt.')
+plt.bar(X,(np.array(out_list_2q_opt)+1)/2,
+        color = 'r', width = 0.5, label='2q_comp. + local opt.')
 
 plt.xticks(X,hidden_string)
 plt.tick_params(axis='x',color='w',length=0)
@@ -210,7 +230,8 @@ plt.show()
 
 print('Shifted String:',hidden_string)
 X = np.arange(string_len)+1
-plt.bar(X,(np.array(out_list_3q)+1)/2, color = 'g', width = 0.5, label='3q_comp.')
+plt.bar(X,(np.array(out_list_3q)+1)/2,
+        color = 'g', width = 0.5, label='3q_comp.')
 
 plt.xticks(X,hidden_string)
 plt.tick_params(axis='x',color='w',length=0)
@@ -230,7 +251,8 @@ plt.show()
 
 print('Shifted String:',hidden_string)
 X = np.arange(string_len)+1
-plt.bar(X,(np.array(out_list_3q_opt)+1)/2, color = 'y', width = 0.5, label='3q_comp. + local opt.')
+plt.bar(X,(np.array(out_list_3q_opt)+1)/2,
+        color = 'y', width = 0.5, label='3q_comp. + local opt.')
 
 plt.xticks(X,hidden_string)
 plt.tick_params(axis='x',color='w',length=0)
@@ -250,7 +272,8 @@ plt.show()
 
 plt.subplot(221)
 X = np.arange(string_len)+1
-plt.bar(X,(np.array(out_list_2q)+1)/2, color = 'b', width = 0.5, label='2q_comp.')
+plt.bar(X,(np.array(out_list_2q)+1)/2,
+        color = 'b', width = 0.5, label='2q_comp.')
 plt.xticks(X,hidden_string,fontsize=8)
 plt.tick_params(axis='x',color='w',length=0)
 plt.axhline(y=0.0, color='k', linestyle='-')
@@ -264,7 +287,8 @@ plt.xlim((0.4,string_len+0.5))
 plt.ylim((-0.1,1.1))
 
 plt.subplot(222)
-plt.bar(X,(np.array(out_list_2q_opt)+1)/2, color = 'r', width = 0.5, label='2q_comp. + local opt.')
+plt.bar(X,(np.array(out_list_2q_opt)+1)/2,
+        color = 'r', width = 0.5, label='2q_comp. + local opt.')
 plt.xticks(X,hidden_string,fontsize=8)
 plt.tick_params(axis='x',color='w',length=0)
 plt.axhline(y=0.0, color='k', linestyle='-')
@@ -278,7 +302,8 @@ plt.xlim((0.4,string_len+0.5))
 plt.ylim((-0.1,1.1))
 
 plt.subplot(223)
-plt.bar(X,(np.array(out_list_3q)+1)/2, color = 'g', width = 0.5, label='3q_comp.')
+plt.bar(X,(np.array(out_list_3q)+1)/2,
+        color = 'g', width = 0.5, label='3q_comp.')
 plt.xticks(X,hidden_string,fontsize=8)
 plt.tick_params(axis='x',color='w',length=0)
 plt.axhline(y=0.0, color='k', linestyle='-')
@@ -293,7 +318,8 @@ plt.ylim((-0.1,1.1))
 
 
 plt.subplot(224)
-plt.bar(X,(np.array(out_list_3q_opt)+1)/2, color = 'y', width = 0.5, label='3q_comp. + local opt.')
+plt.bar(X,(np.array(out_list_3q_opt)+1)/2,
+        color = 'y', width = 0.5, label='3q_comp. + local opt.')
 
 plt.xticks(X,hidden_string,fontsize=8)
 plt.tick_params(axis='x',color='w',length=0)

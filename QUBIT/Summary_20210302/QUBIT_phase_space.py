@@ -22,7 +22,7 @@ def get_trace_D(Gamma):
 
 def get_F1q0(Gamma):
     ''' Returns new displacement operator at the origin,
-        F_0 = 1/DIM \sum_{p,q} 1/tr[D_{p,q} Gamma] D_{p,q}. !!! D_{-p,-q}
+        F_0 = 1/DIM \sum_{p,q} 1/tr[D_{p,q} Gamma] D_{p,q}.
         Output - (DIM,DIM) complex ndarray
     '''
     traces = 1./get_trace_D(Gamma)
@@ -125,28 +125,33 @@ def neg_gate_2q_max(U2q, Gamma_in1, Gamma_in2, Gamma_out1, Gamma_out2):
     return np.abs(wigner_dist).sum(axis=(4,5,6,7)).max()
 
 
-def W_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3):
+def W_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3,
+                   Gamma_out1, Gamma_out2, Gamma_out3):
     ''' Returns Gamma-distribution of 3-qubit gate U3q'''
-    G_in = np.einsum('ijkl,mnrs,xyzw->ijmnxykrzlsw',
-            get_G1q_list(Gamma_in1), get_G1q_list(Gamma_in2), get_G1q_list(Gamma_in3)
+    G_in = np.einsum('ijkl,mnrs,xyzw->ijmnxykrzlsw', get_G1q_list(Gamma_in1),
+                     get_G1q_list(Gamma_in2), get_G1q_list(Gamma_in3)
            ).reshape((DIM,DIM,DIM,DIM,DIM,DIM,DIM*DIM*DIM,DIM*DIM*DIM))
-    F_out = np.einsum('ijkl,mnrs,xyzw->ijmnxykrzlsw',
-                       get_F1q_list(Gamma_out1), get_F1q_list(Gamma_out2), get_F1q_list(Gamma_out3)
-                      ).reshape((DIM,DIM,DIM,DIM,DIM,DIM,DIM*DIM*DIM,DIM*DIM*DIM))
+    F_out = np.einsum('ijkl,mnrs,xyzw->ijmnxykrzlsw', get_F1q_list(Gamma_out1),
+                      get_F1q_list(Gamma_out2), get_F1q_list(Gamma_out3)
+           ).reshape((DIM,DIM,DIM,DIM,DIM,DIM,DIM*DIM*DIM,DIM*DIM*DIM))
     U_ev = np.einsum('lk,ijsrxykn,mn->ijsrxylm', U3q, G_in, U3q.conj())
     return 1/DIM/DIM/DIM * np.real(np.einsum('ijsrxykl,mnabzwlk->ijsrxymnabzw',
                                          U_ev, F_out))
 
-def neg_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3):
+def neg_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3,
+                     Gamma_out1, Gamma_out2, Gamma_out3):
     ''' Calculates \sum{p1_out,q1_out, p2_out,q2_out}
                    |W_U(p1_out,q1_out,p2_out,q2_out|p1_in,q1_in,p2_in,q2_in)|.
         Output - float
     '''
-    wigner_dist = W_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3)
+    wigner_dist = W_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3,
+                                 Gamma_out1, Gamma_out2, Gamma_out3)
     return np.abs(wigner_dist).sum(axis=(6,7,8,9,10,11))
 
-def neg_gate_3q_max(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3):
-    return neg_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2, Gamma_out3).max()
+def neg_gate_3q_max(U3q, Gamma_in1, Gamma_in2, Gamma_in3,
+                         Gamma_out1, Gamma_out2, Gamma_out3):
+    return neg_gate_3q(U3q, Gamma_in1, Gamma_in2, Gamma_in3,
+                       Gamma_out1, Gamma_out2, Gamma_out3).max()
 
 
 def W_meas_1q(E, Gamma):

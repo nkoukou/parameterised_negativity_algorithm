@@ -118,13 +118,16 @@ if __name__== "__main__":
     import matplotlib.pylab as plt
     import pickle
 
-    circuit, Tcount = random_connected_circuit(
-            qudit_num=7, circuit_length=11,
-            Tgate_prob =(15/(2*11)),
-            given_state=None, given_measurement=2, method='c')
+    # circuit, Tcount = random_connected_circuit(
+    #         qudit_num=7, circuit_length=11,
+    #         Tgate_prob =(15/(2*11)),
+    #         given_state=None, given_measurement=2, method='c')
     # circuit, Tcount, toffoli_num = random_connected_circuit_2q3q(
     #     qudit_num=4, circuit_length=10, Tgate_prob=1/3, prob_2q=1,
     #     given_state=None, given_measurement=4)
+    circuit = random_circuit(qudit_num=3, C1qGate_num=1, TGate_num=2,
+                             CSUMGate_num=4, Toff_num=5,
+                   given_state=None, given_measurement=1)
 
     # np.save("test_circuit", circuit)
     # outfile = open("test_circuit", 'wb')
@@ -135,26 +138,26 @@ if __name__== "__main__":
     # infile.close()
 
     circ = QD_circuit(circuit)
-    # circ.show_connectivity(compressed=False)
+    circ.show_connectivity(compressed=False)
 
     sample_size = int(5)
     x_list = np.linspace(1, sample_size, sample_size)
 
 
-    print("\n------------------ 2q-compression -------------------\n")
-    circ.compress_circuit(m=2)
-    # circ.show_connectivity()
-    pborn1 = solve_qubit_circuit(circ.circuit)
-    pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-    print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),
-      "(%.4f, %.4f)"%(pborn1, pborn2))
-    if not np.allclose(pborn1, pborn2):
-        raise Exception('(2q-compression) Probs: NOT equal')
+    # print("\n------------------ 2q-compression -------------------\n")
+    # circ.compress_circuit(m=2)
+    # # circ.show_connectivity()
+    # pborn1 = solve_qubit_circuit(circ.circuit)
+    # pborn2 = solve_qubit_circuit(circ.circuit_compressed)
+    # print("(2q-compression) Probs:", np.allclose(pborn1, pborn2),
+    #   "(%.4f, %.4f)"%(pborn1, pborn2))
+    # if not np.allclose(pborn1, pborn2):
+    #     raise Exception('(2q-compression) Probs: NOT equal')
 
-    t0 = time.time()
-    circ.opt_x(method='Wigner')
-    t1 = time.time()
-    circ.get_QD_list(method='Wigner')
+    # t0 = time.time()
+    # circ.opt_x(method='Wigner')
+    # t1 = time.time()
+    # circ.get_QD_list(method='Wigner')
     # t2 = time.time()
     # wigner_out_list = circ.sample(method='Wigner', sample_size=sample_size)
     # t3 = time.time()
@@ -178,7 +181,7 @@ if __name__== "__main__":
 
     print("\n----------------- 3q-compression --------------------\n")
     circ.compress_circuit(m=3)
-    # circ.show_connectivity()
+    circ.show_connectivity()
     pborn1 = solve_qubit_circuit(circ.circuit)
     pborn2 = solve_qubit_circuit(circ.circuit_compressed)
     print("(3q-compression) Probs:", np.allclose(pborn1, pborn2),
@@ -186,15 +189,15 @@ if __name__== "__main__":
     if not np.allclose(pborn1, pborn2):
         raise Exception('(2q-compression) Probs: NOT equal')
 
-    t0 = time.time()
-    circ.opt_x(method='Wigner', m=3)
-    t1 = time.time()
+    # t0 = time.time()
+    # circ.opt_x(method='Wigner', m=3)
+    # t1 = time.time()
     # circ.get_QD_list(method='Wigner', m=3)
     # t2 = time.time()
     # wigner_out_list = circ.sample(method='Wigner', m=3,
     #                               sample_size=sample_size)
     # t3 = time.time()
-    print("opt_x: %.2f"%(t1-t0))
+    # print("opt_x: %.2f"%(t1-t0))
     # print("get_QD_list: %.2f"%(t2-t1))
     # print("sample: %.2f"%(t3-t2))
     # prob_wigner = np.cumsum(wigner_out_list)/x_list
