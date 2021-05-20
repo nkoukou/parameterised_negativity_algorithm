@@ -85,7 +85,7 @@ def RTR_matrix_3q(T3q,x_in,x_out):
     R1_out = Rot_matrix(x_out[0],x_out[1],x_out[2])
     R2_out = Rot_matrix(x_out[3],x_out[4],x_out[5])
     R3_out = Rot_matrix(x_out[6],x_out[7],x_out[8])
-    R_out = np.kron(np.kron(R1_out,R2_out),R3_in)
+    R_out = np.kron(np.kron(R1_out,R2_out),R3_out)
 
     return np.dot(np.dot(R_out,T3q),R_in.T)
 
@@ -147,9 +147,9 @@ def get_prob_Pauli_2q(circuit):
     neg_gate = 1
     for gate_T_2q in gate_T_2q_list:
         neg_gate *= max_negativity(gate_T_2q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log2(neg_meas))
 
 
     prob_Pauli_output = {
@@ -169,9 +169,9 @@ def get_prob_Pauli_3q(circuit):
     neg_gate = 1
     for gate_T_3q in gate_T_3q_list:
         neg_gate *= max_negativity(gate_T_3q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log(neg_meas))
 
     prob_Pauli_output = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_3q_list, 'gate_P_list': gate_P_3q_list,
@@ -441,9 +441,9 @@ def opt_Pauli_2q(prob_Pauli_output,**kwargs):
     neg_gate = 1
     for gate_T_2q in gate_T_2q_opt_list:
         neg_gate *= max_negativity(gate_T_2q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas),'\t(optimization time:)', time.time() -t,')')
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log2(neg_meas),'\t(optimization time:)', time.time() -t,')')
 
     prob_Pauli_output_opt = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_2q_opt_list, 'gate_P_list': gate_P_2q_opt_list,
@@ -497,9 +497,9 @@ def opt_Pauli_3q(prob_Pauli_output,**kwargs):
     neg_gate = 1
     for gate_T_3q in gate_T_3q_opt_list:
         neg_gate *= max_negativity(gate_T_3q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas),'\t(optimization time:)', time.time() -t,')')
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log2(neg_meas),'\t(optimization time:)', time.time() -t,')')
 
     prob_Pauli_output_opt = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_3q_opt_list, 'gate_P_list': gate_P_3q_opt_list,
@@ -635,9 +635,9 @@ def opt_Pauli_2q_global(prob_Pauli_output,**kwargs): #### Not working ###
     neg_gate = 1
     for gate_T_2q in gate_T_2q_opt_list:
         neg_gate *= max_negativity(gate_T_2q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log2(neg_meas))
 
     prob_Pauli_output = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_2q_opt_list, 'gate_P_list': gate_P_2q_opt_list,
