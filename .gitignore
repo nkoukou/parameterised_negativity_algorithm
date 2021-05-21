@@ -4,6 +4,7 @@ QUBIT/__pycache__/*
 QUBIT/Summary_20210302/__pycache__/*
 QUBIT/BV*
 QUBIT/Summary_20210302/test/*
+QUBIT/Summary_20210302/test_pauli/*
 
 .DS_Store
 Summary_20210315/.DS_Store
