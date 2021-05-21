@@ -1,6 +1,7 @@
 from QUBIT_QD_circuit import(QD_circuit)
 from QUBIT_circuit_generator import(random_connected_circuit,
                                     solve_qubit_circuit)
+from QUBIT_Pauli_sampling import(get_prob_Pauli_2q, opt_Pauli_2q)
 import autograd.numpy as np
 import time
 import os
@@ -30,29 +31,41 @@ def get_data(q_rng, samples, direc='test', qcts=(0,0,0,0)):
                         given_state=None, given_measurement=2, method='c')
 
                     circ = QD_circuit(circuit)
-                    pborn1 = solve_qubit_circuit(circ.circuit)
+                    # pborn1 = solve_qubit_circuit(circ.circuit)
                     circ.compress_circuit(m=2)
-                    pborn2 = solve_qubit_circuit(circ.circuit_compressed)
-                    print()
-                    print("Probs-2q:", np.allclose(pborn1, pborn2),
-                      "(%.4f, %.4f)"%(pborn1, pborn2), "\n")
-                    if not np.allclose(pborn1, pborn2):
-                        raise Exception('(2q-compression) Probs: NOT equal')
+                    # pborn2 = solve_qubit_circuit(circ.circuit_compressed)
+                    # print()
+                    # print("Probs-2q:", np.allclose(pborn1, pborn2),
+                    #   "(%.4f, %.4f)"%(pborn1, pborn2), "\n")
+                    # if not np.allclose(pborn1, pborn2):
+                    #     raise Exception('(2q-compression) Probs: NOT equal')
 
-                    WI_x, WI_neg = circ.opt_x(method='Wigner')
-                    LO_x, LO_neg = circ.opt_x(method='Local_opt',
+                    _, WI_neg = circ.opt_x(method='Wigner')
+                    _, LO_neg = circ.opt_x(method='Local_opt',
                                               **{'niter':10})
+                    temp = get_prob_Pauli_2q(circ.circuit_compressed)
+                    PS_neg = np.log(temp['neg_gate'])
+                    PO_neg = np.log(opt_Pauli_2q(temp)['neg_gate'])
+                    print('----------------- PAULI SAMPLING -----------------')
+                    print('No opt: %.2f'%(PS_neg))
+                    print('w/ opt: %.2f'%(PO_neg))
+                    print('--------------------------------------------------')
+
                     CT = (time.time()-t0)
 
                     fname = 'Q'+str(n_qubit)+'_CNOT'+str(n_CNOT)+\
                             '_T'+str(n_Tgate)+'_s'+str(num)+'.npy'
                     WI_fname = 'WI_'+fname
                     LO_fname = 'LO_'+fname
+                    PS_fname = 'PS_'+fname
+                    PO_fname = 'PO_'+fname
                     CT_fname = 'CT_'+fname
                     np.save(os.path.join(direc, WI_fname), WI_neg)
                     np.save(os.path.join(direc, LO_fname), LO_neg)
+                    np.save(os.path.join(direc, PS_fname), PS_neg)
+                    np.save(os.path.join(direc, PO_fname), PO_neg)
                     np.save(os.path.join(direc, CT_fname), CT)
-get_data(q_rng=(0,15), samples=10, direc='test')
+get_data(q_rng=(3,10), samples=10, direc='test_pauli')
 
 # direc = 'test'
 

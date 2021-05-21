@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pylab as plt
+from matplotlib.pyplot import cm
 import matplotlib.legend_handler
 import os
 
@@ -118,14 +119,14 @@ def scatter_logneg(n_qubit, m=2, diff=True, max_n_CNOT=None):
 # data = scatter_logneg(n_qubit=n_qubit, m=2, diff=False, max_n_CNOT=19)
 
 def group_data(q_rng=(4,11)):
-    direc = 'test'
-    var = ['WI_', 'LO_', 'CT_']
+    direc = 'test_pauli'
+    var = ['WI_', 'LO_', 'PS_', 'PO_', 'CT_']
     samples = 10
 
     for n_qubit in range(q_rng[0], q_rng[1]+1):
         for n_cnot in [n_qubit, n_qubit+1]:
             Tgates = np.arange(2*n_cnot+1)
-            neg = np.zeros((3, 3, len(Tgates)))
+            neg = np.zeros((len(var), 3, len(Tgates)))
             for n_Tgate in Tgates:
                 temp = np.zeros((neg.shape[0],samples))
                 for num in range(samples):
@@ -142,35 +143,48 @@ def group_data(q_rng=(4,11)):
                 np.save(os.path.join(direc,'AVG_'+var[i]+fname), neg[i])
 
 
-def get_data(n_qubit): # max: Q9, C9
-    direc = 'test'
-    n_cnot = n_qubit
-    fname = 'Q'+str(n_qubit)+'_CNOT'+str(n_cnot)+'.npy'
-
-    Tgates = np.arange(2*n_cnot+1)
-    WI_neg = np.load(os.path.join(direc,'AVG_WI_'+fname))
-    LO_neg = np.load(os.path.join(direc,'AVG_LO_'+fname))
+def get_data(n_qubit, n_cnot):
+    if n_cnot==0: cnots = [n_qubit]
+    if n_cnot==1: cnots = [n_qubit+1]
+    if n_cnot==2: cnots = [n_qubit, n_qubit+1]
+    direc = 'test_pauli'
+    var = ['WI_', 'LO_', 'PS_', 'PO_']
+    ttl = ['Wig', 'Frame LO', 'Pauli', 'Pauli LO']
+    sty = [('o', '-'), ('x', '--')]
 
     fig, ax = plt.subplots(1,1)
-    ax.errorbar(Tgates, WI_neg[1], yerr=WI_neg[2],
-                marker='o', ls='', c='b', label='WI')
-    ax.plot(Tgates, WI_neg[0], ls='-', c='b')
-    ax.errorbar(Tgates, LO_neg[1], yerr=WI_neg[2],
-                marker='x', ls='', c='r', label='LO')
-    ax.plot(Tgates, LO_neg[0], ls='-', c='r')
-    ax.axhline(y=0, c='grey', alpha=0.2)
+    cw = cm.rainbow(np.linspace(0,1,len(var)))
+    for n_cnot in cnots:
+        j = n_cnot - n_qubit
+        fname = 'Q'+str(n_qubit)+'_CNOT'+str(n_cnot)+'.npy'
+
+        Tgates = np.arange(2*n_cnot+1)
+        neg = []
+        for i in range(len(var)):
+            neg.append( np.load(os.path.join(direc,'AVG_'+var[i]+fname)) )
+
+        for i in range(len(var)):
+            ax.errorbar(Tgates, neg[i][1], yerr=neg[i][2],
+                        marker=sty[j][0], ls='', c=cw[i],
+                        label=ttl[i])
+            ax.plot(Tgates, neg[i][0], sty[j][1], c=cw[i])
+    ax.axhline(y=0., c='grey', alpha=0.2)
     ax.set_xlabel(r'#$T$ Gates')
     ax.set_xlim(Tgates.min(), Tgates.max())
     ax.set_ylabel(r'$\log{{\cal N}}$')
-    ax.set_ylim(-1, WI_neg[1].max()+1)
-    ax.legend(title='#qubits = %d'%(n_qubit), loc='center right'
-              ).set_draggable(1)
-    return WI_neg, LO_neg
+    ax.set_ylim(-1, neg[0][1].max()+1)
+    ax.legend(title='#qubits = %d\n#cnots = %d'%(n_qubit, n_cnot),
+              loc='upper left').set_draggable(1)
+    return neg
 
 plt.close('all')
-for i in range(4,9+1):
-    wi, lo = get_data(n_qubit=i)
-    plt.savefig('figs_constant_neg/Q'+str(i)+'.pdf', bbox_inches='tight')
+n_cnot=0
+q_rng = (3,8)
+# group_data(q_rng)
+for i in range(q_rng[0], q_rng[1]+1):
+    wi, lo, ps, po = get_data(n_qubit=i, n_cnot=n_cnot)
+    plt.savefig('figs_constant_neg/Pauli_Q'+str(i)+'.pdf',
+                bbox_inches='tight')
 
 
 
