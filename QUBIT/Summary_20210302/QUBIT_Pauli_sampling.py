@@ -179,9 +179,9 @@ def get_prob_Pauli_3q(circuit):
     neg_gate = 1
     for gate_T_3q in gate_T_3q_list:
         neg_gate *= max_negativity(gate_T_3q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log(neg_meas))
 
     prob_Pauli_output = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_3q_list,
@@ -674,9 +674,9 @@ def opt_Pauli_2q_global(prob_Pauli_output,**kwargs):
     neg_gate = 1
     for gate_T_2q in gate_T_2q_opt_list:
         neg_gate *= max_negativity(gate_T_2q)
-    print('Log negativity (gate):',np.log(neg_gate))
-    print('Log negativity (meas):',np.log(neg_meas))
-    print('Log negativity:',np.log(neg_gate) + np.log(neg_meas))
+    print('Log_2 negativity (gate):',np.log2(neg_gate))
+    print('Log_2 negativity (meas):',np.log2(neg_meas))
+    print('Log_2 negativity:',np.log2(neg_gate) + np.log2(neg_meas))
 
     prob_Pauli_output = {
         'state_T_list': state_T_list, 'gate_T_list': gate_T_2q_opt_list,

@@ -56,8 +56,9 @@ CZ_count = 5
 CCZ_count = 1
 
 oc = bool_oracle(string_len)
-oc.set_random_oracle(Z_count=Z_count,CZ_count=CZ_count,CCZ_count=CCZ_count)
-print('Oracle index list:', oc.index_list)
+oc.set_random_oracle(Z_count=100,CZ_count=50,CCZ_count=6)
+print('Oracle index list:', oc.index_list_3q)
+
 
 ### set sample size ###
 sample_size = int(1e4)
@@ -78,6 +79,10 @@ def meas_string(meas_qubit_index, string_len):
 cc = hidden_shift_circuit(string_len,hidden_string,oc)
 cc.set_meas(meas_string(0,string_len))
 circuit = compress2q_circuit(circuit_class_to_label(cc))
+
+cc_3q = hidden_shift_circuit(string_len,hidden_string,oc,**{'Toffoli_Decomposition':'3q'})
+cc_3q.set_meas(meas_string(0,string_len))
+circuit_3q = compress2q_circuit(circuit_class_to_label(cc_3q))
 
 ### Wigner sampling ###
 print("===================Wigner sampling method======================")
@@ -105,7 +110,9 @@ print("\n")
 ### Pauli sampling ###
 rev_circuit = reverse_circuit(circuit)
 circuit_compress_2q = compress2q_circuit(rev_circuit)
-circuit_compress_3q = compress3q_circuit(rev_circuit)
+
+rev_circuit_3q = reverse_circuit(circuit_3q)
+circuit_compress_3q = compress3q_circuit(rev_circuit_3q)
 
 print("===================Pauli sampling method======================")
 print("----------------2q compression without optimization-----------------")
