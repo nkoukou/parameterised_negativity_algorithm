@@ -1,0 +1,91 @@
+File_directory: data_hidden_shift_CCZ=2
+
+
+Oracle index list: [[0], [4], [0], [2, 3], [1], [0], [2, 0], [3], [4, 3], [2, 4], [0, 2], [1, 0], [4, 2], [1, 0], [3], [3, 0], [3], [4, 2], [0], [0, 2], [1, 2], [0, 1], [1, 4, 2], [3, 1], [0, 1, 4], [0, 2], [2], [3, 4], [0, 3], [3, 1], [4, 1], [2, 0], [3]]
+Z_count: 10
+CZ_count: 20
+CCZ_count: 2
+
+
+Shifted string: 0000111010
+Shifted string: 0000111010
+
+
+===================Wigner sampling method======================
+------------------2q compression-------------------
+--------------------- WIGNER NEGATIVITY ----------------------
+Wigner Log Neg:   73.14033462879205
+Computation time: 0.02272820472717285
+--------------------------------------------------------------
+-----------------3q compression--------------------
+--------------------- WIGNER NEGATIVITY ----------------------
+Wigner Log Neg:   46.048875292937105
+Computation time: 0.07014822959899902
+--------------------------------------------------------------
+
+
+===================Pauli sampling method======================
+sample size: 10000
+------------------2q compression without optimization-------------------
+Log_2 negativity (gate): 11.999999999999991
+Log_2 negativity (meas): 0.0
+Log_2 negativity: 11.999999999999991
+------------------2q compression with optimization-------------------
+Log_2 negativity (gate): 11.000086338049297
+Log_2 negativity (meas): 0.0
+Log_2 negativity: 11.000086338049297 	(optimization time:) 128.71165299415588 )
+------------------3q compression without optimization-------------------
+Log_2 negativity (gate): 3.9999999999999933
+Log_2 negativity (meas): 0.0
+Log_2 negativity: 3.9999999999999933
+------------------3q compression with optimization-------------------
+Log_2 negativity (gate): 4.000000772386586
+Log_2 negativity (meas): 0.0
+Log_2 negativity: 4.000000772386586 	(optimization time:) 124.37626910209656 )
+
+
+===================Probability estimation log======================
+------------------2q compression without optimization-------------------
+p_estimate: -0.9999999999999947 	(sampling time: 20.266000986099243 )
+p_estimate: -0.9999999999999947 	(sampling time: 20.425007820129395 )
+p_estimate: -0.9999999999999947 	(sampling time: 20.17817711830139 )
+p_estimate: -0.9999999999999947 	(sampling time: 20.08047580718994 )
+p_estimate: 0.9999999999999947 	(sampling time: 20.071232080459595 )
+p_estimate: 1.0143999999999946 	(sampling time: 20.056903839111328 )
+p_estimate: 1.2799999999999925 	(sampling time: 19.872105836868286 )
+p_estimate: -0.9551999999999944 	(sampling time: 19.56958818435669 )
+p_estimate: 0.9999999999999947 	(sampling time: 18.52990198135376 )
+p_estimate: -0.9215999999999943 	(sampling time: 18.688040733337402 )
+------------------2q compression with optimization-------------------
+p_estimate: -1.0000005118716457 	(sampling time: 19.22760033607483 )
+p_estimate: -1.0000003281054233 	(sampling time: 20.31848406791687 )
+p_estimate: -0.9999646740879096 	(sampling time: 20.29169011116028 )
+p_estimate: -1.0000000882262639 	(sampling time: 20.738931894302368 )
+p_estimate: 0.9999485883290945 	(sampling time: 20.2320556640625 )
+p_estimate: 0.9048234783506519 	(sampling time: 20.055567026138306 )
+p_estimate: 1.1648413469623107 	(sampling time: 20.012716054916382 )
+p_estimate: -1.1232362069051403 	(sampling time: 20.02815270423889 )
+p_estimate: 0.9999493129967716 	(sampling time: 20.06439781188965 )
+p_estimate: -0.5376283554278992 	(sampling time: 20.199088096618652 )
+------------------3q compression without optimization-------------------
+p_estimate: -0.9999999999999947 	(sampling time: 11.072875022888184 )
+p_estimate: -0.9999999999999947 	(sampling time: 10.967941284179688 )
+p_estimate: -0.9999999999999947 	(sampling time: 11.13810420036316 )
+p_estimate: -0.9999999999999947 	(sampling time: 11.005888938903809 )
+p_estimate: 0.9999999999999947 	(sampling time: 11.03135895729065 )
+p_estimate: 1.0123999999999946 	(sampling time: 10.959317207336426 )
+p_estimate: 0.9167999999999955 	(sampling time: 11.004914045333862 )
+p_estimate: -1.0075999999999952 	(sampling time: 11.420495748519897 )
+p_estimate: 0.9999999999999951 	(sampling time: 10.965410232543945 )
+p_estimate: -1.0303999999999953 	(sampling time: 11.199599027633667 )
+------------------3q compression with optimization-------------------
+p_estimate: -1.0000000427300222 	(sampling time: 11.208016872406006 )
+p_estimate: -1.0000000509630333 	(sampling time: 11.134198188781738 )
+p_estimate: -1.0000000473428425 	(sampling time: 11.082635164260864 )
+p_estimate: -1.0000000429038232 	(sampling time: 11.07416296005249 )
+p_estimate: 1.0000000702884504 	(sampling time: 11.126344203948975 )
+p_estimate: 1.002800219687432 	(sampling time: 11.15457797050476 )
+p_estimate: 0.9360001904028626 	(sampling time: 11.269517183303833 )
+p_estimate: -1.0128002546515396 	(sampling time: 11.232363224029541 )
+p_estimate: 1.000000296994571 	(sampling time: 11.349624156951904 )
+p_estimate: -1.0480002257113379 	(sampling time: 11.092787981033325 )
