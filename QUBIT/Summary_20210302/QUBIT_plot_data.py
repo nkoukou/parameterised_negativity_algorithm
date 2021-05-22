@@ -148,8 +148,8 @@ def get_data(n_qubit, n_cnot):
     if n_cnot==1: cnots = [n_qubit+1]
     if n_cnot==2: cnots = [n_qubit, n_qubit+1]
     direc = 'test_pauli'
-    var = ['WI_', 'LO_', 'PS_', 'PO_']
-    ttl = ['Wig', 'Frame LO', 'Pauli', 'Pauli LO']
+    var = ['WI_', 'LO_', 'PO_'] #, 'PS_'
+    ttl = ['Wig', 'Frame LO', 'Pauli LO'] #, 'Pauli'
     sty = [('o', '-'), ('x', '--')]
 
     fig, ax = plt.subplots(1,1)
@@ -166,23 +166,23 @@ def get_data(n_qubit, n_cnot):
         for i in range(len(var)):
             ax.errorbar(Tgates, neg[i][1], yerr=neg[i][2],
                         marker=sty[j][0], ls='', c=cw[i],
-                        label=ttl[i])
+                        label=ttl[i]+': %d'%(n_cnot))
             ax.plot(Tgates, neg[i][0], sty[j][1], c=cw[i])
     ax.axhline(y=0., c='grey', alpha=0.2)
     ax.set_xlabel(r'#$T$ Gates')
     ax.set_xlim(Tgates.min(), Tgates.max())
     ax.set_ylabel(r'$\log{{\cal N}}$')
     ax.set_ylim(-1, neg[0][1].max()+1)
-    ax.legend(title='#qubits = %d\n#cnots = %d'%(n_qubit, n_cnot),
+    ax.legend(title='#qubits = %d | method: CNOTs'%(n_qubit), ncol=2,
               loc='upper left').set_draggable(1)
     return neg
 
 plt.close('all')
-n_cnot=0
-q_rng = (3,8)
+n_cnot=2
+q_rng = (8,8)
 # group_data(q_rng)
 for i in range(q_rng[0], q_rng[1]+1):
-    wi, lo, ps, po = get_data(n_qubit=i, n_cnot=n_cnot)
+    neg = get_data(n_qubit=i, n_cnot=n_cnot)
     plt.savefig('figs_constant_neg/Pauli_Q'+str(i)+'.pdf',
                 bbox_inches='tight')
 

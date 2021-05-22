@@ -6,7 +6,7 @@ import autograd.numpy as np
 import time
 import os
 
-def get_data(q_rng, samples, direc='test', qcts=(0,0,0,0)):
+def get_data(q_rng, samples, direc='test', qcts=(9,10,3,3)):
     Q, C, T, S = qcts
     for n_qubit in range(q_rng[0], q_rng[1]):
         if n_qubit < Q: continue
