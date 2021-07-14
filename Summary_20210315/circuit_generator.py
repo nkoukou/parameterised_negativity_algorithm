@@ -1,4 +1,5 @@
 from functools import reduce
+from random import(shuffle)
 import numpy as np
 import numpy.random as nr
 from itertools import permutations
@@ -117,21 +118,37 @@ def random_connected_circuit(qudit_num, circuit_length, Tgate_prob=1/3,
     indices = get_index_list(circuit_length, qudit_num, method='c')
 
     # Gates
-    char = ['1', 'H', 'S', 'T']
-    prob_list = [(1-Tgate_prob)/3]*(len(char)-1) + [Tgate_prob]
     gates = []
-    Tcount = 0
-    for g in range(circuit_length):
-        U1qA = nr.choice(char, p=prob_list)
-        U1qB = nr.choice(char, p=prob_list)
-        Tcount +=(U1qA=='T')+(U1qB=='T')
-        U1qA = makeGate(U1qA)
-        U1qB = makeGate(U1qB)
-        U_AB_loc = np.kron(U1qA, U1qB)
-        csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
-        csum = makeGate(csum)
-        U_AB_tot = np.dot(U_AB_loc, csum)
-        gates.append(U_AB_tot)
+    if type(Tgate_prob)==int:
+        char = ['1', 'H', 'S']
+        prob = [1/len(char)]*len(char)
+        chars = ['T']*Tgate_prob + [nr.choice(char, p=prob)
+                      for g in range(2*circuit_length - Tgate_prob)]
+        shuffle(chars)
+        for g in range(circuit_length):
+            U1qA = makeGate(chars[2*g])
+            U1qB = makeGate(chars[2*g+1])
+            U_AB_loc = np.kron(U1qA, U1qB)
+            csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
+            csum = makeGate(csum)
+            U_AB_tot = np.dot(U_AB_loc, csum)
+            gates.append(U_AB_tot)
+        Tcount = Tgate_prob
+    else:
+        char = ['1', 'H', 'S', 'T']
+        prob_list = [(1-Tgate_prob)/3]*(len(char)-1) + [Tgate_prob]
+        Tcount = 0
+        for g in range(circuit_length):
+            U1qA = nr.choice(char, p=prob_list)
+            U1qB = nr.choice(char, p=prob_list)
+            Tcount +=(U1qA=='T')+(U1qB=='T')
+            U1qA = makeGate(U1qA)
+            U1qB = makeGate(U1qB)
+            U_AB_loc = np.kron(U1qA, U1qB)
+            csum = 'C+' if indices[g][0]>indices[g][1] else '+C'
+            csum = makeGate(csum)
+            U_AB_tot = np.dot(U_AB_loc, csum)
+            gates.append(U_AB_tot)
 
     # Measurements
     if type(given_measurement)==int:
