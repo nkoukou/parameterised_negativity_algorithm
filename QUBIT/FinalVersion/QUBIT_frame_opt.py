@@ -2,160 +2,138 @@ import autograd.numpy as np
 from autograd import(grad)
 
 from scipy.optimize import(basinhopping)
-from QUBIT_phase_space import(x2Gamma, neg_gate_1q_max, neg_gate_2q_max, neg_gate_3q_max,
-                             neg_state_1q, neg_meas_1q)
 
-x0 = [1,1/2,1/2]
-Gamma0 = x2Gamma(x0)
 
-def neg_gate_max(gate, Gamma_in, Gamma_out, n):
-    '''
-    Calculate the negativity of any n-qubit gate (TO DO: MAKE IT WORK FOR n>3)
-    INPUT - gate: gate matrix
-            Gamma_in: a list of input Gammas
-            Gamma_out: a list of output Gammas
-            n: the number of qubits to which the gate applies
-    '''
-    if n==1:
-        return neg_gate_1q_max(gate, Gamma_in[0], Gamma_out[0])
-    elif n==2:
-        return neg_gate_2q_max(gate, Gamma_in[0], Gamma_in[1], Gamma_out[0], Gamma_out[1])
-    elif n==3:
-        return neg_gate_3q_max(gate, Gamma_in[0], Gamma_in[1], Gamma_in[2], Gamma_out[0], Gamma_out[1], Gamma_out[2])
-    else:
-        raise Exception('m>3 does not work at the moment.')
-
-def make_x_list(full_x_list, small_x_list, x_index_list):
-    '''
-    Replace appropriate x-parameters in 'full_x_list' with the ones in 'small_x_list'.
-    'x_index_list' contains the indices of x-parameters which are to be replaced. 
-    INPUT - full_x_list: a longer vector of x-parameters (ex. a vector of x-parameters for a full circuit)
-            small_x_list: a shorter vector of x-parameters (ex. a vector of optimised x-parameters for a sub-block of the full circuit)
-            x_index_list: a list of indices for the x-parameters in 'small_x_list'
-    '''
-    full_x_list_out = full_x_list.copy()
-    for i in range(len(x_index_list)):
-        for j in range(len(x0)):
-            full_x_list_out[len(x0)*x_index_list[i]+j] = small_x_list[len(x0)*i+j]
-    return full_x_list_out
-
-def arrange_gates(gates_set, indices_set, gate_numbers):
-    '''
-    Sort 'gates_set', 'indices_set', and 'gate_numbers' in ascending order of gate numbers.
-    '''
-    sorted_gates_set = []
-    sorted_indices_set = []
-    sorted_gate_numbers = gate_numbers.copy()
-    sorted_gate_numbers.sort()
+def neg_gate_max(W_gate, gate, par_list_in, par_list_out):
+    n = len(par_list_in)
     
-    for i in sorted_gate_numbers:
-        sorted_gates_set.append(gates_set[gate_numbers.index(i)])
-        sorted_indices_set.append(indices_set[gate_numbers.index(i)])
-    return sorted_gates_set, sorted_indices_set, sorted_gate_numbers
+    if n==1:
+        return np.abs(W_gate(gate, par_list_in, par_list_out)).sum(axis=(2,3)).max()
+    elif n==2:
+        return np.abs(W_gate(gate, par_list_in, par_list_out)).sum(axis=(4,5,6,7)).max()
+    elif n==3:
+        return np.abs(W_gate(gate, par_list_in, par_list_out)).sum(axis=(6,7,8,9,10,11)).max()
+    else:
+        raise Exception('n should be smaller than or equal to 3.')
 
-def neg_circuit(circuit, x_list=0):
+def make_par_list(full_par_list, small_par_list, par_index_list, par0):
     '''
-    Calculate the negativity of 'circuit' with the given x-parameters ('x_list').
-    If 'x_list'=0, then generate Wigner x-vector, and calculate the Wigner negativity.
+    Replace appropriate frame-parameters in 'full_par_list' with the ones in 'small_par_list'.
+    'par_index_list' contains the indices of frame-parameters which are to be replaced. 
+    INPUT - full_par_list: a longer vector of frame-parameters (ex. a vector of frame-parameters for a full circuit)
+            small_par_list: a shorter vector of frame-parameters (ex. a vector of optimised frame-parameters for a sub-block of the full circuit)
+            par_index_list: a list of indices for the frame-parameters in 'small_par_list'
     '''
-    if type(x_list)==int:
-        x_len = len(circuit['state_list'])
-        for indices in circuit['index_list']:
-            x_len += len(indices)
-        x_list = x0*x_len
+    par0_len = len(par0)
+    full_par_list_out = full_par_list.copy()
+    for i in range(len(par_index_list)):
+        for j in range(par0_len):
+            full_par_list_out[par0_len*par_index_list[i]+j] = small_par_list[par0_len*i+j]
+    return full_par_list_out
+
+def neg_circuit(circuit, W, par_list, par0):
+    '''
+    Calculate the negativity of 'circuit' with the given frame-parameters ('par_list').
+    '''
+    W_state = W[0]
+    W_gate = W[1]
+    W_meas = W[2]
+    par0_len = len(par0)
 
     neg = 1.
-    Gamma_index = 0
-    Gammas = []
+    frame_index = 0
+    frames = []
     for state in circuit['state_list']: ### State part
-        Gamma = x2Gamma(x_list[3*Gamma_index:3*(Gamma_index+1)])
-        neg = neg * neg_state_1q(state, Gamma)
-        Gammas.append(Gamma)
-        Gamma_index += 1
+        frame = par_list[par0_len*frame_index:par0_len*(frame_index+1)]
+        neg = neg * np.abs(W_state(state, frame)).sum()
+        frames.append(frame)
+        frame_index += 1
 
     gate_index = 0
     for gate in circuit['gate_list']: ### Gate part
         idx = circuit['index_list'][gate_index]
         gate_index += 1
 
-        Gamma_in = [Gammas[i] for i in idx]
-        Gamma_out = []
+        frames_in = [frames[i] for i in idx]
+        frames_out = []
         for i in range(len(idx)):
-            Gamma_out.append(x2Gamma(x_list[len(x0)*(Gamma_index+i):len(x0)*(Gamma_index+i+1)]))
-        Gamma_index += len(idx)
-        neg = neg * neg_gate_max(gate, Gamma_in, Gamma_out, len(idx))
+            frames_out.append(par_list[par0_len*(frame_index+i):par0_len*(frame_index+i+1)])
+        frame_index += len(idx)
+        neg = neg * neg_gate_max(W_gate, gate, frames_in, frames_out)
         
         for i, index in enumerate(idx):
-            Gammas[index] = Gamma_out[i]
+            frames[index] = frames_out[i]
 
     qudit_index = 0
     for meas in circuit['meas_list']: ### Measurement part
         if str(meas) == '/': continue
-        Gamma = Gammas[qudit_index]
+        frame = frames[qudit_index]
         qudit_index += 1
-        neg = neg * neg_meas_1q(meas, Gamma)
+        neg = neg * np.abs(W_meas(meas, frame)).max()
 
     return np.log(neg)
 
-def block_frame_opt(FO_gate_list, FO_index_list, FO_gate_numbers, n, niter=3):
+def block_frame_opt(FO_gate_list, FO_index_list, FO_gate_numbers, par0, W_gate, niter=3):
     '''
     Carry out the frame optimisation for a given sub-block
     INPUT - FO_gate_list: the list of the gates in the sub-block
             FO_index_list: the list of qubit indices of the gates in the sub-block
             FO_gate_numbers: the gate-indices (in the full circuit) of the gates in the sub-block 
     '''
+    par0_len = len(par0)
+
     merged = []
     for index in FO_index_list:
         merged.append(index)
-    merged = list(np.unique(merged)) # Find out the number of qubits the sub-block applies to
+    merged = list(np.unique(merged)) # Find out the number of qudits the sub-block applies to
     
-    FO_x_len = len(merged) + sum([len(indices) for indices in FO_index_list]) # the number of different x-parameters in the given sub-block
-    FO_x_list = x0*FO_x_len # initial vector of x-parameters
+    FO_par_len = len(merged) + sum([len(indices) for indices in FO_index_list]) # the number of different frame-parameters in the given sub-block
+    FO_par_list = par0*FO_par_len # initial vector of frame-parameters
     
-    ## Find out which x-paramemters are intermediate x-parameters (to be optimised).
-    FO_x_opt_list = [] # The list only containing intermediate x-parameters
-    FO_x_opt_index_list = [] # The list containing the indices of intermediate x-parameters
+    ## Find out which frame-paramemters are intermediate (to be optimised).
+    FO_par_opt_list = [] # The list only containing intermediate frame-parameters
+    FO_par_opt_index_list = [] # The list containing the indices of intermediate frame-parameters
     for i, indices in enumerate(FO_index_list):
         for j, index in enumerate(indices):
-            if index in np.unique(FO_index_list[i+1:]): # If there is another 'index' in the leftover gates, then it is a intermediate x-parameter.
-                FO_x_opt_list = FO_x_opt_list+x0
-                which_x = len(merged) + sum([len(a) for a in FO_index_list[:i]]) + j
-                FO_x_opt_index_list.append(which_x)
+            if index in np.unique(FO_index_list[i+1:]): # If there is another 'index' in the leftover gates, then it is a intermediate frame-parameter.
+                FO_par_opt_list = FO_par_opt_list+par0
+                which_par = len(merged) + sum([len(a) for a in FO_index_list[:i]]) + j
+                FO_par_opt_index_list.append(which_par)
                 
-    # Later we need to know the indices of optimised x-parameter in the full circuit.
-    # We record [gate_index, i] for each intermediate x-parameter and return it with the optimised x-parameters.
+    # Later we need to know the indices of optimised frame-parameter in the full circuit.
+    # We record [gate_index, i] for each intermediate frame-parameter and return it with the optimised frame-parameters.
     # 'gate_index' is the gate-index of the gate just before the correponding frame. 
-    # 'i' indicates the index of corresponding wire (for the gate with 'gate_index') of the intermediate frame (x-parameter).
-    x_index_list_to_return = []
-    for i in FO_x_opt_index_list:
+    # 'i' indicates the index of corresponding wire (for the gate with 'gate_index') of the intermediate frame.
+    par_index_list_to_return = []
+    for i in FO_par_opt_index_list:
         find_corr_gate_n = len(merged)
         for j, gate_indices in enumerate(FO_index_list):
             find_corr_gate_n += len(gate_indices)
             if i < find_corr_gate_n:
-                x_index_list_to_return.append([FO_gate_numbers[j], i-find_corr_gate_n+len(gate_indices)])
+                par_index_list_to_return.append([FO_gate_numbers[j], i-find_corr_gate_n+len(gate_indices)])
                 break
     
-    def cost_function(x): # The negativity of the sub-block for given vector 'x' of intermediate x-parameters.
+    def cost_function(x): # The negativity of the sub-block for given vector 'x' of intermediate frame-parameters.
         neg = 1.
-        full_x_list = make_x_list(FO_x_list, x, FO_x_opt_index_list)
-        # x only contains the intermediate x-parameters. We need to build 'full_x_list' for the whole sub-block from 'x'.
+        full_par_list = make_par_list(FO_par_list, x, FO_par_opt_index_list, par0)
+        # x only contains the intermediate frame-parameters. We need to build 'full_par_list' for the whole sub-block from 'x'.
 
-        Gammas = {}
+        frames = {}
         for i, index in enumerate(merged):
-            Gammas[str(index)] = x2Gamma(full_x_list[len(x0)*i:len(x0)*(i+1)])
+            frames[str(index)] = full_par_list[par0_len*i:par0_len*(i+1)]
 
         gate_index = 0
         for gate in FO_gate_list:
-            Gamma_in = [Gammas[str(y)] for y in FO_index_list[gate_index]]
-            x_index = len(merged) + sum([len(a) for a in FO_index_list[:gate_index]])
-            Gamma_out = []
+            frames_in = [frames[str(y)] for y in FO_index_list[gate_index]]
+            par_index = len(merged) + sum([len(a) for a in FO_index_list[:gate_index]])
+            frames_out = []
             for i in range(len(FO_index_list[gate_index])):
-                Gamma_out.append(x2Gamma(full_x_list[len(x0)*(x_index+i):len(x0)*(x_index+i+1)]))
+                frames_out.append(full_par_list[par0_len*(par_index+i):par0_len*(par_index+i+1)])
 
-            neg = neg*neg_gate_max(gate, Gamma_in, Gamma_out, n)
+            neg = neg*neg_gate_max(W_gate, gate, frames_in, frames_out)
 
             for i,index in enumerate(FO_index_list[gate_index]):
-                Gammas[str(index)] = Gamma_out[i]
+                frames[str(index)] = frames_out[i]
             gate_index += 1
         return np.log(neg)
     
@@ -163,16 +141,18 @@ def block_frame_opt(FO_gate_list, FO_index_list, FO_gate_numbers, n, niter=3):
     def func(x):
         return cost_function(x), grad_cost_function(x)
 
-    ## Optimise
-    optimise_result = basinhopping(func, FO_x_opt_list, minimizer_kwargs={"method":"L-BFGS-B", "jac":True}, niter=niter)
-    
-    return optimise_result.x, x_index_list_to_return
+    if len(FO_par_opt_index_list)==0: ## If there is no connected wire, then we don't need to optimise anything.
+        return [], []
+    else: 
+        ## Optimise
+        optimise_result = basinhopping(func, FO_par_opt_list, minimizer_kwargs={"method":"L-BFGS-B", "jac":True}, niter=niter)
+        return optimise_result.x, par_index_list_to_return
 
-def frame_opt(circuit, n, l, **kwargs):
+def frame_opt(circuit, l, par0, W, **kwargs):
     '''
     Perform frame optimisation with spatial parameter 'n' and temporal parameter 'l'.
     Divide the circuit into sub-blocks with at most 'l' gates and optimise the intermediate frames in each sub-block.
-    Return the full list of x-parameters for the circuit, which includes the optimised intermidate frames.
+    Return the full list of frame-parameters for the circuit, which includes the optimised intermidate frames.
     INPUT - circuit: given circuit
             n: spatial parameter (the minimum number of qubits to which a compressed gate applies)
             l: temporal parameter (the maximum number of gates included in the frame optimisation)
@@ -183,69 +163,54 @@ def frame_opt(circuit, n, l, **kwargs):
     gate_list = circuit['gate_list']
     index_list = circuit['index_list']
     n_states = len(circuit['state_list'])
-    
-    ## Find out the full length of the vector of x-parameters for the circuit
-    x_len = n_states
-    for indices in index_list:
-        x_len += len(indices)
 
-    ## Initial vector or x-parameters
-    x_list = x0*x_len
+    W_state = W[0]
+    W_gate = W[1]
+    W_meas = W[2]
+    
+    ## Find out the full length of the vector of frame-parameters for the circuit
+    par_len = n_states
+    for indices in index_list:
+        par_len += len(indices)
+
+    ## Initial vector of frame-parameters -> reference frames
+    par_list = par0*par_len
     
     ## Find a sub-block of at most 'l' connected gates.
-    masks = [0]*len(index_list)
+    gate_set = []
+    indices_set = []
+    gate_numbers = []
     for gate_n, indices in enumerate(index_list):
-        if masks[gate_n]==1: continue
-        masks[gate_n] = 1
-        target_indices = indices
-        gate_numbers = [gate_n]
-        indices_set = [indices]
-        gates_set = [gate_list[gate_n]]
+        gate_set.append(gate_list[gate_n])
+        indices_set.append(indices)
+        gate_numbers.append(gate_n)
 
-        ## Starting from the next gate, find other 'l'-1 gates connected with the gate with gate-index 'gate_n'
-        for i, next_indices in enumerate(index_list[gate_n+1:]):
-            next_gate_n = gate_n+1+i
-            if masks[next_gate_n]==1: continue
+        if len(gate_numbers)>=l: ### Found a new sub-block with 'l' gates. Perform frame optimisaiton.
+            block_par_list, par_indicates_list = block_frame_opt(gate_set, indices_set, gate_numbers, par0, W_gate, niter=options['niter']) # Frame optimisation
 
-            merged = list(np.unique(target_indices+next_indices))
-            if len(merged)==len(target_indices)+len(next_indices): continue # Not connected
-            else: # If connected, put into the sub-block
-                masks[next_gate_n] = 1
-                target_indices = merged
-                gate_numbers.append(next_gate_n)
-                indices_set.append(next_indices)
-                gates_set.append(gate_list[next_gate_n])
+            par_indices_list = []
+            for gate_n, i in par_indicates_list:
+                par_index = n_states + sum([len(indices) for indices in index_list[:gate_n]]) + i
+                par_indices_list.append(par_index)
+            par_list = make_par_list(par_list, block_par_list, par_indices_list, par0) # Replace the corresponding frame-parameters with the optimised ones.
 
-                # Then check whether there was a connected gate with the newly added gate before
-                for j, double_check in enumerate(index_list[:next_gate_n]):
-                    if masks[j]==1: continue
-                    check_merged = list(np.unique(double_check+next_indices))
-                    if len(check_merged)!=len(double_check)+len(next_indices): # There was a gate connected to the newly added gate.
-                        masks[j] = 1
-                        if len(gate_numbers)<l: # Add it to the sub-block only when the sub-block is not full (contains less than 'l' gates).
-                            target_indices = list(np.unique(target_indices+double_check))
-                            gate_numbers.append(j)
-                            indices_set.append(double_check)
-                            gates_set.append(gate_list[j])
+            gate_set = []
+            indices_set = []
+            gate_numbers = []
 
-            if len(gate_numbers)>=l: break # If we found all 'l' gates, then proceed to the next step.
-                
-        if len(gate_numbers)==1: continue # If we couldn't find any connected gate left, then just end the loop.
+    if len(gate_numbers)>1: ## If there are more than 1 gate left, then perform frame optimisation for the smaller last sub-block.
+        block_par_list, par_indicates_list = block_frame_opt(gate_set, indices_set, gate_numbers, par0, W_gate, niter=options['niter']) 
 
-        gates_set, indices_set, gate_numbers = arrange_gates(gates_set, indices_set, gate_numbers) # Sort in order
-        block_x_list, x_indicates_list = block_frame_opt(gates_set, indices_set, gate_numbers, n, niter=options['niter']) # Frame optimisation
+        par_indices_list = []
+        for gate_n, i in par_indicates_list:
+            par_index = n_states + sum([len(indices) for indices in index_list[:gate_n]]) + i
+            par_indices_list.append(par_index)
+        par_list = make_par_list(par_list, block_par_list, par_indices_list, par0) 
 
-        x_indices_list = [] # From 'x_indicates_list', find the indices of the optimised x-parameters in the full circuit.
-        for gate_n, i in x_indicates_list:
-            x_index = n_states + sum([len(indices) for indices in index_list[:gate_n]]) + i
-            x_indices_list.append(x_index)
-
-        x_list = make_x_list(x_list, block_x_list, x_indices_list) # Replace the corresponding x-parameters with the optimised ones.
-    
-    neg_circuit_opt = neg_circuit(circuit, x_list)
+    neg_circuit_opt = neg_circuit(circuit, W, par_list, par0)
     print('--------------------- FRAME OPTIMISATION with l =',l,'----------------------')
-    print('Wigner Log Neg:', neg_circuit(circuit, x0*x_len))
+    print('Wigner Log Neg:', neg_circuit(circuit, W, par0*par_len, par0))
     print('Optimised Log Neg:', neg_circuit_opt)
     print('----------------------------------------------------------------------------')
         
-    return x_list, neg_circuit_opt
+    return par_list, neg_circuit_opt

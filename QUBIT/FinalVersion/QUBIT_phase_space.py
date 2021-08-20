@@ -1,8 +1,31 @@
 import autograd.numpy as np
 import itertools as it
+from math import (log)
 
 from QUBIT_state_functions import(DIM, tau, power)
 from QUBIT_circuit_components import(makeGate, makeState, psi2rho)
+
+def W_state(rho, x):
+    return W_state_1q(rho, x2Gamma(x))
+
+def W_gate(gate, x_list_in, x_list_out):
+    n = len(x_list_in)
+
+    if n==1:
+        return W_gate_1q(gate, x2Gamma(x_list_in[0]), x2Gamma(x_list_out[0]))
+    elif n==2:
+        Gamma_in = [x2Gamma(x) for x in x_list_in]
+        Gamma_out = [x2Gamma(x) for x in x_list_out]
+        return W_gate_2q(gate, Gamma_in[0], Gamma_in[1], Gamma_out[0], Gamma_out[1])
+    elif n==3:
+        Gamma_in = [x2Gamma(x) for x in x_list_in]
+        Gamma_out = [x2Gamma(x) for x in x_list_out]
+        return W_gate_3q(gate, Gamma_in[0], Gamma_in[1], Gamma_in[2], Gamma_out[0], Gamma_out[1], Gamma_out[2])
+    else:
+        raise Exception('Gates are too large. n should be smaller than 4.')
+
+def W_meas(E, x):
+    return W_meas_1q(E, x2Gamma(x))
 
 def x2Gamma(x):
     ''' Returns covariance matrix Gamma given array x of independent parameters
