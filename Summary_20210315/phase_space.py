@@ -142,7 +142,7 @@ def neg_gate_3q_max(U3q, Gamma_in1, Gamma_in2, Gamma_in3, Gamma_out1, Gamma_out2
 
 def W_meas_1q(E, Gamma):
     ''' Returns Gamma-distribution of measurement effect E,
-        W_E(p,q) = 1/DIM tr[G_{p,q} E].
+        W_E(p,q) = tr[G_{p,q} E].
         Output - (DIM, DIM) complex ndarray
     '''
     G1q = get_G1q_list(Gamma)
