@@ -1,6 +1,5 @@
 import autograd.numpy as np
 import itertools as it
-from math import (log)
 
 from QUBIT_state_functions import(DIM, tau, power)
 from QUBIT_circuit_components import(makeGate, makeState, psi2rho)
@@ -16,13 +15,15 @@ def W_gate(gate, x_list_in, x_list_out):
     elif n==2:
         Gamma_in = [x2Gamma(x) for x in x_list_in]
         Gamma_out = [x2Gamma(x) for x in x_list_out]
-        return W_gate_2q(gate, Gamma_in[0], Gamma_in[1], Gamma_out[0], Gamma_out[1])
+        return W_gate_2q(gate, Gamma_in[0], Gamma_in[1], Gamma_out[0],
+                         Gamma_out[1])
     elif n==3:
         Gamma_in = [x2Gamma(x) for x in x_list_in]
         Gamma_out = [x2Gamma(x) for x in x_list_out]
-        return W_gate_3q(gate, Gamma_in[0], Gamma_in[1], Gamma_in[2], Gamma_out[0], Gamma_out[1], Gamma_out[2])
+        return W_gate_3q(gate, Gamma_in[0], Gamma_in[1], Gamma_in[2],
+                         Gamma_out[0], Gamma_out[1], Gamma_out[2])
     else:
-        raise Exception('Gates are too large. n should be smaller than 4.')
+        raise Exception('Not implemented for n > 3.')
 
 def W_meas(E, x):
     return W_meas_1q(E, x2Gamma(x))
@@ -57,7 +58,7 @@ def test_F1q0(Gamma):
     for w in it.product(range(DIM),repeat=2):
         p,q = w[0],w[1]
         F1q0 += D1q_list[p,q]/D_Gamma_list[p,q]
-#         F1q0 += D1q_list[-p,-q]/D_Gamma_list[p,q]
+        # F1q0 += D1q_list[-p,-q]/D_Gamma_list[p,q]
     return np.array(F1q0/DIM, dtype="complex_")
 
 def get_F1q_list(Gamma):
