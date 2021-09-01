@@ -246,9 +246,9 @@ def frame_opt(circuit, l, par0, W, **kwargs):
                                  par0)
 
     neg_circuit_opt = neg_circuit(circuit, W, par_list, par0)
-    print('--------------- FRAME OPTIMISATION with l =',l,'----------------')
+    print('---------------- FRAME OPTIMISATION with l=%d ----------------'%(l))
     print('Wigner Log Neg:', neg_circuit(circuit, W, par0*par_len, par0))
     print('Optimised Log Neg:', neg_circuit_opt)
-    print('----------------------------------------------------------------')
+    print('-------------------------------------------------------------')
 
     return par_list, neg_circuit_opt
