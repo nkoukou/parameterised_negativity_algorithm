@@ -1,10 +1,22 @@
-from circuit_generator import (haar_random_connected_circuit,
+from QUBIT_circuit_generator import (haar_random_connected_circuit,
                                      show_connectivity)
-from compression import (compress_circuit)
-from frame_opt import (frame_opt, neg_circuit)
-from get_prob import (get_prob_list)
-from sample import (sample_circuit, sample_circuit_3q)
-from phase_space import (W_state, W_gate, W_meas)
+from QUBIT_compression import (compress_circuit)
+from QUBIT_frame_opt import (frame_opt, neg_circuit)
+from QUBIT_get_prob import (get_prob_list)
+from QUBIT_sample import (sample_circuit, sample_circuit_3q)
+from QUBIT_phase_space import (W_state, W_gate, W_meas)
+from QUBIT_Pauli_sampling import (W_state_pauli, W_gate_pauli, W_meas_pauli)
+
+'''
+1. Check qubit vs qutrit code
+2. Fix Pauli sampling compatibility with QD_circuit
+3. Delete all other files + push
+4. Create code for circuit generation of 1 and 2 blocks
+5. Plot 1-block histograms + 2-block histograms for qubits
+6. Plot N vs (n,\ell) for qubits
+7. Remains: qutrit plots + proof of CNOT+T no reduction + n>3 + rolling opt
+'''
+
 
 class QD_circuit(object):
     ''' Represents quasi-probability circuit.
@@ -15,6 +27,8 @@ class QD_circuit(object):
                    'index_list': indices, 'meas_list': measurements}
         '''
         self.circuit = circuit
+        self.N = len(self.circuit['state_list'])
+        self.L = len(self.circuit['gate_list'])
         self.n = n
         self.l = l
         self.DIM = DIM
@@ -37,7 +51,7 @@ class QD_circuit(object):
         INPUT - n : spatial parameter
         '''
         self.is_compressed = True
-        self.circuit_compressed = compress_circuit(self.circuit, n, self.DIM)
+        self.circuit_compressed = compress_circuit(self.circuit, self.n)
 
     def show_connectivity(self, compressed=True):
         circuit = self.circuit_compressed if compressed else self.circuit
@@ -79,6 +93,8 @@ class QD_circuit(object):
 
     def get_QD_list(self, opt=True, **kwargs):
         ''' Get quasi-prob, negativity, sign, & normalised probability.
+
+            method - string ('refere', 'opt')
         '''
 
         if opt:
@@ -102,10 +118,10 @@ class QD_circuit(object):
 
         if self.n==2:
             sample_list = sample_circuit(self.circuit_compressed, QD_output,
-                                         self.DIM, sample_size, **kwargs)
+                                         sample_size, **kwargs)
         elif self.n==3:
-            sample_list = sample_circuit_3q(self.circuit_compressed, QD_output,
-                                         self.DIM, sample_size, **kwargs)
+            sample_list = sample_circuit_3q(self.circuit_compressed,
+                                            QD_output, sample_size, **kwargs)
         else:
             raise Exception("Sampling not implemented for n>3")
 
@@ -113,32 +129,54 @@ class QD_circuit(object):
 
 
 ######## EXAMPLE CODE #########
-n=3
-l=2
-x0 = [1,0,0,0,0,0,1,0]
-dim = 3
-qp_function = [W_state, W_gate, W_meas]
-circ = haar_random_connected_circuit(N=8, L=20, n=2, d=dim,
+if __name__== "__main__":
+    dim = 2
+    circ = haar_random_connected_circuit(N=8, L=20, n=2, d=dim,
               given_state=None, given_meas=1, method='r')
 
-circuit = QD_circuit(circ, n, l, dim, x0, qp_function)
+    n=2
+    l=2
+    x0 = [1,1/2,1/2]
+    qp_function = [W_state, W_gate, W_meas]
+    circuit = QD_circuit(circ, n, l, dim, x0, qp_function)
 
-print("\nBefore compression:\n")
-circuit.show_connectivity(compressed=False)
-temp = circuit.get_neg_circuit(ref=True)
-print("\nAfter compression:\n")
-circuit.compress_circuit()
-circuit.show_connectivity(compressed=True)
-print("\nPerforming frame optimisation...\n")
-circuit.opt_x()
-print("Optimisation done.")
-print("---------------------------------------------------------------")
-print("Circuit negativity N at each step:")
-print("\n1. N = %.3f (initial Wigner neg)"%(temp))
-print("\n2. N = %.3f (after compression with n = %d)"%(
-    circuit.get_neg_circuit(ref=True), n))
-print("\n3. N = %.3f (after frame optimisation with l = %d)"%(
-    circuit.get_neg_circuit(ref=False), l))
+    print("\nBefore compression:\n")
+    circuit.show_connectivity(compressed=False)
+    temp = circuit.get_neg_circuit(ref=True)
+    print("\nAfter compression:\n")
+    circuit.compress_circuit()
+    circuit.show_connectivity(compressed=True)
+    print("\nPerforming frame optimisation...\n")
+    circuit.opt_x()
+    print("Optimisation done.")
+    print("-------------------------------------------------------------")
+    print("Circuit negativity N at each step:")
+    print("\n1. N = %.3f (initial Wigner neg)"%(temp))
+    print("\n2. N = %.3f (after compression with n=%d)"%(
+        circuit.get_neg_circuit(ref=True), n))
+    print("\n3. N = %.3f (after frame optimisation with l=%d)"%(
+        circuit.get_neg_circuit(ref=False), l))
+
+    x0 = [0.,0.,0.]
+    qp_function = [W_state_pauli, W_gate_pauli, W_meas_pauli]
+    circuit = QD_circuit(circ, n, l, dim, x0, qp_function)
+
+    print("\nBefore compression:\n")
+    circuit.show_connectivity(compressed=False)
+    temp = circuit.get_neg_circuit(ref=True)
+    print("\nAfter compression:\n")
+    circuit.compress_circuit()
+    circuit.show_connectivity(compressed=True)
+    print("\nPerforming frame optimisation...\n")
+    circuit.opt_x()
+    print("Optimisation done.")
+    print("-------------------------------------------------------------")
+    print("Circuit negativity N at each step:")
+    print("\n1. N = %.3f (initial Wigner neg)"%(temp))
+    print("\n2. N = %.3f (after compression with n=%d)"%(
+        circuit.get_neg_circuit(ref=True), n))
+    print("\n3. N = %.3f (after frame optimisation with l=%d)"%(
+        circuit.get_neg_circuit(ref=False), l))
 
 
 
