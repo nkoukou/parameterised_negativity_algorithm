@@ -117,32 +117,32 @@ class QD_circuit(object):
 
 
 ######## EXAMPLE CODE #########
-# dim = 2
-# circ = haar_random_connected_circuit(N=10, L=40, n=2, d=dim,
-#          given_state=None, given_meas=1, method='r')
+dim = 2
+circ = haar_random_connected_circuit(N=10, L=40, n=2, d=dim,
+          given_state=None, given_meas=1, method='r')
 
-# n=2
-# l=2
-# x0 = [1,1/2,1/2]
-# qp_function = [W_state, W_gate, W_meas]
-# circuit = QD_circuit(circ, n, l, dim, x0, qp_function)
+n=2
+l=4
+x0 = [1,1/2,1/2]
+qp_function = [W_state, W_gate, W_meas]
+circuit = QD_circuit(circ, n, l, dim, x0, qp_function)
 
-# print("\nBefore compression:\n")
-# circuit.show_connectivity(compressed=False)
-# temp = circuit.get_neg_circuit(ref=True)
-# print("\nAfter compression:\n")
-# circuit.compress_circuit()
-# circuit.show_connectivity(compressed=True)
-# print("\nPerforming frame optimisation...\n")
-# circuit.opt_x()
-# print("Optimisation done.")
-# print("-------------------------------------------------------------")
-# print("Circuit negativity N at each step:")
-# print("\n1. N = %.3f (initial Wigner neg)"%(temp))
-# print("\n2. N = %.3f (after compression with n=%d)"%(
-#     circuit.get_neg_circuit(ref=True), n))
-# print("\n3. N = %.3f (after frame optimisation with l=%d)"%(
-#     circuit.get_neg_circuit(ref=False), l))
+print("\nBefore compression:\n")
+circuit.show_connectivity(compressed=False)
+temp = circuit.get_neg_circuit(ref=True)
+print("\nAfter compression:\n")
+circuit.compress_circuit()
+circuit.show_connectivity(compressed=True)
+print("\nPerforming frame optimisation...\n")
+circuit.opt_x()
+print("Optimisation done.")
+print("-------------------------------------------------------------")
+print("Circuit negativity N at each step:")
+print("\n1. N = %.3f (initial Wigner neg)"%(temp))
+print("\n2. N = %.3f (after compression with n=%d)"%(
+    circuit.get_neg_circuit(ref=True), n))
+print("\n3. N = %.3f (after frame optimisation with l=%d)"%(
+    circuit.get_neg_circuit(ref=False), l))
 
 
 
