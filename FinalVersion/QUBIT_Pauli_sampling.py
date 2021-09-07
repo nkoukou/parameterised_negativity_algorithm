@@ -13,34 +13,34 @@ sigma_z = np.array([[1,0],[0,-1]],dtype='complex')
 Pauli_list = [np.eye(2),sigma_x,sigma_y,sigma_z]
 
 def W_state_pauli(rho, x):
-    return T1q(rho, x).reshape((2,)*2)
+    return T1q(rho, x)#.reshape((2,)*2)
 
 def W_gate_pauli(gate, x_list_in, x_list_out):
     n = len(x_list_in)
     if n==1:
         T1q = T_matrix_1q(gate)
         wgate = RTR_matrix_1q(T1q,x_list_in,x_list_out)
-        return wgate.reshape((2,)*4) # !!! Is this reshaping corect?
+        return wgate
     elif n==2:
         x_list_in = list(it.chain.from_iterable(x_list_in))
         x_list_out = list(it.chain.from_iterable(x_list_out))
         T2q = T_matrix_2q(gate)
         wgate = RTR_matrix_2q(T2q,x_list_in,x_list_out)
-        return wgate.reshape((2,)*8) # !!! Is this reshaping corect?
+        return wgate
     elif n==3:
         x_list_in = list(it.chain.from_iterable(x_list_in))
         x_list_out = list(it.chain.from_iterable(x_list_out))
         T3q = T_matrix_3q(gate)
         wgate = RTR_matrix_3q(T3q,x_list_in,x_list_out)
-        return wgate.reshape((2,)*12) # !!! Is this reshaping corect?
-    # elif n==34:
+        return wgate
+    # elif n==4:
     #     T4q = T_matrix_4q(gate)
     #     return RTR_matrix_4q(T4q,x_list_in,x_list_out)
     else:
         raise Exception('Not implemented for n > 3.')
 
 def W_meas_pauli(E, x):
-    return T1q(E, x, meas=True).reshape((2,)*2)
+    return T1q(E, x, meas=True)#.reshape((2,)*2)
 
 
 

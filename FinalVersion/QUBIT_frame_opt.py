@@ -2,12 +2,19 @@ import autograd.numpy as np
 from autograd import(grad)
 
 from scipy.optimize import(basinhopping)
+from QUBIT_phase_space import W_gate as W_test
 
 
 def neg_gate_max(W_gate, gate, par_list_in, par_list_out):
-    n = len(par_list_in)
-    return np.abs(W_gate(gate, par_list_in, par_list_out)
-                      ).sum(axis=tuple(np.arange(2*n,4*n))).max()
+
+    if W_gate==W_test:
+        n = len(par_list_in)
+        neg = np.abs(W_gate(gate, par_list_in, par_list_out)
+                          ).sum(axis=tuple(np.arange(2*n,4*n))).max()
+    else:
+        neg = np.abs(W_gate(gate, par_list_in, par_list_out)
+                            ).sum(axis=0).max()
+    return neg
 
 def make_par_list(full_par_list, small_par_list, par_index_list, par0):
     '''

@@ -8,13 +8,11 @@ from QUBIT_phase_space import (W_state, W_gate, W_meas)
 from QUBIT_Pauli_sampling import (W_state_pauli, W_gate_pauli, W_meas_pauli)
 
 '''
-1. Check qubit vs qutrit code
-2. Fix Pauli sampling compatibility with QD_circuit
-3. Delete all other files + push
-4. Create code for circuit generation of 1 and 2 blocks
-5. Plot 1-block histograms + 2-block histograms for qubits
-6. Plot N vs (n,\ell) for qubits
-7. Remains: qutrit plots + proof of CNOT+T no reduction + n>3 + rolling opt
+1. Create code for circuit generation of 1 and 2 blocks
+2. Plot 1-block histograms + 2-block histograms for qubits (wigner + pauli)
+3. Plot N vs (n,\ell) for qubits
+4. Remains: proof of CNOT+T no reduction + qutrit code (plots & merge) +
+            n>3 + rolling opt
 '''
 
 
