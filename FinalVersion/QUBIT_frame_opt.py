@@ -189,8 +189,8 @@ def frame_opt(circuit, l, par0, W, **kwargs):
     the optimised intermidate frames.
     INPUT - circuit: given circuit
             l:       max number of gates included in frame optimisation
-            par0:    ???
-            W:       ???
+            par0:    !!!
+            W:       !!!
     '''
     options = {'niter': 3}
     options.update(kwargs)
@@ -221,7 +221,7 @@ def frame_opt(circuit, l, par0, W, **kwargs):
         gate_numbers.append(gate_n)
 
         if len(gate_numbers)>=l:
-            ### Found a new block with 'l' gates. Perform frame optimisaiton.
+            ### Found a new block with 'l' gates. Perform frame optimisation.
             block_par_list, par_indicates_list = block_frame_opt(gate_set,
               indices_set, gate_numbers, par0, W_gate, niter=options['niter'])
 

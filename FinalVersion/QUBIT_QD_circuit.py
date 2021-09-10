@@ -1,5 +1,5 @@
 from QUBIT_circuit_generator import (haar_random_connected_circuit,
-                                     show_connectivity)
+         haar_2gate_circuit, show_connectivity)
 from QUBIT_compression import (compress_circuit)
 from QUBIT_frame_opt import (frame_opt, neg_circuit)
 from QUBIT_get_prob import (get_prob_list)
@@ -8,13 +8,13 @@ from QUBIT_phase_space import (W_state, W_gate, W_meas)
 from QUBIT_Pauli_sampling import (W_state_pauli, W_gate_pauli, W_meas_pauli)
 
 '''
-1. Create code for circuit generation of 1 and 2 blocks
-2. Plot 1-block histograms + 2-block histograms for qubits (wigner + pauli)
-3. Plot N vs (n,\ell) for qubits
-4. Remains: proof of CNOT+T no reduction + qutrit code (plots & merge) +
-            n>3 + rolling opt
+1. Increase L and let ell = 1, ..., L
+2. Proof of no reduction for CNOT+T frame-switching
+3. n>3
+4. rolling opt
+5. qutrit code plots
+6. qubit/qutrit code merge
 '''
-
 
 class QD_circuit(object):
     ''' Represents quasi-probability circuit.
@@ -129,8 +129,9 @@ class QD_circuit(object):
 ######## EXAMPLE CODE #########
 if __name__== "__main__":
     dim = 2
-    circ = haar_random_connected_circuit(N=8, L=20, n=2, d=dim,
-              given_state=None, given_meas=1, method='r')
+    # circ = haar_random_connected_circuit(N=8, L=20, n=2, d=dim,
+    #           given_state=None, given_meas=1, method='r')
+    circ = haar_2gate_circuit()
 
     n=2
     l=2
@@ -157,6 +158,7 @@ if __name__== "__main__":
 
     x0 = [0.,0.,0.]
     qp_function = [W_state_pauli, W_gate_pauli, W_meas_pauli]
+    circ = haar_2gate_circuit()
     circuit = QD_circuit(circ, n, l, dim, x0, qp_function)
 
     print("\nBefore compression:\n")

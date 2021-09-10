@@ -68,6 +68,18 @@ def haar_random_connected_circuit(N, L, n, d=2,
                'index_list': indices, 'meas_list': measurements}
     return circuit
 
+def haar_2gate_circuit(n_blocks=1):
+    states = [makeState('0') for i in range(3)]
+    indices = []
+    for i in range(n_blocks):
+        indices += [[0,1],[1,2]]
+    gates = [qr_haar(4) for i in range(2*n_blocks)]
+    meas =[makeState('0') for i in range(2)]+[np.eye(2)]
+
+    circuit = {'state_list': states, 'gate_list': gates,
+               'index_list': indices, 'meas_list': meas}
+    return circuit
+
 def qr_haar(d):
     ''' Generates a Haar-random matrix using the QR decomposition.
     '''
@@ -101,6 +113,11 @@ def get_index_list(L, N, n, method='r'):
                 qudit_index = 0
             elif qudit_index == N-1 and N%2 == 1:
                 qudit_index = 1
+    elif method=='cc':
+        qudit_index = 0
+        for gate_index in range(L):
+            gate_qudit_index_list.append([qudit_index, qudit_index+1])
+            qudit_index += 1
     return gate_qudit_index_list
 
 def show_connectivity(circuit):
