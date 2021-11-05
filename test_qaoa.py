@@ -69,7 +69,8 @@ x_out1, neg_list_seq1 = sequential_para_opt(W, circuit1_compressed,
                                             x_circuit1, l=1, niter=1)
 print("STEP 2")
 output = get_qd_output(circuit1_compressed, x_out1, ps_Wigner)
-res, test = sample_circuit(circuit1_compressed, output, sample_size = 100000)
+p_est, expectation_qaoa = sample_circuit(circuit1_compressed, output,
+                                 sample_size = 100000)
 
 # circuit2 = test.copy()
 # # circuit2 = compress_circuit(circuit2, n=2)

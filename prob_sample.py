@@ -137,7 +137,7 @@ def sample_circuit(circuit, qd_output, sample_size = int(1e4)):
             current_ps_point[idx[1]] = ps_point%4
             p_estimate *= neg*sign[ps_point]
 
-        p_qaoa = 0
+        exp_qaoa = 0
         # Measurement
         for m, meas in enumerate(circuit['meas_list']):
             wf = qd_output['qd_list_meas'][m].flatten() # QD NOT PD
@@ -145,27 +145,27 @@ def sample_circuit(circuit, qd_output, sample_size = int(1e4)):
 
             temp = (m+1)%len(circuit['meas_list'])
             wf_next = qd_output['qd_list_meas'][temp].flatten() # QD NOT PD
-            p_qaoa += 0.5*wf_next[current_ps_point[m]]*wf[current_ps_point[m]]
+            exp_qaoa += 0.5*wf_next[current_ps_point[m]]*wf[current_ps_point[m]]
 
-        return p_estimate, p_qaoa
+        return p_estimate, exp_qaoa
 
     start_time = time.time()
     p_estimate = np.zeros(sample_size)
-    p_qaoa = np.zeros(sample_size)
+    exp_qaoa = np.zeros(sample_size)
     for n in range(sample_size):
         est, test = sample_iter()
         p_estimate[n] = est
-        p_qaoa[n] = test
+        exp_qaoa[n] = test
     sampling_time = time.time() - start_time
 
     print('====================== Sampling Results ======================')
     print('p_estimate:    ', np.average(p_estimate))
-    print('p_qaoa:    ', np.average(p_qaoa))
+    print('exp_qaoa:    ', np.average(exp_qaoa))
     print('Sample size:   ', sample_size)
     print('Sampling time: ', sampling_time)
     print('==============================================================')
 
-    return p_estimate, p_qaoa
+    return p_estimate, exp_qaoa
 
 
 def sample_circuit_2q(compressed_circuit, qd_output,
