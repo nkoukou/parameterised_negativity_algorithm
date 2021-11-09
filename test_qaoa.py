@@ -52,8 +52,8 @@ def qaoa_maxcut(G, beta_list, gamma_list):
 edges = [(0, 1), (1, 2), (2, 3), (3, 0)]
 G = Graph(4, edges)
 
-beta_list = [0.1]
-gamma_list = [0.05]
+beta_list = [1.9793337]
+gamma_list = [1.16663483]
 
 test = qaoa_maxcut(G, beta_list, gamma_list)
 x0 = ps_Wigner.x0
@@ -70,15 +70,26 @@ x_out1, neg_list_seq1 = sequential_para_opt(W, circuit1_compressed,
 print("STEP 2")
 output = get_qd_output(circuit1_compressed, x_out1, ps_Wigner)
 p_est, expectation_qaoa = sample_circuit(circuit1_compressed, output,
-                                 sample_size = 100000)
+                                          sample_size = int(1e5))
 
-# circuit2 = test.copy()
-# # circuit2 = compress_circuit(circuit2, n=2)
-# # show_connectivity(circuit2)
-# x_circuit2 = init_x_list(circuit2, x0)
-# x_out2, neg_list_seq2 = sequential_para_opt(W, circuit2, x_circuit2, l=10,
-#                                             niter=3)
 
+### TEST SAMPLING ###
+# from qubit_circuit_components import(makeState, makeGate)
+
+# phi = 0.6 * np.pi
+# test_circuit = {'state_list': [makeState('0') for i in range(3)],
+#                 'gate_list': [U_mix(phi), makeGate('C+'), X, makeGate('H')],
+#                 'index_list': [[0], [0,1], [1], [2]],
+#                 'meas_list': [makeState('0'), makeState('1'), makeState('+')]}
+
+# test_circuit = compress_circuit(test_circuit, n=3)
+# x_circuit1 = init_x_list(test_circuit, x0)
+# x_out1, neg_list_seq1 = sequential_para_opt(W, test_circuit,
+#                                             x_circuit1, l=1, niter=1)
+# output = get_qd_output(test_circuit, x_out1, ps_Wigner)
+# p_est, expectation_qaoa = sample_circuit(test_circuit, output,
+#                                           sample_size = int(1e5))
+# print(np.cos(phi)**2)
 
 
 
