@@ -16,7 +16,7 @@ ZZ   = np.kron(Z,Z)
 X    = np.array([[0,1],[1,0]])
 
 def U_prob(gamma):
-    return expm(-1.j*gamma*ZZ)
+    return expm(-1.j*2*gamma*ZZ)
 def U_mix(beta):
     return expm(-1.j*beta*X)
 
@@ -49,34 +49,46 @@ def qaoa_maxcut(G, beta_list, gamma_list):
     return circuit
 
 
-edges = [(0, 1), (1, 2), (2, 3), (3, 0)]
-G = Graph(4, edges)
-
-beta_list = [1.9793337]
-gamma_list = [1.16663483]
-
-test = qaoa_maxcut(G, beta_list, gamma_list)
 x0 = ps_Wigner.x0
 W = ps_Wigner.W
 
-print("STEP 0")
-circuit1 = test.copy()
-show_connectivity(circuit1)
-circuit1_compressed = compress_circuit(circuit1, n=2)
-print("STEP 1")
-x_circuit1 = init_x_list(circuit1_compressed, x0)
-x_out1, neg_list_seq1 = sequential_para_opt(W, circuit1_compressed,
-                                            x_circuit1, l=1, niter=1)
-print("STEP 2")
-output = get_qd_output(circuit1_compressed, x_out1, ps_Wigner)
-p_est, expectation_qaoa = sample_circuit(circuit1_compressed, output,
-                                          sample_size = int(1e5))
+edges = [(0, 1), (1, 2), (2, 3), (3, 0)]
+G = Graph(4, edges)
+
+betas  = np.linspace(0., 0.5, 4) * np.pi/4 # np.array([1.9793337]) #
+gammas = np.linspace(0., 1., 6) * np.pi/4 # np.array([1.16663483]) #
+
+neg_circ = np.zeros((betas.size, gammas.size))
+p_est = np.zeros((betas.size, gammas.size))
+for b in range(betas.size):
+    for g in range(gammas.size):
+        print("\n"+"(beta, gamma) = (%.2f, %.2f)"%(betas[b], gammas[g])+"\n")
+
+        circuit = qaoa_maxcut(G, [betas[b]], [gammas[g]])
+        circuit = compress_circuit(circuit, n=2)
+        x_circ  = init_x_list(circuit, x0)
+        x_out, neg_list = sequential_para_opt(W, circuit, x_circ,
+                                              l=1, niter=1)
+        output = get_qd_output(circuit, x_out, ps_Wigner)
+        exp_qaoa = sample_circuit(circuit, output, sample_size = int(5e6))
+
+        temp = np.prod(np.array(output["neg_list_states"]))
+        for neg_gate in output["neg_list_gates"]:
+            temp *= neg_gate.max()
+        temp *= np.prod(np.array(output["neg_list_meas"]))
+        neg_circ[b,g] = np.log2(temp)
+        p_est[b, g] = np.average(exp_qaoa)
+
+        np.save("neg_circ.npy", neg_circ)
+        np.save("p_est.npy", p_est)
+
+
 
 
 ### TEST SAMPLING ###
 # from qubit_circuit_components import(makeState, makeGate)
 
-# phi = 0.6 * np.pi
+# phi = 0.8 * np.pi
 # test_circuit = {'state_list': [makeState('0') for i in range(3)],
 #                 'gate_list': [U_mix(phi), makeGate('C+'), X, makeGate('H')],
 #                 'index_list': [[0], [0,1], [1], [2]],
@@ -87,8 +99,8 @@ p_est, expectation_qaoa = sample_circuit(circuit1_compressed, output,
 # x_out1, neg_list_seq1 = sequential_para_opt(W, test_circuit,
 #                                             x_circuit1, l=1, niter=1)
 # output = get_qd_output(test_circuit, x_out1, ps_Wigner)
-# p_est, expectation_qaoa = sample_circuit(test_circuit, output,
-#                                           sample_size = int(1e5))
+# p_est = sample_circuit(test_circuit, output,
+#                                           sample_size = int(5e5))
 # print(np.cos(phi)**2)
 
 
