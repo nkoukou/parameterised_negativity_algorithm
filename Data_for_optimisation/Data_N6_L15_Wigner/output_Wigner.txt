@@ -1,0 +1,37 @@
+/homes/hj3617/.local/lib/python3.5/site-packages/autograd/numpy/numpy_vjps.py:698: ComplexWarning: Casting complex values to real discards the imaginary part
+  onp.add.at(A, idx, x)
+================= Haar-random circuit negativity reduction =================
+Initial log-negativity: 18.92595332069789
+------------------------- With n = 2 -------------------------
+Optimized log-negativity (n=2, l=1): 13.121630944926405
+Computation time: 40.73691272735596
+Optimized log-negativity (n=2, l=2): 12.216850461694483
+Computation time: 109.90450739860535
+Optimized log-negativity (n=2, l=3): 12.689907025005224
+Computation time: 214.6415240764618
+Optimized log-negativity (n=2, l=3): 12.808723237157832
+Computation time: 393.33731842041016
+Optimized log-negativity (n=2, l=5): 11.674561159868949
+Computation time: 556.1207702159882
+------------------------- With n = 3 -------------------------
+Optimized log-negativity (n=3, l=1): 10.373707480349092
+Computation time: 154.86743426322937
+Optimized log-negativity (n=3, l=2): 9.703895816490023
+Computation time: 620.415563583374
+Optimized log-negativity (n=3, l=3): 9.31394553044297
+Computation time: 870.8350811004639
+Optimized log-negativity (n=3, l=3): 8.955532121162639
+Computation time: 1229.8853070735931
+Optimized log-negativity (n=3, l=5): 9.235803617665969
+Computation time: 1710.7955260276794
+------------------------- With n = 4 -------------------------
+Optimized log-negativity (n=4, l=1): 7.947596376930814
+Computation time: 6067.44101691246
+Optimized log-negativity (n=4, l=2): 7.6898615521517035
+Computation time: 15315.880274295807
+Optimized log-negativity (n=4, l=3): 6.694598866283652
+Computation time: 22174.865304470062
+Optimized log-negativity (n=4, l=3): 6.911360227257332
+Computation time: 27499.095725536346
+Optimized log-negativity (n=4, l=5): 6.187025509335429
+Computation time: 29684.350692272186
