@@ -1,5 +1,5 @@
 import numpy as np
-from state_functions import(DIM, omega, ksi, psi2rho, maxcoh, maxmixed,
+from qubit_state_functions import(DIM, omega, ksi, psi2rho, maxcoh, maxmixed,
                             element, inverse)
 # import time
 np.set_printoptions(precision=4, suppress=True)
@@ -23,9 +23,18 @@ def makeGate(gate_string):
         gate = makeCsum(gate_string)
         return gate
 
+    if gate_string=='S':
+        gate = np.array([[1.,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+        return gate
+
+    if gate_string=='A':
+        gate = np.block([[np.eye(6),       np.zeros((6,2))],
+                         [np.zeros((2,6)), makeGate('X')  ]])
+        return gate
+
     gate = 1
     for g in gate_string:
-        # print(g)
+        #print(g)
         temp = makeGate1q(g)
         gate = np.kron(gate, temp)
     return gate
@@ -45,68 +54,65 @@ def makeState1q(state_string, dim=DIM):
     ''' Returns a 1-qudit state matrix from the generating state string:
         '0' - |0><0| (Pauli Z basis |0> state)
         '1' - |1><1| (Pauli Z basis |1> state)
-        '2' - |2><2| (Pauli Z basis |2> state)
         '+' - |+><+| (maximally coherent state)
         'm' - 1/d 1  (maximally mixed state)
-        'S' - |S><S| (Strange state)
-        'N' - |N><N| (Norrell state)
+        'H' - |H><H| (H state)
         'T' - |T><T| (T state)
+        Followed the notations in the Bravyi&Kitaev paper:quant-ph/0403025.
     '''
     if state_string=='0':
-        state = psi2rho(np.array([1,0,0]))
+        state = psi2rho(np.array([1,0]))
     elif state_string=='1':
-        state = psi2rho(np.array([0,1,0]))
-    elif state_string=='2':
-        state = psi2rho(np.array([0,0,1]))
+        state = psi2rho(np.array([0,1]))
     elif state_string=='+':
         state = maxcoh(dim)
     elif state_string=='m':
         state = maxmixed(dim)
-    elif state_string=='S':
-        state = psi2rho(1/np.sqrt(2) * np.array([0, 1, -1]))
-    elif state_string=='N':
-        state = psi2rho(1/np.sqrt(6) * np.array([-1, 2, -1]))
+    elif state_string=='H':
+        state = psi2rho(np.array([np.cos(np.pi/8), np.sin(np.pi/8)]))
     elif state_string=='T':
-        state = psi2rho(1/np.sqrt(3) * np.array([1, ksi, 1/ksi]))
-        # state = psi2rho(1/np.sqrt(2) * np.array([ksi, 1, 0]))
+        beta = np.arccos(1/np.sqrt(3))/2
+        state = psi2rho(np.array([np.cos(beta), ksi*np.sin(beta)]))
     else:
         raise Exception('Invalid state string')
     return state
 
 def makeGate1q(gate_string, dim=DIM):
-    ''' Returns a 1-qudit gate matrix from the generating gate string:
+    ''' Returns a 1-qubit gate matrix from the generating gate string:
         '1' - Identity
         'H' - Hadamard
-        'S' - Phase gate
-        'T' - T gate (magic gate)
-        't' - Inverse T gate
+        'K' - Pi/4-Phase shift gate ([[1,0],[0,i]])
+        'X' - Pauli X
+        'Z' - Pauli Z
+        'T' - qubit T-gate (magic gate)
+        't' - Conjugate transpose of the T-gate
+        Followed the definition of T-gates in Wikipedia
     '''
     if gate_string=='1':
         gate = np.eye(dim)
     elif gate_string=='H':
-        gate = 1/np.sqrt(dim) * np.array([[1., 1.,          1.         ],
-                                          [1., omega,       omega*omega],
-                                          [1., omega*omega, omega      ]])
-    elif gate_string=='S':
-        gate = np.diag([1., omega, 1.])
+        gate = 1/np.sqrt(dim) * np.array([[1., 1.],
+                                          [1., -1.]])
+    elif gate_string=='K':
+        gate = np.diag([1., 1.j])
     elif gate_string=='Z':
         gate = np.diag(omega**np.arange(dim))
     elif gate_string=='X':
         gate = np.roll(np.eye(dim), 1, axis=0)
     elif gate_string=='T':
-        gate = np.diag([ksi, 1., ksi.conj()])
+        gate = np.diag([1., ksi])
     elif gate_string=='t':
-        gate = np.diag([ksi.conj(), 1., ksi])
+        gate = np.diag([1., np.conjugate(ksi)])
     else:
         raise Exception('Invalid 1-q gate string')
     return gate
 
 def makeCsum(gate_string, dim=DIM):
-    ''' Makes a 2-qudit C-SUM gate matrix from the generating gate string,
+    ''' Makes a 2-qubit C-SUM gate matrix from the generating gate string,
         e.g. '11+1C'.
-        'C' - C-SUM gate (control) between two qudits
-        'c' - inverse C-SUM gate (control) between two qudits
-        '+' - C-SUM & inverse C-SUM gate (target) between two qudits
+        'C' - C-SUM gate (control) between two qubits
+        'c' - inverse C-SUM gate (control) between two qubits
+        '+' - C-SUM & inverse C-SUM gate (target) between two qubits
     '''
     if not(gate_string.count('+')==1 and
            gate_string.count('1')==len(gate_string)-2 and

@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as nr
 from numpy.linalg import qr
-from QUBIT_circuit_components import(makeState, makeGate, makeMeas)
+from qubit_circuit_components import(makeState, makeGate, makeMeas)
 
 def haar_random_connected_circuit(N, L, n, d=2,
                                   given_state=None, given_meas=1, method='c'):

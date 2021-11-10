@@ -1,5 +1,7 @@
 .DS_Store
 
-FinalVersion/__pycache__/*
-FinalVersion_Qutrit/__pycache__/*
-FinalVersion_Qutrit/__pycache__/*
+FinalVersion/*
+FinalVersion_Qutrit/*
+HK_Update/*
+data/*
+__pycache__/*
