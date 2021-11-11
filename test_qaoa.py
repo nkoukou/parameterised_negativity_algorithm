@@ -70,7 +70,7 @@ for b in range(betas.size):
         x_out, neg_list = sequential_para_opt(W, circuit, x_circ,
                                               l=1, niter=1)
         output = get_qd_output(circuit, x_out, ps_Wigner)
-        exp_qaoa = sample_circuit(circuit, output, sample_size = int(5e6))
+        exp_qaoa = sample_circuit(circuit, output, sample_size = int(1e8))
 
         temp = np.prod(np.array(output["neg_list_states"]))
         for neg_gate in output["neg_list_gates"]:
@@ -81,6 +81,28 @@ for b in range(betas.size):
 
         np.save("neg_circ.npy", neg_circ)
         np.save("p_est.npy", p_est)
+
+p_exact = np.array([[0., 0., 0., 0., 0., 0.],
+                    [0., 0.293926, 0.475554, 0.475553, 0.293923, 0.],
+                    [0., 0.50909, 0.823682, 0.823682, 0.50909, 0.],
+                    [0., 0.587845, 0.951107, 0.951107, 0.587845, 0.]])
+
+p_est = np.load("p_est.npy")
+
+neg = np.load("neg_circ.npy")
+
+import matplotlib.pylab as plt
+plt.close()
+
+plt.figure()
+plt.plot(neg.flatten(), (p_est - p_exact).flatten(), 'o')
+plt.xlabel("Negativity")
+plt.ylabel(r'$\hat{p} - p$')
+
+plt.figure()
+plt.plot((p_est - p_exact).flatten(), 'o')
+plt.xlabel(r'$(\beta, \gamma)$')
+plt.ylabel(r'$\hat{p} - p$')
 
 
 

@@ -17,7 +17,7 @@ L = 8
 gate_size = 2
 circuit_haar = haar_random_connected_circuit(N, L, gate_size, d=2, given_state=None, given_meas=1, method='c')
 
-main_path = 'Data_for_optimisation/Data_N%d_L%d'%(N,L)
+main_path = 'data_optimisation/Data_N%d_L%d'%(N,L)
 
 ###### Data
 print('================= Haar-random circuit negativity reduction =================')
