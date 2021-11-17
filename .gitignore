@@ -5,3 +5,5 @@ FinalVersion_Qutrit/*
 HK_Update/*
 data/*
 __pycache__/*
+
+*.npy
