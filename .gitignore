@@ -1,5 +1,6 @@
 .DS_Store
 
+.ipynb_checkpoints/*
 FinalVersion/*
 FinalVersion_Qutrit/*
 HK_Update/*
