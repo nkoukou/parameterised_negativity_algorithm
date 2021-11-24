@@ -131,40 +131,90 @@ G = Graph(4, edges)
 
 
 ### TEST SAMPLING ###
-from qubit_circuit_components import(makeState, makeGate)
+# from qubit_circuit_components import(makeState, makeGate)
 
-phi = 0.6 * np.pi
-circuit = {'state_list': [makeState('0') for i in range(3)],
-                'gate_list': [U_mix(phi), makeGate('C+'), X, makeGate('H')],
-                'index_list': [[0], [0,1], [1], [2]],
-                'meas_list': [makeState('0'),makeState('1'),makeState('+')]}
+# phi = 0.6 * np.pi
+# circuit = {'state_list': [makeState('0') for i in range(3)],
+#                 'gate_list': [U_mix(phi), makeGate('C+'), X, makeGate('H')],
+#                 'index_list': [[0], [0,1], [1], [2]],
+#                 'meas_list': [makeState('0'),makeState('1'),makeState('+')]}
 
-circuit = compress_circuit(circuit, n=2)
-x_circuit = init_x_list(circuit, x0)
-x_out, neg_list_seq = sequential_para_opt(W, circuit,
-                                            x_circuit, l=1, niter=1)
+# circuit = compress_circuit(circuit, n=2)
+# x_circuit = init_x_list(circuit, x0)
+# x_out, neg_list_seq = sequential_para_opt(W, circuit,
+#                                             x_circuit, l=1, niter=1)
 
-meas_list, index_list, qd_list_states, qd_list_gates, qd_list_meas,\
-pd_list_states, pd_list_gates, pd_list_meas, sign_list_states,\
-sign_list_gates, sign_list_meas, neg_list_states, neg_list_gates,\
-neg_list_meas = prepare_sampler(circuit=circuit, par_list=x_out,ps=ps_Wigner)
+# meas_list, index_list, qd_list_states, qd_list_gates, qd_list_meas,\
+# pd_list_states, pd_list_gates, pd_list_meas, sign_list_states,\
+# sign_list_gates, sign_list_meas, neg_list_states, neg_list_gates,\
+# neg_list_meas = prepare_sampler(circuit=circuit, par_list=x_out,ps=ps_Wigner)
 
-test = sample_fast(sample_size, meas_list, index_list, qd_list_states,
-                qd_list_gates, qd_list_meas, pd_list_states, pd_list_gates,
-                pd_list_meas, sign_list_states, sign_list_gates,
-                sign_list_meas, neg_list_states, neg_list_gates,
-                neg_list_meas)
+# test = sample_fast(sample_size, meas_list, index_list, qd_list_states,
+#                 qd_list_gates, qd_list_meas, pd_list_states, pd_list_gates,
+#                 pd_list_meas, sign_list_states, sign_list_gates,
+#                 sign_list_meas, neg_list_states, neg_list_gates,
+#                 neg_list_meas)
 
-print(test)
-print(np.cos(phi)**2)
-
-
+# print(test)
+# print(np.cos(phi)**2)
 
 
 
 
+### TEST FINITE FRAME SWITCHING
+# from copy import deepcopy
+# from qubit_circuit_components import(makeState, makeGate)
 
+# circuit = {'state_list': [makeState('0') for i in range(2)],
+#            'gate_list': [makeGate('H'), makeGate('T'), makeGate('H'),
+#                          makeGate('C+')],
+#            'index_list': [[0], [0], [0], [0,1]],
+#            'meas_list': [makeState('0'),makeState('1')]}
+# show_connectivity(circuit)
 
+# x_0 = init_x_list(circuit, x0)
+# # x_out, neg_list_seq = sequential_para_opt(W, circuit,
+# #                                           x_circuit, l=1, niter=1)
+# neg0 = get_negativity_circuit(W, circuit, x_0)
+# x_1q = [np.array([1., 0.5, 0.5]), np.array([1., 0.7, 0.7])]
+
+# def replace(x, n, x1q):
+#     y = deepcopy(x)
+#     y[0][n] = list(x1q)
+#     return y
+
+# def gen_bin(bit_count):
+#     binary_strings = []
+#     def genbin(n, bs=''):
+#         if len(bs) == n:
+#             binary_strings.append(bs)
+#         else:
+#             genbin(n, bs + '0')
+#             genbin(n, bs + '1')
+#     genbin(bit_count)
+#     return binary_strings
+
+# def opt_neg(circuit, x0, x1q):
+#     n = len(x_0[0])
+#     neg_list = []
+#     ind_list = []
+#     for indicator in gen_bin(n):
+#         xref = deepcopy(x0)
+#         for i in range(len(indicator)):
+#             if indicator[i]=='0': continue
+#             xref = replace(xref, i, x1q[1])
+#         neg_list.append(get_negativity_circuit(W, circuit, xref))
+#         ind_list.append(indicator)
+#     return(np.array(neg_list), ind_list)
+
+# neg, ind = opt_neg(circuit, x_0, x_1q)
+
+# y = x_0
+# for i in [2,5,6]:
+#     y = replace(y, i, x_1q[1])
+# neg1 = get_negativity_circuit(W, circuit, y)
+
+# print("%.2f, %.2f"%(neg0, neg1))
 
 ### TEST PARALLELISM
 

@@ -1,4 +1,5 @@
 .DS_Store
+.gitpush.txt
 
 .ipynb_checkpoints/*
 FinalVersion/*
