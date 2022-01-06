@@ -45,10 +45,10 @@ def haar_random_connected_circuit(N, L, n, d=2,
     for i in range(L):
         gates.append(qr_haar(d**n))
 
-        if method=='r': # EXTRA
-            gates.append(qr_haar(d))
-            for j in range(n-1):
-                gates[-1] = np.kron(gates[-1], qr_haar(d))
+        # if method=='r': # EXTRA
+        #     gates.append(qr_haar(d))
+        #     for j in range(n-1):
+        #         gates[-1] = np.kron(gates[-1], qr_haar(d))
 
     # Measurements
     if type(given_meas)==int:
@@ -105,7 +105,7 @@ def get_index_list(L, N, n, method='r'):
             gate_qudit_index = rng.choice(N, size=n, replace=False)
             gate_qudit_index_list.append(list(gate_qudit_index))
 
-            gate_qudit_index_list.append(list(gate_qudit_index)) # EXTRA
+            # gate_qudit_index_list.append(list(gate_qudit_index)) # EXTRA
 
 
     elif method=='c':

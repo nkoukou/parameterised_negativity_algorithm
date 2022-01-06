@@ -19,8 +19,9 @@ W = ps_Wigner.W
 
 def sample(circuit, n, l, sample_size):
     circ = deepcopy(circuit)
-    x_in = init_x_list(circ, x0)
     circ_comp = compress_circuit(circuit, n)
+
+    x_in = init_x_list(circ, x0)
     x_comp = init_x_list(circ_comp, x0)
     x_opt, _ = sequential_para_opt(W, circ_comp, x_comp, l, niter=1)
 
@@ -56,10 +57,10 @@ def plot(samples):
     ax.plot(xaxis, samples[1], label='Compressed, Wig repr')
     ax.plot(xaxis, samples[2], label='Compressed, Opt repr')
 
-    ax.legend(loc='upper right')
+    ax.legend(loc='upper left').set_draggable(1)
 
 
-circuit = haar_random_connected_circuit(N=3, L=20, n=2,
+circuit = haar_random_connected_circuit(N=3, L=15, n=2,
             given_state=0, given_meas=1, method='r')
 n = 2
 l = 1
