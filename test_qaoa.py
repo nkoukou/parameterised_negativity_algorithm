@@ -57,12 +57,12 @@ def qaoa_maxcut(G, beta_list, gamma_list):
 
 
 
-sample_size = int(1e5)
-x0 = ps_Wigner.x0
-W = ps_Wigner.W
+# sample_size = int(1e5)
+# x0 = ps_Wigner.x0
+# W = ps_Wigner.W
 
-edges = [(0, 1), (1, 2), (2, 3), (3, 0)]
-G = Graph(4, edges)
+# edges = [(0, 1), (1, 2), (2, 3), (3, 0)]
+# G = Graph(4, edges)
 
 ### Get QAOA samples
 
@@ -89,7 +89,7 @@ G = Graph(4, edges)
 #                                         par_list=x_out, ps=ps_Wigner)
 
 #         print("\nSTEP 0\n")
-#         test = sample_fast(sample_size, meas_list, index_list, qd_list_states,
+#         test = sample_fast(sample_size, meas_list, index_list,qd_list_states,
 #                 qd_list_gates, qd_list_meas, pd_list_states, pd_list_gates,
 #                 pd_list_meas, sign_list_states, sign_list_gates,
 #                 sign_list_meas, neg_list_states, neg_list_gates,
@@ -127,55 +127,23 @@ G = Graph(4, edges)
 
 
 
-
-
-
-### TEST SAMPLING ###
-# from qubit_circuit_components import(makeState, makeGate)
-
-# phi = 0.6 * np.pi
-# circuit = {'state_list': [makeState('0') for i in range(3)],
-#                 'gate_list': [U_mix(phi), makeGate('C+'), X, makeGate('H')],
-#                 'index_list': [[0], [0,1], [1], [2]],
-#                 'meas_list': [makeState('0'),makeState('1'),makeState('+')]}
-
-# circuit = compress_circuit(circuit, n=2)
-# x_circuit = init_x_list(circuit, x0)
-# x_out, neg_list_seq = sequential_para_opt(W, circuit,
-#                                             x_circuit, l=1, niter=1)
-
-# meas_list, index_list, qd_list_states, qd_list_gates, qd_list_meas,\
-# pd_list_states, pd_list_gates, pd_list_meas, sign_list_states,\
-# sign_list_gates, sign_list_meas, neg_list_states, neg_list_gates,\
-# neg_list_meas = prepare_sampler(circuit=circuit, par_list=x_out,ps=ps_Wigner)
-
-# test = sample_fast(sample_size, meas_list, index_list, qd_list_states,
-#                 qd_list_gates, qd_list_meas, pd_list_states, pd_list_gates,
-#                 pd_list_meas, sign_list_states, sign_list_gates,
-#                 sign_list_meas, neg_list_states, neg_list_gates,
-#                 neg_list_meas)
-
-# print(test)
-# print(np.cos(phi)**2)
-
-
-
-
 ### TEST FINITE FRAME SWITCHING
 # from copy import deepcopy
 # from qubit_circuit_components import(makeState, makeGate)
 
 # circuit = {'state_list': [makeState('0') for i in range(2)],
-#            'gate_list': [makeGate('H'), makeGate('T'), makeGate('H'),
-#                          makeGate('C+')],
-#            'index_list': [[0], [0], [0], [0,1]],
-#            'meas_list': [makeState('0'),makeState('1')]}
+#             'gate_list': [makeGate('H'), makeGate('T'), makeGate('H'),
+#                           makeGate('C+')],
+#             'index_list': [[0], [0], [0], [0,1]],
+#             'meas_list': [makeState('0'),makeState('1')]}
 # show_connectivity(circuit)
 
 # x_0 = init_x_list(circuit, x0)
-# # x_out, neg_list_seq = sequential_para_opt(W, circuit,
-# #                                           x_circuit, l=1, niter=1)
+# x_circuit = init_x_list(circuit, x0)
+# x_out, neg_list_seq = sequential_para_opt(W, circuit,
+#                                           x_circuit, l=1, niter=1)
 # neg0 = get_negativity_circuit(W, circuit, x_0)
+# neg1 = get_negativity_circuit(W, circuit, x_out)
 # x_1q = [np.array([1., 0.5, 0.5]), np.array([1., 0.7, 0.7])]
 
 # def replace(x, n, x1q):
@@ -215,6 +183,58 @@ G = Graph(4, edges)
 # neg1 = get_negativity_circuit(W, circuit, y)
 
 # print("%.2f, %.2f"%(neg0, neg1))
+
+
+# from autograd import(grad)
+# from scipy.optimize import(basinhopping)
+# from qubit_frame_Pauli import(F, G, DIM, x0)
+# ps_Pauli = PhaseSpace(F, G, x0, DIM)
+
+# test_circuit = {'state_list': [makeState('0') for i in range(3)],
+#                 'gate_list': [makeGate('H'), makeGate('C+'),
+#                               makeGate('T'), # makeGate('C+'), makeGate('C+')
+#                               ], #, makeGate('T'), makeGate('T')
+#                 'index_list': [[1], [0, 1], [2]# , [1, 2], [0, 1], [1], [2]
+#                                ],
+#                 'meas_list': [makeState('0') for i in range(3)]}
+# test_circuit = {'state_list': [makeState('0')],
+#                 'gate_list': [makeGate('T')],
+#                 'index_list': [[0]],
+#                 'meas_list': [makeState('0')]}
+
+# x_0 = init_x_list(circuit, x0)
+# x_circuit = init_x_list(circuit, x0)
+# x_out, neg_list_seq = sequential_para_opt(W, circuit,
+#                                           x_circuit, l=1, niter=1)
+# neg0 = get_negativity_circuit(W, circuit, x_0)
+# neg1 = get_negativity_circuit(W, circuit, x_out)
+# x_1q = [np.array([1., 0.5, 0.5]), np.array([1., 0.7, 0.7])]
+# x_init = init_x_list(test_circuit, ps_Pauli.x0)
+# neg_init = get_negativity_circuit(ps_Pauli.W, test_circuit, x_init)
+
+# x_opt = deepcopy(x_init)
+# x_opt[0][1] = np.array([0.4452, 4.7124, 3.4818])
+# neg_opt = get_negativity_circuit(ps_Pauli.W, test_circuit, x_opt)
+# print(neg_init, neg_opt)
+
+# res = []
+# for i in range(16):
+#     print(i)
+
+#     start_x = np.random.rand(len(x0))
+#     def cost_function(x):
+#         x_out = deepcopy(x_init)
+#         x_out[0][i] = x
+#         return get_negativity_circuit(ps_Pauli.W, test_circuit, x_out)
+#     grad_cost_function = grad(cost_function)
+#     def func(x):
+#         return cost_function(x), grad_cost_function(x)
+#     opt_res = basinhopping(func, start_x,
+#                 minimizer_kwargs={"method":"L-BFGS-B", "jac":True}, niter=3)
+
+#     print(neg_init, opt_res.fun)
+#     if opt_res.fun < neg_init:
+#         res.append([i, opt_res.fun, opt_res.x])
 
 ### TEST PARALLELISM
 

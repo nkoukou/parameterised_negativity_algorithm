@@ -5,11 +5,11 @@ from qubit_circuit_components import(makeState, makeGate, makeMeas)
 
 def haar_random_connected_circuit(N, L, n, d=2,
                                   given_state=None, given_meas=1, method='c'):
-    ''' Generates a circuit with Haar-random n-qudit gates.
+    ''' Generates a circuit with Haar-random gates acting on up to n qudits.
         Input:
             N - number of qudits
             L - number of gates
-            n - number of qudits a gate acts on
+            n - max number of qudits a gate acts on
             d - qudit dimension
             given_state - None or 0 (all zeros) or string
             given_meas  - string or int (number of measurement modes)
@@ -44,6 +44,11 @@ def haar_random_connected_circuit(N, L, n, d=2,
     gates = []
     for i in range(L):
         gates.append(qr_haar(d**n))
+
+        if method=='r': # EXTRA
+            gates.append(qr_haar(d))
+            for j in range(n-1):
+                gates[-1] = np.kron(gates[-1], qr_haar(d))
 
     # Measurements
     if type(given_meas)==int:
@@ -99,6 +104,9 @@ def get_index_list(L, N, n, method='r'):
             rng = nr.default_rng()
             gate_qudit_index = rng.choice(N, size=n, replace=False)
             gate_qudit_index_list.append(list(gate_qudit_index))
+
+            gate_qudit_index_list.append(list(gate_qudit_index)) # EXTRA
+
 
     elif method=='c':
         qudit_index = 0

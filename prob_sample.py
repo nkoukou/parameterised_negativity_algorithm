@@ -12,12 +12,11 @@ def sample_fast(sample_size, meas_list, index_list,
           pd_list_gates, pd_list_meas, sign_list_states, sign_list_gates,
           sign_list_meas, neg_list_states, neg_list_gates, neg_list_meas):
     N = meas_list.shape[0]
-    p_out = 0
+    p_out = np.zeros(sample_size) # 0
     for n in prange(sample_size):
-        if n%(sample_size//100)==0:
-            # print("------")
+        if n%(sample_size//10)==0:
+            print("------")
             print(n/sample_size*100, "%")
-            # print("------")
 
         current_ps_point = np.zeros(N, dtype=np.int32)
         p_estimate = 1.
@@ -66,17 +65,22 @@ def sample_fast(sample_size, meas_list, index_list,
 
 
         # Measurement
-        exp_qaoa = p_estimate
-        temp = 0
         for m in range(N):
             p_estimate *= qd_list_meas[m,current_ps_point[m]]
+        p_out[n] = p_estimate
 
-            m_next = (m+1)%N
-            temp += 0.5 * qd_list_meas[m_next,current_ps_point[m_next]]*\
-                          qd_list_meas[m,current_ps_point[m]]
-        exp_qaoa *= temp
+        # exp_qaoa = p_estimate
+        # temp = 0
+        # for m in range(N):
+        #     p_estimate *= qd_list_meas[m,current_ps_point[m]]
 
-        p_out += 1./sample_size * exp_qaoa # p_estimate #
+        #     m_next = (m+1)%N
+        #     temp += 0.5 * qd_list_meas[m_next,current_ps_point[m_next]]*\
+        #                   qd_list_meas[m,current_ps_point[m]]
+        # exp_qaoa *= temp
+
+        # p_out += 1./sample_size * exp_qaoa
+    p_out = 1./sample_size * np.cumsum(p_out)
     return p_out
 
 def get_qd_output(circuit, par_list, ps):
