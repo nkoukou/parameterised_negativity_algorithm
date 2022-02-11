@@ -1,12 +1,12 @@
 import os
 # os.environ['NUMBA_DISABLE_INTEL_SVML']  = '1'
-from numba import(jitclass, jit, prange, types)
+from numba import (jit, prange, types)
 import numpy as np
 import numpy.random as nr
 import time
 
-
-@jit(nopython=True) # Comment out this line to ignore numba
+# @jit(nopython=True) # Comment out this line to ignore numba
+@jit(nopython=True, cache=True) # Comment out this line to ignore numba
 def sample_fast(sample_size, meas_list, index_list,
           qd_list_states, qd_list_gates, qd_list_meas, pd_list_states,
           pd_list_gates, pd_list_meas, sign_list_states, sign_list_gates,
@@ -14,9 +14,9 @@ def sample_fast(sample_size, meas_list, index_list,
     N = meas_list.shape[0]
     p_out = np.zeros(sample_size) # 0
     for n in prange(sample_size):
-        if n%(sample_size//10)==0:
-            print("------")
-            print(n/sample_size*100, "%")
+        # if n%(sample_size//10)==0:
+        #     print("------")
+            # print(n/sample_size*100, "%")
 
         current_ps_point = np.zeros(N, dtype=np.int32)
         p_estimate = 1.
@@ -80,7 +80,7 @@ def sample_fast(sample_size, meas_list, index_list,
         # exp_qaoa *= temp
 
         # p_out += 1./sample_size * exp_qaoa
-    p_out = 1./sample_size * np.cumsum(p_out)
+    p_out = (1./sample_size) * np.cumsum(p_out)
     return p_out
 
 def get_qd_output(circuit, par_list, ps):

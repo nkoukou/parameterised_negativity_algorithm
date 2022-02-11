@@ -58,19 +58,17 @@ def plot(samples):
     ax.plot(xaxis, samples[2], label='Compressed, Opt repr')
 
     ax.legend(loc='upper left').set_draggable(1)
+    plt.show()
 
 
-circuit = haar_random_connected_circuit(N=3, L=15, n=2,
+circuit = haar_random_connected_circuit(N=8, L=8, n=2,
             given_state=0, given_meas=1, method='r')
 n = 2
 l = 1
-sample_size = int(1e6)
+sample_size = np.int64(1e8)
 
 samples = sample(circuit, n, l, sample_size)
 plot(samples)
-
-
-
 
 
 
