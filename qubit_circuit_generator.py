@@ -2,6 +2,12 @@ import numpy as np
 import numpy.random as nr
 from numpy.linalg import qr
 from qubit_circuit_components import(makeState, makeGate, makeMeas)
+from qubit_state_functions import psi2rho
+
+from qiskit import QuantumCircuit
+from qiskit.quantum_info.operators import Operator
+from qiskit.quantum_info import Statevector
+from functools import reduce
 
 def haar_random_connected_circuit(N, L, n, d=2,
                                   given_state=None, given_meas=1, method='c'):
@@ -71,6 +77,7 @@ def haar_random_connected_circuit(N, L, n, d=2,
 
     circuit = {'state_list': states, 'gate_list': gates,
                'index_list': indices, 'meas_list': measurements}
+
     return circuit
 
 def haar_2gate_circuit(n_blocks=1):
@@ -163,4 +170,47 @@ def show_connectivity(circuit):
     for wire in circ_repr:
         print(wire)
     # return circ_repr
+
+def qiskit_simulate(circuit):
+    N = len(circuit["state_list"])
+    qsk_circ = QuantumCircuit(N)
+
+    qubit_n = 0
+    for state in circuit["state_list"]:
+        if np.allclose(state, makeState('0')): continue
+        elif np.allclose(state, makeState('1')): qsk_circ.x(qubit_n)
+        else: raise Exception('Initial states must be 0 and 1')
+        qubit_n += 1
+    state = Statevector.from_int(0, 2**N)
+
+    gate_n = 0
+    for gate in circuit["gate_list"]:
+        qsk_gate = Operator(gate)
+        qsk_circ.append(qsk_gate, circuit["index_list"][gate_n])
+        gate_n += 1
+
+    meas_effect = reduce(np.kron, circuit["meas_list"])
+
+    state = state.evolve(qsk_circ)
+    final_state = np.array(state.data)
+    p_exact = np.einsum('ij,ji->', psi2rho(final_state), meas_effect)
+    return np.real(p_exact)
+
+### Test QISKIT circuits
+# from scipy.linalg import(expm)
+# N = 6
+# L = 20
+# n = 2
+
+# circuit = haar_random_connected_circuit(N, L, n, d=2,
+#                                   given_state=None, given_meas=1, method='c')
+# phi = 0.6 * np.pi
+# phasegate = np.kron(expm(-1.j*phi*np.array([[0,1],[1,0]])), makeGate('1'))
+# circuit = {'state_list': [makeState('0') for i in range(2)],
+#                 'gate_list': [phasegate, makeGate('C+')],
+#                 'index_list': [[0,1], [0,1]],
+#                 'meas_list': [makeState('1'),makeState('1')]}
+# p_exact = qiskit_simulate(circuit)
+
+# print(np.sin(phi)**2, p_exact)
 

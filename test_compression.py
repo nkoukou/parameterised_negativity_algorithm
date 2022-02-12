@@ -5,17 +5,16 @@ import matplotlib.pyplot as plt
 # import time
 import os
 
-from QUBIT_circuit_components import(makeState, makeGate)
+from qubit_circuit_components import(makeState, makeGate)
 from compression import(compress_circuit)
 from frame_opt import(neg_gate_max)
-# init_x_list, get_negativity_circuit, sequential_para_opt,
-from phase_space import(phase_space)
-from QUBIT_Pauli_frame import(F, G, DIM, x0)
-ps_Pauli = phase_space(F,G,x0,DIM)
-from QUBIT_Wigner_frame import(F, G, DIM, x0)
-ps_Wigner = phase_space(F,G,x0,DIM)
+from phase_space import(PhaseSpace)
+from qubit_frame_Pauli import(F, G, DIM, x0)
+ps_Pauli = PhaseSpace(F,G,x0,DIM)
+from qubit_frame_Wigner import(F, G, DIM, x0)
+ps_Wigner = PhaseSpace(F,G,x0,DIM)
 
-direc = 'data'
+direc = 'data_compression'
 np.set_printoptions(precision=4, suppress=True)
 
 plt.rcParams['figure.dpi'] = 200
@@ -66,7 +65,7 @@ def generate_data(N, n, L, T, S):
     x0 = ps_Pauli.x0
     for s in range(S):
         if s < trig: continue
-        print("(N, n, L, T) = (%d, %d, %d, %d) | %d / %d PAU"%(N,n,L,T,s,S))
+        print("(N, n, L, T) = (%d, %d, %d, %d) | %d / %d PAU"%(N,n,L,T,s+1,S))
         circuit = generate_random_CliffT(N, L, T)
         cc = circuit.copy()
         cc = compress_circuit(cc, n)
@@ -91,56 +90,60 @@ def plot_data(N, n, L, Ts, S):
         stat = [data.mean(), data.std(), np.where(data<to_beat[0]
                 )[0].size/S, np.where(data<to_beat[1])[0].size/S]
         stats.append(stat)
-        freq, bnds, _ = ax[i,j].hist(data, bins=20, fc=(0, 0, 1, 0.3),
+        freq, bnds, _ = ax[i,j].hist(data, bins=20, fc=(0, 0, 1., 0.3),
                           edgecolor="none")
+        xbnds = bnds
 
         ax[i,j].vlines(x=stat[0], ymin=0, ymax=300, lw=4, #freq.max()
-                           color='b', ls='-', label=r'$n = %d$'%(n))
+                            color='b', ls='-', label=r'$n = %d$'%(n))
         ax[i,j].axvspan(stat[0]-stat[1], stat[0]+stat[1],
-                         color='gray', alpha=0.2)
+                          color='gray', alpha=0.2)
 
         temp = np.load(os.path.join(direc,
                   "neg_compressed_pau_N%d_n%d_L%d_T%d_S%d.npy"%(N,n-1,L,t,S)))
         temp = np.log2(temp)/t
-        freq, bnds, _ = ax[i,j].hist(temp, bins=20, fc=(0, 1, 0, 0.3),
-                          edgecolor="none")
+        # freq, bnds, _ = ax[i,j].hist(temp, bins=20, fc=(0, 1, 0, 0.3),
+        #                   edgecolor="none")
         ax[i,j].vlines(x=temp.mean(), ymin=0, ymax=300, lw=4,
-                            color=(0, 1, 0, 1.), ls='-',
+                            color=(0.1, 0.8, 0.1, 1.), ls='-',
                             label=r'$n = %d$'%(n-1))
+        xbnds = np.append(xbnds, temp.mean())
+
         temp = np.load(os.path.join(direc,
                   "neg_compressed_pau_N%d_n%d_L%d_T%d_S%d.npy"%(N,n-2,L,t,S)))
         temp = np.log2(temp)/t
-        freq, bnds, _ = ax[i,j].hist(temp, bins=20, fc=(1, 0, 0, 0.3),
-                          edgecolor="none")
+        # freq, bnds, _ = ax[i,j].hist(temp, bins=20, fc=(1, 0, 0, 0.3),
+        #                   edgecolor="none")
         ax[i,j].vlines(x=temp.mean(), ymin=0, ymax=300, lw=4,
-                            color=(1, 0, 0, 1.), ls='-',
+                            color=(0.8, 0.1, 0.1, 1.), ls='-',
                             label=r'$n = %d$'%(n-2))
+        xbnds = np.append(xbnds, temp.mean())
 
         ax[i,j].set_xticks(np.round(np.linspace(0., bnds.max(), 5), 2))
-        ax[i,j].set_xlabel(r'$\log{N^{\rm Pauli}_T(\mathcal{G}_0)}/t$')
-        ax[i,j].set_xlim(0., bnds.max()*1.1)
+        ax[i,j].tick_params(axis='x', which='major', pad=10)
+        ax[i,j].set_xlabel(r'$\log{N^{\rm Pauli}_T}/t$')
+        ax[i,j].set_xlim(0., xbnds.max()*1.05)
         ax[i,j].set_ylim(0., freq.max())
         ax[i,j].legend(title=r'$t = %d$'%(t), loc='upper left')
 
         for val in to_beat:
             ax[i,j].vlines(x=val, ymin=0, ymax=freq.max(),
-                           color='brown', ls='--')
-    return np.array(stats)
+                            color='brown', ls='--')
+    stats = np.array(stats)
 
-Ts = [9,10,11,12]
-# N, n, L, S = 10, 5, 100, 200
-# for T in Ts:
-#     data = generate_data(N=N, n=n, L=L, T=T, S=S)
-# Ts = [9,10,11,12]
-# N, n, L, S = 5, 4, 100, 1000
-# for T in Ts:
-#     data = generate_data(N=N, n=n, L=L, T=T, S=S)
+    # fig, ax = plt.subplots(1,1)
+    # ax.plot(Ts, stats[:,0], ls='--', marker='s', markersize=10,
+    #         color=(0.1, 0.2, 0.7, 1.))
+    # ax.set_xticks(Ts)
+    # ax.set_xlabel(r'$t$')
+    # ax.set_xlim(min(Ts)-0.2, max(Ts)+0.2)
+    # ax.set_ylabel(r'Average $\log{N^{\rm Pauli}_T}/t$')
 
+    return stats
+
+Ts = [12,13,14,15]
 plt.close('all')
-# stats = plot_data(N=10, n=5, L=100, Ts=Ts, S=200)
-stats2 = plot_data(N=5, n=5, L=100, Ts=Ts, S=1000)
-
-
+stats = plot_data(N=5, n=5, L=100, Ts=Ts, S=1000)
 
 
 
