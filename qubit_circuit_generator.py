@@ -49,12 +49,14 @@ def haar_random_connected_circuit(N, L, n, d=2,
     indices = get_index_list(L, N, n, method)
     gates = []
     for i in range(L):
-        gates.append(qr_haar(d**n))
-
+        coin = np.random.binomial(1,0.75)
+        if coin==1:
+            gates.append(qr_haar(d**n))
+        if coin==0:
         # if method=='r': # EXTRA
-        #     gates.append(qr_haar(d))
-        #     for j in range(n-1):
-        #         gates[-1] = np.kron(gates[-1], qr_haar(d))
+            gates.append(qr_haar(d))
+            for j in range(n-1):
+                gates[-1] = np.kron(gates[-1], qr_haar(d))
 
     # Measurements
     if type(given_meas)==int:
@@ -195,22 +197,4 @@ def qiskit_simulate(circuit):
     final_state = np.array(state.data)
     p_exact = np.einsum('ij,ji->', psi2rho(final_state), meas_effect)
     return np.real(p_exact)
-
-### Test QISKIT circuits
-# from scipy.linalg import(expm)
-# N = 6
-# L = 20
-# n = 2
-
-# circuit = haar_random_connected_circuit(N, L, n, d=2,
-#                                   given_state=None, given_meas=1, method='c')
-# phi = 0.6 * np.pi
-# phasegate = np.kron(expm(-1.j*phi*np.array([[0,1],[1,0]])), makeGate('1'))
-# circuit = {'state_list': [makeState('0') for i in range(2)],
-#                 'gate_list': [phasegate, makeGate('C+')],
-#                 'index_list': [[0,1], [0,1]],
-#                 'meas_list': [makeState('1'),makeState('1')]}
-# p_exact = qiskit_simulate(circuit)
-
-# print(np.sin(phi)**2, p_exact)
 

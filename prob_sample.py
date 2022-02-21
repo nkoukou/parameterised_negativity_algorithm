@@ -9,19 +9,20 @@ def sample_fast(sample_size, meas_list, index_list,
           qd_list_states, qd_list_gates, qd_list_meas, pd_list_states,
           pd_list_gates, pd_list_meas, sign_list_states, sign_list_gates,
           sign_list_meas, neg_list_states, neg_list_gates, neg_list_meas):
+    sample_size = np.int64(sample_size)
     N = meas_list.shape[0]
     p_out = 0 # np.zeros(sample_size) #
     for n in prange(sample_size):
-        # if n%(sample_size//10)==0:
-        #     print("------")
-            # print(n/sample_size*100, "%")
+        if n%(sample_size//10)==0:
+            print("------")
+            print((n/sample_size)*100, "%")
 
-        current_ps_point = np.zeros(N, dtype=np.int32)
+        current_ps_point = np.zeros(N, dtype=np.int64)
         p_estimate = 1.
 
         # Input states
         for s in range(N):
-            ps_point = np.arange(len(pd_list_states[s]), dtype=np.int32
+            ps_point = np.arange(len(pd_list_states[s]), dtype=np.int64
                          )[np.searchsorted(np.cumsum(pd_list_states[s]),
                                            np.random.random(), side="right")]
             current_ps_point[s] = ps_point
@@ -36,25 +37,18 @@ def sample_fast(sample_size, meas_list, index_list,
             for i in range(len(idx)):
                 pq_in += current_ps_point[idx[i]]//2 * 2**(2*(arr_dim-i)-1)
                 pq_in += current_ps_point[idx[i]]%2 * 2**(2*(arr_dim-i)-2)
-            pq_in = np.int32(pq_in)
+            pq_in = np.int64(pq_in)
 
-            prob = pd_list_gates[g,pq_in:pq_in+np.int32(2**arr_dim)]
+            prob = pd_list_gates[g,pq_in:pq_in+np.int64(2**arr_dim)]
             prob = prob/prob.sum()
-            sign = sign_list_gates[g,pq_in:pq_in+np.int32(2**arr_dim)]
-            neg = neg_list_gates[g,np.int32(pq_in//(2**arr_dim))]
-
-            # if n%(sample_size//100)==0:
-            #     print("STEP 1")
-            #     print(prob)
-            #     print(prob.sum())
-            #     print()
+            sign = sign_list_gates[g,pq_in:pq_in+np.int64(2**arr_dim)]
+            neg = neg_list_gates[g,np.int64(pq_in//(2**arr_dim))]
 
             # The next line is the cause of the segmentation fault.
             # I suspect it's related to the type/values/normalisation of
             # array prob.
-            ps_point = np.arange(len(prob), dtype=np.int32)[np.searchsorted(
+            ps_point = np.arange(len(prob), dtype=np.int64)[np.searchsorted(
               np.cumsum(prob), np.random.random(), side="right")]
-            # if n%(sample_size//100)==0: print("STEP 2")
 
             prob_dim = np.log2(len(prob))/2
             for i in range(len(idx)):
@@ -77,7 +71,7 @@ def sample_fast(sample_size, meas_list, index_list,
         #                   qd_list_meas[m,current_ps_point[m]]
         # exp_qaoa *= temp
         # p_out += 1./sample_size * exp_qaoa
-    p_out = (1./sample_size) * np.cumsum(p_out)
+    # p_out = (1./sample_size) * np.cumsum(p_out)
     return p_out
 
 def get_qd_output(circuit, par_list, ps):
@@ -171,35 +165,35 @@ def get_qd_output(circuit, par_list, ps):
     return output
 
 def prepare_sampler(circuit, par_list, ps):
-    meas_list = np.stack(circuit["meas_list"]).astype(np.float32)
-    index_list = np.array(circuit["index_list"]).astype(np.int8)
+    meas_list = np.stack(circuit["meas_list"]).astype(np.float64)
+    index_list = np.array(circuit["index_list"]).astype(np.int64)
 
     output = get_qd_output(circuit, par_list, ps)
 
-    qd_list_states = np.stack([dist.flatten().astype(np.float32)
+    qd_list_states = np.stack([dist.flatten().astype(np.float64)
                                for dist in output["qd_list_states"]])
-    qd_list_gates = np.stack([dist.flatten().astype(np.float32)
+    qd_list_gates = np.stack([dist.flatten().astype(np.float64)
                               for dist in output["qd_list_gates"]])
-    qd_list_meas = np.stack([dist.flatten().astype(np.float32)
+    qd_list_meas = np.stack([dist.flatten().astype(np.float64)
                              for dist in output["qd_list_meas"]])
 
-    neg_list_states = np.array(output["neg_list_states"]).astype(np.float32)
-    neg_list_gates = np.stack([dist.flatten().astype(np.float32)
+    neg_list_states = np.array(output["neg_list_states"]).astype(np.float64)
+    neg_list_gates = np.stack([dist.flatten().astype(np.float64)
                                for dist in output["neg_list_gates"]])
-    neg_list_meas = np.array(output["neg_list_meas"]).astype(np.float32)
+    neg_list_meas = np.array(output["neg_list_meas"]).astype(np.float64)
 
-    pd_list_states = np.stack([dist.flatten().astype(np.float32)
+    pd_list_states = np.stack([dist.flatten().astype(np.float64)
                                for dist in output["pd_list_states"]])
-    pd_list_gates = np.stack([dist.flatten().astype(np.float32)
+    pd_list_gates = np.stack([dist.flatten().astype(np.float64)
                               for dist in output["pd_list_gates"]])
-    pd_list_meas = np.stack([dist.flatten().astype(np.float32)
+    pd_list_meas = np.stack([dist.flatten().astype(np.float64)
                              for dist in output["pd_list_meas"]])
 
-    sign_list_states = np.stack([dist.flatten().astype(np.float32)
+    sign_list_states = np.stack([dist.flatten().astype(np.float64)
                                  for dist in output["sign_list_states"]])
-    sign_list_gates = np.stack([dist.flatten().astype(np.float32)
+    sign_list_gates = np.stack([dist.flatten().astype(np.float64)
                                 for dist in output["sign_list_gates"]])
-    sign_list_meas = np.stack([dist.flatten().astype(np.float32)
+    sign_list_meas = np.stack([dist.flatten().astype(np.float64)
                                for dist in output["sign_list_meas"]])
 
     return(meas_list, index_list, qd_list_states, qd_list_gates, qd_list_meas,
