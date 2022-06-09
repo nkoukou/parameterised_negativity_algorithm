@@ -93,11 +93,11 @@ def plot(samples):
 
     labels = ['Wigner, uncompressed', 'Wigner, compressed',
               'Optimised, compressed']
-    colours = [(0.1, 0.9, 0., 0.2), (0.2, 0., 0.8, 0.7), (0.8, 0., 0.2, 0.5)]
+    colours = [(0.3, 0.7, 0., 0.3), (0.2, 0., 0.8, 0.7), (0.8, 0., 0.2, 0.5)]
 
     ymax = 0.
     width = 0.1
-    for i in range(1,3):
+    for i in [0,1,2]:
         data = dev(i+1)
         bins = int((data.max() - data.min())/width)
         freq, bnds, _ = ax.hist(data, bins=bins, fc=colours[i],
@@ -105,25 +105,25 @@ def plot(samples):
         if freq.max() > ymax: ymax = freq.max()
 
     ax.set_ylim(0., 1.05*ymax)
-    ax.set_xlim(-0.05, 4.)
+    ax.set_xlim(-0.01, 4.)
     ax.set_xlabel(r'$|p_{\rm{est}} - p_{\rm{sim}}|$')
     ax.legend(loc='upper right').set_draggable(1)
 
 S, circ_num = int(1e7), 1000
-N, n, L, l = 6, 3, 10, 1
+N, n, L, l = 3, 2, 8, 1
 
-samples = generate_data(N, n, L, l, S, circ_num)
-print(samples.shape)
-
-# fname = os.path.join("data_sampling",
-#                      "samples_N%d_n%d_L%d_l%d.npy"%(N,n,L,l))
-# samples = np.load(fname)[:100]
+# samples = generate_data(N, n, L, l, S, circ_num)
 # print(samples.shape)
-# plt.close('all')
-# plot(samples)
+
+fname = os.path.join("data_sampling",
+                      "samples_N%d_n%d_L%d_l%d.npy"%(N,n,L,l))
+samples = np.load(fname)
+print(samples
 
 
-
+.shape)
+plt.close('all')
+plot(samples)
 
 
 ### TEST SAMPLING WORKS
