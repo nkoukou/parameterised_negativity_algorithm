@@ -91,8 +91,8 @@ def plot(samples):
 
     fig, ax = plt.subplots(1,1)
 
-    labels = ['Wigner, uncompressed', 'Wigner, compressed',
-              'Optimised, compressed']
+    labels = ['Wigner, unmerged', 'Wigner, merged',
+              'Optimised, merged']
     colours = [(0.3, 0.7, 0., 0.3), (0.2, 0., 0.8, 0.7), (0.8, 0., 0.2, 0.5)]
 
     ymax = 0.
@@ -109,58 +109,15 @@ def plot(samples):
     ax.set_xlabel(r'$|p_{\rm{est}} - p_{\rm{sim}}|$')
     ax.legend(loc='upper right').set_draggable(1)
 
-S, circ_num = int(1e7), 1000
+S, circ_num = int(1e6), 1000
 N, n, L, l = 3, 2, 8, 1
 
-# samples = generate_data(N, n, L, l, S, circ_num)
-# print(samples.shape)
 
 fname = os.path.join("data_sampling",
                       "samples_N%d_n%d_L%d_l%d.npy"%(N,n,L,l))
 samples = np.load(fname)
-print(samples
-
-
-.shape)
 plt.close('all')
 plot(samples)
-
-
-### TEST SAMPLING WORKS
-# from scipy.linalg import(expm)
-# N = 6
-# L = 20
-# n = 2
-
-# phi = 0.8 * np.pi
-# p_analytical = np.sin(phi)**2
-
-# phasegate = np.kron(expm(-1.j*phi*np.array([[0,1],[1,0]])), makeGate('1'))
-# circuit = {'state_list': [makeState('0') for i in range(2)],
-#                 'gate_list': [phasegate, makeGate('C+')],
-#                 'index_list': [[0,1], [0,1]],
-#                 'meas_list': [makeState('1'),makeState('1')]}
-# p_sim = qiskit_simulate(circuit)
-
-
-# circ_comp = compress_circuit(circuit, n)
-# x_comp    = init_x_list(circ_comp, x0)
-# x_opt, _  = sequential_para_opt(W, circ_comp, x_comp, l, niter=1)
-# meas_list, index_list, qd_list_states, qd_list_gates, qd_list_meas,\
-# pd_list_states, pd_list_gates, pd_list_meas, sign_list_states,\
-# sign_list_gates, sign_list_meas, neg_list_states, neg_list_gates,\
-# neg_list_meas = prepare_sampler(circuit=circ_comp, par_list=x_opt,
-#                                 ps=ps_Wigner)
-
-# p_est  = sample_fast(S, meas_list, index_list,
-#             qd_list_states, qd_list_gates, qd_list_meas,
-#             pd_list_states, pd_list_gates, pd_list_meas,
-#             sign_list_states, sign_list_gates, sign_list_meas,
-#             neg_list_states, neg_list_gates, neg_list_meas)
-
-# print(p_analytical, p_sim, p_est)
-
-
 
 
 

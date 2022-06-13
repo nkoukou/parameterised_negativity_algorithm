@@ -1,12 +1,5 @@
 .DS_Store
 .gitpush.txt
-
 .ipynb_checkpoints/*
-FinalVersion/*
-FinalVersion_Qutrit/*
-HK_Update/*
-data/*
 __pycache__/*
-
-
-*.npy
+_prev/*
